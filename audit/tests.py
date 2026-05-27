@@ -1,10 +1,12 @@
 from decimal import Decimal
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.urls import reverse
 from brands.models import Brand
 from categories.models import Category
 from products.models import Product
 from .models import AuditLog
+from .templatetags.notification_tags import get_notifications, NotificationCollection, NotificationItem
 
 
 class AuditLogModelTest(TestCase):
@@ -91,3 +93,101 @@ class AuditSignalTest(TestCase):
         )
         self.assertIn('Criacao', str(log))
         self.assertIn('Product', str(log))
+
+class AuditViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+        for i in range(5):
+            AuditLog.objects.create(
+                action='CREATE' if i % 2 == 0 else 'UPDATE',
+                model_name='Product',
+                object_id=str(i),
+                object_repr=f'Product {i}',
+                changes={'name': {'new': f'Product {i}'}},
+                user=cls.user,
+            )
+
+    def test_audit_list_requires_permission(self):
+        response = self.client.get(reverse('audit:audit_list'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_audit_list_renders(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('audit:audit_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Product')
+        self.assertIn('logs', response.context)
+        self.assertIn('action_choices', response.context)
+
+    def test_audit_list_with_action_filter(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('audit:audit_list'), {'action': 'CREATE'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_audit_list_with_model_filter(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('audit:audit_list'), {'model': 'Product'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_activity_feed_requires_permission(self):
+        response = self.client.get(reverse('audit:activity_feed'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_activity_feed_renders(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('audit:activity_feed'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('recent_activities', response.context)
+        self.assertEqual(len(response.context['recent_activities']), 5)
+
+    def test_activity_feed_with_tenant(self):
+        from tenants.models import Tenant, TenantUser
+        tenant = Tenant.objects.create(name='T', slug='t')
+        TenantUser.objects.create(user=self.user, tenant=tenant)
+        AuditLog.objects.create(
+            action='DELETE', model_name='Brand',
+            object_id='99', object_repr='Other', tenant=tenant,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('audit:activity_feed'))
+        self.assertEqual(response.status_code, 200)
+
+
+class NotificationTagTest(TestCase):
+    def test_unauthenticated_returns_empty(self):
+        class MockRequest:
+            user = type('u', (), {'is_authenticated': False})()
+        context = {'request': MockRequest()}
+        result = get_notifications(context)
+        self.assertEqual(result.count, 0)
+
+    def test_notification_item_attrs(self):
+        item = NotificationItem('Title', 'Message', '/url/', 'bi-icon', 'text-danger')
+        self.assertEqual(item.title, 'Title')
+        self.assertEqual(item.message, 'Message')
+        self.assertEqual(item.url, '/url/')
+
+    def test_notification_collection_count(self):
+        nc = NotificationCollection()
+        self.assertEqual(nc.count, 0)
+        nc.items = [1, 2]
+        self.assertEqual(nc.count, 2)
+
+    def test_get_notifications_low_stock(self):
+        brand = Brand.objects.create(name='B')
+        cat = Category.objects.create(name='C')
+        Product.objects.create(
+            title='LowStock', category=cat, brand=brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('3'),
+        )
+        user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+
+        class MockRequest:
+            tenant = None
+        req = MockRequest()
+        req.user = user
+        context = {'request': req}
+        result = get_notifications(context)
+        self.assertGreaterEqual(result.count, 1)

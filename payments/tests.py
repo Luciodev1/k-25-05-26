@@ -115,3 +115,62 @@ class PaymentViewTest(TestCase):
         response = self.client.post(f'/pagamentos/{payment.pk}/eliminar-permanente/')
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Payment.all_objects.filter(pk=payment.pk).exists())
+
+
+class PaymentFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.customer = Customer.objects.create(name='C')
+        cls.supplier = Supplier.objects.create(name='S')
+
+    def test_payment_form_valid_receipt(self):
+        from payments.forms import PaymentForm
+        form = PaymentForm(data={
+            'type': 'RECEIPT', 'customer': self.customer.pk,
+            'amount': '100.00', 'payment_method': 'CASH',
+            'date': '2026-05-27',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_payment_form_valid_payment(self):
+        from payments.forms import PaymentForm
+        form = PaymentForm(data={
+            'type': 'PAYMENT', 'supplier': self.supplier.pk,
+            'amount': '100.00', 'payment_method': 'CASH',
+            'date': '2026-05-27',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_payment_form_receipt_requires_customer(self):
+        from payments.forms import PaymentForm
+        form = PaymentForm(data={
+            'type': 'RECEIPT', 'supplier': self.supplier.pk,
+            'amount': '100.00', 'payment_method': 'CASH',
+            'date': '2026-05-27',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('customer', form.errors)
+
+    def test_payment_form_payment_requires_supplier(self):
+        from payments.forms import PaymentForm
+        form = PaymentForm(data={
+            'type': 'PAYMENT', 'customer': self.customer.pk,
+            'amount': '100.00', 'payment_method': 'CASH',
+            'date': '2026-05-27',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('supplier', form.errors)
+
+    def test_payment_form_tenant_filtering(self):
+        from payments.forms import PaymentForm
+        from tenants.models import Tenant
+        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant_cust = Customer.objects.create(name='TC', tenant=tenant)
+        tenant_supp = Supplier.objects.create(name='TS', tenant=tenant)
+        other_cust = Customer.objects.create(name='Other')
+        other_supp = Supplier.objects.create(name='Other')
+        form = PaymentForm(tenant=tenant)
+        self.assertIn(tenant_cust, form.fields['customer'].queryset)
+        self.assertIn(tenant_supp, form.fields['supplier'].queryset)
+        self.assertNotIn(other_cust, form.fields['customer'].queryset)
+        self.assertNotIn(other_supp, form.fields['supplier'].queryset)

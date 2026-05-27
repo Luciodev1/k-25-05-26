@@ -39,3 +39,16 @@ class SupplierViewTest(TestCase):
         from django.contrib.auth.models import User
         return User.objects.create_superuser('testuser', 'test@test.com', 'testpass123')
 
+
+
+class SupplierFormTest(TestCase):
+    def test_supplier_form_valid(self):
+        from suppliers.forms import SupplierForm
+        form = SupplierForm(data={'name': 'Test', 'nif': '123456789'})
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_supplier_form_invalid_nif(self):
+        from suppliers.forms import SupplierForm
+        form = SupplierForm(data={'name': 'Test', 'nif': '12345'})
+        self.assertFalse(form.is_valid())
+        self.assertIn('nif', form.errors)

@@ -440,3 +440,63 @@ class ReportTasksTest(TestCase):
         result = generate_large_pdf_export('app.Model', [1, 2, 3], 'test.pdf')
         self.assertEqual(result['status'], 'ok')
         self.assertIn('exports/', result['path'])
+
+
+class ReportTenantScopedTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from tenants.models import Tenant, TenantUser
+        cls.tenant_a = Tenant.objects.create(name='A', slug='a')
+        cls.tenant_b = Tenant.objects.create(name='B', slug='b')
+        cls.user_a = User.objects.create_superuser('usera', 'a@t.com', 'pass')
+        cls.user_b = User.objects.create_superuser('userb', 'b@t.com', 'pass')
+        TenantUser.objects.create(user=cls.user_a, tenant=cls.tenant_a)
+        TenantUser.objects.create(user=cls.user_b, tenant=cls.tenant_b)
+        cls.brand = Brand.objects.create(name='BA', tenant=cls.tenant_a)
+        cls.cat = Category.objects.create(name='CA', tenant=cls.tenant_a)
+        cls.customer = Customer.objects.create(name='CustA', tenant=cls.tenant_a)
+        cls.supplier = Supplier.objects.create(name='SuppA', tenant=cls.tenant_a)
+        cls.product = Product.objects.create(
+            title='PA', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('50'), tenant=cls.tenant_a,
+        )
+        cls.outflow = Outflow.objects.create(
+            product=cls.product, customer=cls.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=cls.tenant_a,
+        )
+
+    def test_report_outflows_tenant_isolation(self):
+        self.client.force_login(self.user_b)
+        response = self.client.get('/reports/outflows-by-customer/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'CustA')
+
+    def test_report_balances_tenant_isolation(self):
+        self.client.force_login(self.user_b)
+        response = self.client.get('/reports/balances/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_report_customer_account_tenant_scoped(self):
+        self.client.force_login(self.user_a)
+        response = self.client.get('/reports/customer-account/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'CustA')
+
+    def test_report_supplier_account_tenant_scoped(self):
+        self.client.force_login(self.user_a)
+        response = self.client.get('/reports/supplier-account/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'SuppA')
+
+    def test_report_deliveries_tenant_scoped(self):
+        driver = __import__('drivers.models', fromlist=['Driver']).Driver.objects.create(
+            name='Drv', phone='123', tenant=self.tenant_a,
+        )
+        Delivery.objects.create(
+            outflow=self.outflow, quantity=Decimal('5'),
+            driver=driver, tenant=self.tenant_a,
+        )
+        self.client.force_login(self.user_a)
+        response = self.client.get('/reports/deliveries/')
+        self.assertEqual(response.status_code, 200)

@@ -151,3 +151,57 @@ class InflowViewTest(TestCase):
         response = self.client.post(f'/inflows/{inflow.pk}/hard-delete/')
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Inflow.all_objects.filter(pk=inflow.pk).exists())
+
+
+class InflowFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from brands.models import Brand
+        from categories.models import Category
+        from suppliers.models import Supplier
+        cls.brand = Brand.objects.create(name='B')
+        cls.cat = Category.objects.create(name='C')
+        cls.supplier = Supplier.objects.create(name='S')
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('0'),
+        )
+
+    def test_inflow_form_valid(self):
+        from inflows.forms import InflowForm
+        form = InflowForm(data={
+            'product': self.product.pk, 'supplier': self.supplier.pk,
+            'quantity': '10', 'price': '12.00',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_inflow_form_quantity_zero_or_negative(self):
+        from inflows.forms import InflowForm
+        for qty in ['0', '-1']:
+            form = InflowForm(data={
+                'product': self.product.pk, 'supplier': self.supplier.pk,
+                'quantity': qty, 'price': '12.00',
+            })
+            self.assertFalse(form.is_valid())
+
+    def test_inflow_form_tenant_filtering(self):
+        from inflows.forms import InflowForm
+        from tenants.models import Tenant
+        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant_product = Product.objects.create(
+            title='TP', category=self.cat, brand=self.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('5'), tenant=tenant,
+        )
+        tenant_supplier = Supplier.objects.create(name='TS', tenant=tenant)
+        other = Product.objects.create(
+            title='Other', category=self.cat, brand=self.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('5'),
+        )
+        form = InflowForm(tenant=tenant)
+        self.assertIn(tenant_product, form.fields['product'].queryset)
+        self.assertIn(tenant_supplier, form.fields['supplier'].queryset)
+        self.assertNotIn(other, form.fields['product'].queryset)
+        self.assertNotIn(self.supplier, form.fields['supplier'].queryset)

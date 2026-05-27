@@ -158,15 +158,10 @@ class OutflowDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView)
         return qs
 
     def post(self, request, *args, **kwargs):
-        from django.db.models import ProtectedError
-        try:
-            obj = self.get_object()
-            obj.delete()
-            messages.success(request, "Saida excluida com sucesso!")
-            return redirect(self.success_url)
-        except ProtectedError:
-            messages.error(request, "Nao e possivel eliminar esta saida porque esta a ser utilizada por entregas.")
-            return redirect(self.success_url)
+        obj = self.get_object()
+        obj.delete()
+        messages.success(request, "Saida excluida com sucesso!")
+        return redirect(self.success_url)
 
 
 class OutflowTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, ListView):

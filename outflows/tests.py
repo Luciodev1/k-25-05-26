@@ -487,3 +487,86 @@ class DeliveryEdgeCaseTest(TestCase):
             reverse('outflows:delivery_restore', kwargs={'pk': delivery.pk}),
         )
         self.assertRedirects(response, reverse('outflows:delivery_trash'))
+
+class OutflowFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from outflows.forms import OutflowForm
+        cls.Form = OutflowForm
+        cls.brand = Brand.objects.create(name='B')
+        cls.cat = Category.objects.create(name='C')
+        cls.customer = Customer.objects.create(name='C')
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('10'),
+        )
+
+    def test_outflow_form_valid(self):
+        form = self.Form(data={
+            'product': self.product.pk, 'customer': self.customer.pk,
+            'quantity': '5', 'price': '15.00',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_outflow_form_quantity_zero_or_negative(self):
+        from outflows.forms import OutflowForm
+        for qty in ['0', '-1']:
+            form = OutflowForm(data={
+                'product': self.product.pk, 'customer': self.customer.pk,
+                'quantity': qty, 'price': '15.00',
+            })
+            self.assertFalse(form.is_valid())
+
+    def test_outflow_form_exceeds_stock(self):
+        from outflows.forms import OutflowForm
+        form = OutflowForm(data={
+            'product': self.product.pk, 'customer': self.customer.pk,
+            'quantity': '15', 'price': '15.00',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('excede o estoque', str(form.errors).lower())
+
+    def test_outflow_form_tenant_filtering(self):
+        from outflows.forms import OutflowForm
+        from tenants.models import Tenant
+        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant_product = Product.objects.create(
+            title='TP', category=self.cat, brand=self.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('10'), tenant=tenant,
+        )
+        tenant_customer = Customer.objects.create(name='TC', tenant=tenant)
+        other = Product.objects.create(
+            title='Other', category=self.cat, brand=self.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('5'),
+        )
+        form = OutflowForm(tenant=tenant)
+        self.assertIn(tenant_product, form.fields['product'].queryset)
+        self.assertIn(tenant_customer, form.fields['customer'].queryset)
+        self.assertNotIn(other, form.fields['product'].queryset)
+        self.assertNotIn(self.customer, form.fields['customer'].queryset)
+
+
+class DeliveryFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.driver = Driver.objects.create(name='D', phone='123')
+
+    def test_delivery_form_quantity_zero_or_negative(self):
+        from outflows.forms import DeliveryForm
+        for qty in ['0', '-1']:
+            form = DeliveryForm(data={
+                'quantity': qty, 'driver': self.driver.pk,
+                'delivery_date': '2026-05-26',
+            })
+            self.assertFalse(form.is_valid())
+
+    def test_delivery_form_valid(self):
+        from outflows.forms import DeliveryForm
+        form = DeliveryForm(data={
+            'quantity': '5', 'driver': self.driver.pk,
+            'delivery_date': '2026-05-26',
+        })
+        self.assertTrue(form.is_valid(), form.errors)

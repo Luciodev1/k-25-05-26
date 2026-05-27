@@ -129,3 +129,41 @@ class ProductViewTest(TestCase):
         self.client.force_login(self.user)
         response = self.client.get('/products/9999/detail/')
         self.assertEqual(response.status_code, 404)
+
+
+class ProductFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.brand = Brand.objects.create(name='B')
+        cls.cat = Category.objects.create(name='C')
+
+    def test_product_form_valid(self):
+        from products.forms import ProductForm
+        form = ProductForm(data={
+            'title': 'NewP', 'category': self.cat.pk, 'brand': self.brand.pk,
+            'cost_price': '10.00', 'selling_price': '15.00', 'quantity': '50',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_product_form_quantity_zero_or_negative(self):
+        from products.forms import ProductForm
+        for qty in ['0', '-1']:
+            form = ProductForm(data={
+                'title': 'NewP', 'category': self.cat.pk, 'brand': self.brand.pk,
+                'cost_price': '10.00', 'selling_price': '15.00', 'quantity': qty,
+            })
+            self.assertFalse(form.is_valid())
+
+    def test_product_form_tenant_filtering(self):
+        from products.forms import ProductForm
+        from tenants.models import Tenant
+        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant_brand = Brand.objects.create(name='TB', tenant=tenant)
+        tenant_cat = Category.objects.create(name='TC', tenant=tenant)
+        other_brand = Brand.objects.create(name='Other')
+        other_cat = Category.objects.create(name='Other')
+        form = ProductForm(tenant=tenant)
+        self.assertIn(tenant_brand, form.fields['brand'].queryset)
+        self.assertIn(tenant_cat, form.fields['category'].queryset)
+        self.assertNotIn(other_brand, form.fields['brand'].queryset)
+        self.assertNotIn(other_cat, form.fields['category'].queryset)
