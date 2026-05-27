@@ -1,7 +1,11 @@
 """Tests for outflow views: delivery, trash, shipping guide, confirm weight."""
 from decimal import Decimal
+from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
+from django.urls import reverse
+from django.db.models import ProtectedError
+from django.db.models.query import QuerySet
 from brands.models import Brand
 from categories.models import Category
 from products.models import Product
@@ -314,3 +318,172 @@ class OutflowTenantScopedTest(TestCase):
         self.client.force_login(self.other_admin)
         response = self.client.get(f'/outflows/{self.outflow.pk}/detail/')
         self.assertEqual(response.status_code, 404)
+
+
+class OutflowUpdateTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.admin = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+        TenantUser.objects.create(user=cls.admin, tenant=cls.tenant)
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('50'), tenant=cls.tenant,
+        )
+        cls.outflow = Outflow.objects.create(
+            product=cls.product, customer=cls.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=cls.tenant,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_outflow_update_success(self):
+        response = self.client.post(
+            reverse('outflows:outflow_update', kwargs={'pk': self.outflow.pk}),
+            {'product': self.product.pk, 'customer': self.customer.pk,
+             'quantity': '15', 'price': '20.00'},
+        )
+        self.assertRedirects(response, reverse('outflows:outflow_list'))
+        self.outflow.refresh_from_db()
+        self.assertEqual(self.outflow.quantity, Decimal('15'))
+        self.assertEqual(self.outflow.price, Decimal('20.00'))
+
+    def test_outflow_update_stock_exceeds(self):
+        response = self.client.post(
+            reverse('outflows:outflow_update', kwargs={'pk': self.outflow.pk}),
+            {'product': self.product.pk, 'customer': self.customer.pk,
+             'quantity': '65', 'price': '15.00'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'excede o estoque')
+
+    def test_outflow_update_product_does_not_exist(self):
+        with patch.object(QuerySet, 'select_for_update') as mock_sfu:
+            mock_sfu.return_value.get.side_effect = Product.DoesNotExist
+            response = self.client.post(
+                reverse('outflows:outflow_update', kwargs={'pk': self.outflow.pk}),
+                {'product': self.product.pk, 'customer': self.customer.pk,
+                 'quantity': '5', 'price': '15.00'},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'já não existe')
+
+
+class OutflowCreateProductDoesNotExistTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.admin = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+        TenantUser.objects.create(user=cls.admin, tenant=cls.tenant)
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('50'), tenant=cls.tenant,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_outflow_create_product_does_not_exist(self):
+        with patch.object(QuerySet, 'select_for_update') as mock_sfu:
+            mock_sfu.return_value.get.side_effect = Product.DoesNotExist
+            response = self.client.post('/outflows/create/', {
+                'product': self.product.pk, 'customer': self.customer.pk,
+                'quantity': '5', 'price': '15.00',
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'já não existe')
+
+    def test_outflow_create_quantity_exceeds_stock(self):
+        response = self.client.post('/outflows/create/', {
+            'product': self.product.pk, 'customer': self.customer.pk,
+            'quantity': '999', 'price': '15.00',
+        })
+        self.assertEqual(response.status_code, 200)
+
+
+class DeliveryEdgeCaseTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.admin = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+        TenantUser.objects.create(user=cls.admin, tenant=cls.tenant)
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.driver = Driver.objects.create(name='Drv', phone='123', tenant=cls.tenant)
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('50'), tenant=cls.tenant,
+        )
+        cls.outflow = Outflow.objects.create(
+            product=cls.product, customer=cls.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=cls.tenant,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin)
+
+    def test_delivery_create_exceeds_pending(self):
+        Delivery.objects.create(
+            outflow=self.outflow, quantity=Decimal('7'),
+            driver=self.driver, tenant=self.tenant,
+        )
+        response = self.client.post(
+            reverse('outflows:delivery_create', kwargs={'pk': self.outflow.pk}),
+            {'quantity': '5', 'driver': self.driver.pk, 'delivered_at': '2026-05-26'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'excede o pendente')
+
+    def test_delivery_create_exceeds_stock(self):
+        Product.objects.filter(pk=self.product.pk).update(quantity=Decimal('3'))
+        response = self.client.post(
+            reverse('outflows:delivery_create', kwargs={'pk': self.outflow.pk}),
+            {'quantity': '5', 'driver': self.driver.pk, 'delivered_at': '2026-05-26'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'excede o estoque dispon')
+
+    def test_delivery_create_registry_does_not_exist(self):
+        with patch.object(QuerySet, 'select_for_update') as mock_sfu:
+            mock_qs = MagicMock()
+            mock_sfu.return_value = mock_qs
+            mock_qs.select_related.return_value.get.side_effect = Outflow.DoesNotExist
+            response = self.client.post(
+                reverse('outflows:delivery_create', kwargs={'pk': self.outflow.pk}),
+                {'quantity': '3', 'driver': self.driver.pk, 'delivered_at': '2026-05-26'},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'já não existe')
+
+    def test_delivery_confirm_weight_double_confirm(self):
+        delivery = Delivery.objects.create(
+            outflow=self.outflow, quantity=Decimal('5'),
+            driver=self.driver, is_confirmed=True,
+            actual_quantity=Decimal('5'), tenant=self.tenant,
+        )
+        response = self.client.post(
+            reverse('outflows:delivery_confirm_weight', kwargs={'pk': delivery.pk}),
+            {'actual_quantity': '6'},
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_delivery_restore_not_deleted(self):
+        delivery = Delivery.objects.create(
+            outflow=self.outflow, quantity=Decimal('3'),
+            driver=self.driver, tenant=self.tenant,
+        )
+        response = self.client.post(
+            reverse('outflows:delivery_restore', kwargs={'pk': delivery.pk}),
+        )
+        self.assertRedirects(response, reverse('outflows:delivery_trash'))

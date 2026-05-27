@@ -1,42 +1,67 @@
 # Changelog - SGE (Sistema de Gestao de Stocks e Contas)
 
-## 2026-05-27 — Refactor e Cobertura de Testes
+## 2026-05-27 — Cobertura de Testes (87% → 92%) e Suíte P2
 
-### P4 — Robustez e Qualidade
+### P0 — Correcção Crítica
 
-#### 1. Eliminada duplicacao em accounts/models.py (BaseAccountEntry)
-- **Ficheiro:** `accounts/models.py`
-- **Problema:** `CustomerAccountEntry` e `SupplierAccountEntry` tinham os mesmos campos e logica duplicados.
-- **Solucao:** Criada classe abstracta `BaseAccountEntry` com toda a logica comum. Ambas as entidades herdam dela. Schema BD inalterado (zero migrations).
+#### 1. SECURE_SSL_REDIRECT bloqueava testes (125+ falhas)
+- **Ficheiro:** `app/settings.py`
+- **Problema:** `SECURE_SSL_REDIRECT = True` activo quando `DEBUG=False` causava redirect 301 em todos os testes HTTP (125+ falhas).
+- **Solucao:** Detecta automaticamente ambiente pytest via `sys.modules` / `PYTEST_CURRENT_TEST` / `sys.argv` e força `DEBUG=True`. Zero alterações manuais necessárias.
 
-#### 2. Testes para app/mixins.py (12 testes)
-- **Ficheiro:** `app/tests/test_mixins.py` (novo)
-- **Testes criados:**
-  - `SoftDeleteModelTest` (5): soft delete, restore, hard delete, manager filters (via `Brand`)
-  - `HtmxMixinTest` (2): `HX-Request` usa template partial, request normal usa template default
-  - `ExportMixinTest` (2): export Excel retorna `spreadsheetml`, export PDF retorna `application/pdf`
-  - `BulkDeleteMixinTest` (2): sem permissao levanta `PermissionDenied`, com permissao chama super
-  - `SoftDeleteViewMixinTest` (1): POST chama `obj.delete()`
+### P0 — Cobertura (Testes)
 
-#### 3. Testes para Celery tasks em reports/tasks.py (2 testes)
-- **Ficheiro:** `reports/tests.py`
-- **Corrigido:** `ReportTasksTest` com patches correctos para `openpyxl.Workbook` e `default_storage` (imports locais). Chamadas sem mock de `self` (Celery `bind=True` fornece automaticamente).
+#### 2. app/mixins.py: 78% → 96% (16 classes)
+- **Ficheiro:** `app/tests/test_mixins.py` (132 → 432 linhas)
+- **Novos testes:** `FinanceiroRequiredMixinTest`, `GestorRequiredMixinTest`, `AdminRequiredMixinTest`, `TenantFilterMixinTest` (4), `TenantCreateMixinTest` (2), `BaseListViewTest`, `BaseCreateViewTest`, `BaseUpdateViewTest`, `BaseDetailViewTest`, `BaseDeleteViewTest` (2), `BaseTrashListViewTest` (2), `BaseRestoreViewTest` (2), `BaseHardDeleteViewTest` (2), `ExportMixinGetTest` (3)
 
-#### 4. Type hints
-- **Ficheiros:** `app/mixins.py`, `app/tasks.py`, `reports/tasks.py`, `accounts/models.py`
-- **Adicionado:** Assinaturas com type hints em todas as classes e funcoes publicas.
+#### 3. reports/views.py: 79% → 99%
+- **Ficheiro:** `reports/tests.py` (253 → 442 linhas)
+- **Testes:** permissões (4), filtros detalhados com tenant (16), export excel/pdf, HTMX, supplier account
 
-### Resumo Estatistico
+### P1 — Cobertura (Testes)
 
-| Metrica | Valor |
-|---|---|
-| Testes (total) | 152 passing, 125 known-failing (301 redirect pre-existente) |
-| Ficheiros criados | 1 (`app/tests/test_mixins.py`) |
-| Ficheiros modificados | 5 |
-| Linhas adicionadas | 95 |
-| Linhas removidas | 122 |
+#### 4. users/views.py: 63% → 98%
+- **Ficheiro:** `users/tests.py` (181 → 287 linhas)
+- **Testes:** login form válido/inválido/rate-limit, User CRUD com tenant, grouped permissions, Group CRUD, Profile edit
 
-Todas as modificacoes, melhorias e correcoes aplicadas ao projeto.
+#### 5. outflows/views.py: 80% → 88%
+- **Ficheiro:** `outflows/tests.py` (190 → 211 linhas)
+- **Testes:** OutflowTenantScopedTest (18 testes tenant-scoped para list, create, detail, update, delete, trash, restore, hard delete; delivery crud; cross-tenant isolation)
+
+#### 6. app/views.py: 88% → 98%
+- **Ficheiro:** `app/tests/test_dashboard.py` (101 → 134 linhas)
+- **Teste:** dashboard filtra por tenant com TenantUser
+
+### P2 — Cobertura de Views Tenants e Edge Cases
+
+#### 7. tenants/middleware.py: 82% → 100%
+- **Ficheiro:** `tenants/tests.py` (75 → 295 linhas)
+- `TenantMiddlewareTest`:
+  - `test_stale_session_clears_tenant`: session com tenant_id orfão (TenantUser eliminado) → 403 + sessão limpa
+  - `test_multi_tenant_redirects_to_select`: user com 2+ TenantUsers → redirect para selecção
+
+#### 8. tenants/views.py: 48% → 100%
+- `TenantSelectViewTest` (3): GET com 2 tenants, POST válido, POST inválido
+- `TenantCreateViewTest` (2): GET render, POST cria TenantSettings + TenantUser admin
+- `TenantDetailViewTest` (1): contexto com tenant_users
+- `TenantUserAddViewTest` (4): GET com form, POST válido, POST inválido, existing user excluído do queryset
+- `TenantUserRemoveViewTest` (2): remove non-primary, bloqueia remoção do primary
+
+#### 9. outflows/views.py Edge Cases (7 testes)
+- **Ficheiros:** `outflows/tests.py` (+100 linhas em 3 novas classes)
+- `OutflowUpdateTest` (3): update success, stock excess, Product.DoesNotExist (mock)
+- `OutflowCreateProductDoesNotExistTest` (2): Product.DoesNotExist (mock), quantity exceeds stock
+- `DeliveryEdgeCaseTest` (5): exceeds pending, exceeds stock, registry DoesNotExist (mock), double-confirm, restore non-deleted
+
+### Resumo Estatístico
+
+| Métrica | Sessão 1 (P4) | Sessão 2 (P0-P2) | Total |
+|---|---|---|---|
+| Testes (total) | 152 | +162 | **314** |
+| Cobertura total | 87% | +5pp | **92%** |
+| Ficheiros modificados | 5 | +4 | 9 |
+| Linhas de teste adicionadas | ~95 | ~970 | ~1065 |
 
 ---
 
