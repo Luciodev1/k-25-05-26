@@ -53,6 +53,55 @@ class BrandViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestBrand')
 
+    def test_delete_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.post(f'/brands/{self.brand.pk}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.brand.refresh_from_db()
+        self.assertTrue(self.brand.is_deleted)
+
+    def test_delete_requires_permission(self):
+        user = self._create_user()
+        user.is_superuser = False
+        user.save()
+        self.client.force_login(user)
+        response = self.client.post(f'/brands/{self.brand.pk}/delete/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_trash_view(self):
+        self.client.force_login(self._create_user())
+        self.brand.delete()
+        response = self.client.get('/brands/trash/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TestBrand')
+
+    def test_restore_view(self):
+        self.client.force_login(self._create_user())
+        self.brand.delete()
+        response = self.client.post(f'/brands/{self.brand.pk}/restore/')
+        self.assertEqual(response.status_code, 302)
+        self.brand.refresh_from_db()
+        self.assertFalse(self.brand.is_deleted)
+
+    def test_hard_delete_view(self):
+        self.client.force_login(self._create_user())
+        self.brand.delete()
+        response = self.client.post(f'/brands/{self.brand.pk}/hard-delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Brand.all_objects.filter(pk=self.brand.pk).exists())
+
     def _create_user(self):
         from django.contrib.auth.models import User
         return User.objects.create_superuser('testuser', 'test@test.com', 'testpass123')
+
+
+class BrandFormTest(TestCase):
+    def test_brand_form_valid(self):
+        from brands.forms import BrandForm
+        form = BrandForm(data={'name': 'Test', 'description': ''})
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_brand_form_invalid_empty_name(self):
+        from brands.forms import BrandForm
+        form = BrandForm(data={'name': '', 'description': ''})
+        self.assertFalse(form.is_valid())

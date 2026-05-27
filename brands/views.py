@@ -62,14 +62,14 @@ class BrandTrashListView(BaseTrashListView):
 
 class BrandRestoreView(BaseRestoreView):
     model = models.Brand
-    redirect_url = 'brand_trash'
+    redirect_url = 'brands:brand_trash'
     permission_required = 'brands.delete_brand'
     success_message = "Marca restaurada com sucesso!"
 
 
 class BrandHardDeleteView(BaseHardDeleteView):
     model = models.Brand
-    redirect_url = 'brand_trash'
+    redirect_url = 'brands:brand_trash'
     permission_required = 'brands.delete_brand'
     success_message = "Marca eliminada permanentemente!"
     protected_error_message = (

@@ -18,6 +18,12 @@ class UserModelTest(TestCase):
         self.assertTrue(admin.is_superuser)
         self.assertTrue(admin.is_staff)
 
+    def test_profile_str(self):
+        from users.models import Profile
+        user = User.objects.create_user('puser', 'p@test.com', 'pass')
+        profile = Profile.objects.get(user=user)
+        self.assertEqual(str(profile), f'Perfil de {user.username}')
+
 
 class UserViewTest(TestCase):
     @classmethod
@@ -205,6 +211,14 @@ class CustomLoginViewTest(TestCase):
         self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'pass123'})
         self.assertNotIn('tenant_id', self.client.session)
 
+    def test_login_multi_tenant_does_not_set_session(self):
+        tenant_a = Tenant.objects.create(name='A', slug='a')
+        tenant_b = Tenant.objects.create(name='B', slug='b')
+        TenantUser.objects.create(user=self.user, tenant=tenant_a)
+        TenantUser.objects.create(user=self.user, tenant=tenant_b)
+        self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'pass123'})
+        self.assertNotIn('tenant_id', self.client.session)
+
     def test_rate_limit_returns_429(self):
         from users.views import CustomLoginView
         from django.test import RequestFactory
@@ -239,6 +253,12 @@ class UserCRUDTenantTest(TestCase):
         response = self.client.get('/users/')
         self.assertContains(response, 'tenant_a_user')
         self.assertNotContains(response, 'tenant_b_user')
+
+    def test_user_create_context_has_creating_tenant(self):
+        response = self.client.get('/users/create/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('creating_tenant', response.context)
+        self.assertEqual(response.context['creating_tenant'], self.tenant_a)
 
     def test_user_create_with_tenant_creates_tenantuser(self):
         response = self.client.post('/users/create/', {

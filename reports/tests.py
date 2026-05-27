@@ -262,6 +262,19 @@ class ReportPermissionTest(TestCase):
         self.assertEqual(data['task_id'], 'abc123')
         self.assertEqual(data['status'], 'PENDING')
 
+    @patch('celery.result.AsyncResult')
+    def test_task_status_with_result(self, mock_async):
+        mock_async.return_value.status = 'SUCCESS'
+        mock_async.return_value.ready.return_value = True
+        mock_async.return_value.result = {'path': 'exports/test.pdf'}
+        self.client.force_login(self.user)
+        perm = Permission.objects.get(codename='view_outflow')
+        self.user.user_permissions.add(perm)
+        response = self.client.get('/reports/task-status/abc123/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['result'], {'path': 'exports/test.pdf'})
+
 
 class ReportDetailedFilterTest(TestCase):
     @classmethod

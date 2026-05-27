@@ -202,8 +202,8 @@ class BaseDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMi
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         try:
-            obj = self.get_object()
-            obj.delete()
+            self.object = self.get_object()
+            self.object.delete()
             messages.success(request, self.success_message)
             return redirect(self.get_success_url())
         except ProtectedError:

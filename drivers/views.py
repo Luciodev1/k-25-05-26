@@ -63,13 +63,13 @@ class DriverTrashListView(BaseTrashListView):
 
 class DriverRestoreView(BaseRestoreView):
     model = Driver
-    redirect_url = 'driver_trash'
+    redirect_url = 'drivers:driver_trash'
     permission_required = 'drivers.delete_driver'
     success_message = "Motorista restaurado com sucesso!"
 
 
 class DriverHardDeleteView(BaseHardDeleteView):
     model = Driver
-    redirect_url = 'driver_trash'
+    redirect_url = 'drivers:driver_trash'
     permission_required = 'drivers.delete_driver'
     success_message = "Motorista eliminado permanentemente!"

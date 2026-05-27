@@ -50,7 +50,62 @@ class DriverViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Driver.objects.filter(name='NewDriver').exists())
 
+    def test_detail_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.get(f'/drivers/{self.driver.pk}/detail/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TestDriver')
+
+    def test_update_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.post(f'/drivers/{self.driver.pk}/update/', {
+            'name': 'Updated', 'phone': '+244911111111',
+            'truck_plate': 'XX-00-00-XX', 'cistern_plate': 'YY-00-00-YY',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.driver.refresh_from_db()
+        self.assertEqual(self.driver.name, 'Updated')
+
+    def test_delete_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.post(f'/drivers/{self.driver.pk}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.driver.refresh_from_db()
+        self.assertTrue(self.driver.is_deleted)
+
+    def test_trash_view(self):
+        self.client.force_login(self._create_user())
+        self.driver.delete()
+        response = self.client.get('/drivers/trash/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TestDriver')
+
+    def test_restore_view(self):
+        self.client.force_login(self._create_user())
+        self.driver.delete()
+        response = self.client.post(f'/drivers/{self.driver.pk}/restore/')
+        self.assertEqual(response.status_code, 302)
+        self.driver.refresh_from_db()
+        self.assertFalse(self.driver.is_deleted)
+
+    def test_hard_delete_view(self):
+        self.client.force_login(self._create_user())
+        self.driver.delete()
+        response = self.client.post(f'/drivers/{self.driver.pk}/hard-delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Driver.all_objects.filter(pk=self.driver.pk).exists())
+
     def _create_user(self):
         from django.contrib.auth.models import User
         return User.objects.create_superuser('testuser', 'test@test.com', 'testpass123')
+
+
+class DriverFormTest(TestCase):
+    def test_driver_form_valid(self):
+        from drivers.forms import DriverForm
+        form = DriverForm(data={
+            'name': 'Test', 'phone': '+244911111111',
+            'truck_plate': 'XX-00-00-XX', 'cistern_plate': 'YY-00-00-YY',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
 

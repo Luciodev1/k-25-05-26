@@ -68,13 +68,13 @@ class SupplierTrashListView(BaseTrashListView):
 
 class SupplierRestoreView(BaseRestoreView):
     model = models.Supplier
-    redirect_url = 'supplier_trash'
+    redirect_url = 'suppliers:supplier_trash'
     permission_required = 'suppliers.delete_supplier'
     success_message = "Fornecedor restaurado com sucesso!"
 
 
 class SupplierHardDeleteView(BaseHardDeleteView):
     model = models.Supplier
-    redirect_url = 'supplier_trash'
+    redirect_url = 'suppliers:supplier_trash'
     permission_required = 'suppliers.delete_supplier'
     success_message = "Fornecedor eliminado permanentemente!"

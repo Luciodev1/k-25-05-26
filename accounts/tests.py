@@ -145,3 +145,40 @@ class AccountEntryModelTest(TestCase):
             date='2026-01-01',
         )
         self.assertIn('Supp', str(entry))
+
+
+class PaymentFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.customer = Customer.objects.create(name='FCust')
+        cls.supplier = Supplier.objects.create(name='FSupp')
+
+    def test_customer_payment_form_valid(self):
+        from accounts.forms import CustomerPaymentForm
+        form = CustomerPaymentForm(
+            data={'customer': self.customer.pk, 'amount': '50.00', 'payment_method': 'CASH', 'date': '2026-05-27'},
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_customer_payment_form_invalid_amount_zero(self):
+        from accounts.forms import CustomerPaymentForm
+        form = CustomerPaymentForm(
+            data={'customer': self.customer.pk, 'amount': '0.00', 'payment_method': 'CASH', 'date': '2026-05-27'},
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('amount', form.errors)
+
+    def test_supplier_payment_form_valid(self):
+        from accounts.forms import SupplierPaymentForm
+        form = SupplierPaymentForm(
+            data={'supplier': self.supplier.pk, 'amount': '75.00', 'payment_method': 'TRANSFER', 'date': '2026-05-27'},
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_supplier_payment_form_invalid_amount_zero(self):
+        from accounts.forms import SupplierPaymentForm
+        form = SupplierPaymentForm(
+            data={'supplier': self.supplier.pk, 'amount': '0.00', 'payment_method': 'TRANSFER', 'date': '2026-05-27'},
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('amount', form.errors)

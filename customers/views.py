@@ -71,13 +71,13 @@ class CustomerTrashListView(BaseTrashListView):
 
 class CustomerRestoreView(BaseRestoreView):
     model = models.Customer
-    redirect_url = 'customer_trash'
+    redirect_url = 'customers:customer_trash'
     permission_required = 'customers.delete_customer'
     success_message = "Cliente restaurado com sucesso!"
 
 
 class CustomerHardDeleteView(BaseHardDeleteView):
     model = models.Customer
-    redirect_url = 'customer_trash'
+    redirect_url = 'customers:customer_trash'
     permission_required = 'customers.delete_customer'
     success_message = "Cliente eliminado permanentemente!"

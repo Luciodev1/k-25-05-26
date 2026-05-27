@@ -62,14 +62,14 @@ class CategoryTrashListView(BaseTrashListView):
 
 class CategoryRestoreView(BaseRestoreView):
     model = models.Category
-    redirect_url = 'category_trash'
+    redirect_url = 'categories:category_trash'
     permission_required = 'categories.delete_category'
     success_message = "Categoria restaurada com sucesso!"
 
 
 class CategoryHardDeleteView(BaseHardDeleteView):
     model = models.Category
-    redirect_url = 'category_trash'
+    redirect_url = 'categories:category_trash'
     permission_required = 'categories.delete_category'
     success_message = "Categoria eliminada permanentemente!"
     protected_error_message = (
