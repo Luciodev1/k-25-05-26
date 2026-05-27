@@ -236,6 +236,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_RESULT_EXPIRES = 86400
 
 # Rate limiting (django-ratelimit)
 RATELIMIT_ENABLE = os.environ.get('RATELIMIT_ENABLE', 'True').lower() in ('true', '1', 'yes')
@@ -279,7 +280,7 @@ LOGGING = {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOG_DIR / 'django.log',
-            'maxBytes': 5 * 1024 * 1024,
+            'maxBytes': 10 * 1024 * 1024,
             'backupCount': 5,
             'formatter': 'verbose',
         },

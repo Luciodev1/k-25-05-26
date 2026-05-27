@@ -8,10 +8,10 @@
 - [x] 1.1: Adicionar dependências ao requirements.txt (redis, celery, sentry-sdk, django-ratelimit, django-filter, pytest, pytest-django, pytest-cov)
 - [x] 1.2: Criar app/celery.py com configuração do Celery
 - [x] 1.3: Atualizar app/__init__.py para importar celery app
-- [ ] 1.4: Configurar Celery em app/settings.py (CELERY_BROKER_URL, CELERY_RESULT_BACKEND, etc)
-- [~] 1.5: Configurar Sentry em app/settings.py (sentry_sdk.init)
-- [~] 1.6: Atualizar .env.example com novas variáveis (SENTRY_DSN, REDIS_URL, BACKUP_DIR, APP_VERSION)
-- [~] 1.7: Configurar log rotation em app/settings.py (RotatingFileHandler)
+- [x] 1.4: Configurar Celery em app/settings.py (CELERY_BROKER_URL, CELERY_RESULT_BACKEND, etc)
+- [x] 1.5: Configurar Sentry em app/settings.py (sentry_sdk.init)
+- [x] 1.6: Atualizar .env.example com novas variáveis (SENTRY_DSN, REDIS_URL, BACKUP_DIR, APP_VERSION)
+- [x] 1.7: Configurar log rotation em app/settings.py (RotatingFileHandler)
 
 ## Task 2: Implementar Validadores Customizados
 **Requirement IDs**: 2, 9, 10, 14, 22

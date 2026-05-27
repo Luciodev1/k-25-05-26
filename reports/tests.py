@@ -429,6 +429,34 @@ class ReportDetailedFilterTest(TestCase):
 
 
 class ReportTasksTest(TestCase):
+    def _mock_model(self):
+        model = MagicMock()
+        obj1 = MagicMock(pk=1)
+        obj2 = MagicMock(pk=2)
+        model.objects.filter.return_value.iterator.return_value = [obj1, obj2]
+
+        def make_field(fname, verb):
+            f = MagicMock()
+            f.name = fname
+            f.verbose_name = verb
+            f.auto_created = False
+            f.is_relation = False
+            f.one_to_one = False
+            f.many_to_many = False
+            return f
+        field1 = make_field('name', 'Name')
+        field2 = make_field('description', 'Description')
+        model._meta.get_fields.return_value = [field1, field2]
+        model._meta.verbose_name_plural = 'Models'
+
+        def get_field(fname):
+            f = MagicMock(name=fname)
+            f.verbose_name = fname.title()
+            return f
+        model._meta.get_field.side_effect = get_field
+
+        return model
+
     @patch('django.core.files.storage.default_storage')
     @patch('openpyxl.Workbook')
     def test_generate_large_excel_export(self, mock_workbook, mock_storage):
@@ -436,11 +464,7 @@ class ReportTasksTest(TestCase):
         mock_ws = MagicMock()
         mock_workbook.return_value = mock_wb
         mock_wb.active = mock_ws
-        mock_model = MagicMock()
-        mock_model.objects.filter.return_value.iterator.return_value = [
-            MagicMock(pk=1),
-            MagicMock(pk=2),
-        ]
+        mock_model = self._mock_model()
 
         with patch('reports.tasks.apps.get_model', return_value=mock_model):
             result = generate_large_excel_export('app.Model', [1, 2], 'test.xlsx')
@@ -449,10 +473,15 @@ class ReportTasksTest(TestCase):
         self.assertIn('exports/', result['path'])
         mock_storage.save.assert_called_once()
 
-    def test_generate_large_pdf_export(self):
-        result = generate_large_pdf_export('app.Model', [1, 2, 3], 'test.pdf')
+    @patch('django.core.files.storage.default_storage')
+    def test_generate_large_pdf_export(self, mock_storage):
+        mock_model = self._mock_model()
+        with patch('reports.tasks.apps.get_model', return_value=mock_model):
+            result = generate_large_pdf_export('app.Model', [1, 2], 'test.pdf')
+
         self.assertEqual(result['status'], 'ok')
         self.assertIn('exports/', result['path'])
+        mock_storage.save.assert_called_once()
 
 
 class ReportTenantScopedTest(TestCase):

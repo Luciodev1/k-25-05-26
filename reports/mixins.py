@@ -37,8 +37,10 @@ class ReportExportMixin:
         from reports.tasks import generate_large_excel_export, generate_large_pdf_export
         ids = list(queryset.values_list('pk', flat=True)[:50000])
         model_label = queryset.model._meta.label
+        user_email = getattr(getattr(self, 'request', None), 'user', None)
+        email = user_email.email if user_email and user_email.is_authenticated else None
         if fmt == 'csv':
-            task = generate_large_excel_export.delay(model_label, ids, filename)
+            task = generate_large_excel_export.delay(model_label, ids, filename, email)
         else:
-            task = generate_large_pdf_export.delay(model_label, ids, filename)
+            task = generate_large_pdf_export.delay(model_label, ids, filename, email)
         return JsonResponse({'task_id': task.id, 'status': 'pending'})

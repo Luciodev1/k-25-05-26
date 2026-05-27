@@ -8,17 +8,23 @@ from django.utils.decorators import method_decorator
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(ratelimit(key='ip', rate='5/15m', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='ip', rate='5/15m', method='POST', block=False), name='post')
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if getattr(request, 'limited', False):
-            logger.warning(
-                'Rate limit excedido no login: ip=%s user=%s',
-                request.META.get('REMOTE_ADDR'),
-                request.POST.get('username', ''),
+        ip = request.META.get('REMOTE_ADDR', '')
+        if self._is_blocked(ip):
+            logger.warning('Login bloqueado (cool-down 30min): ip=%s', ip)
+            from django.http import HttpResponse
+            return HttpResponse(
+                'Demasiadas tentativas de login. Aguarde 30 minutos antes de tentar novamente.',
+                status=429,
+                content_type='text/plain; charset=utf-8',
             )
+        if getattr(request, 'limited', False):
+            self._block_ip(ip)
+            logger.warning('Rate limit excedido: ip=%s user=%s', ip, request.POST.get('username', ''))
             from django.http import HttpResponse
             return HttpResponse(
                 'Demasiadas tentativas de login. Aguarde 30 minutos antes de tentar novamente.',
@@ -27,9 +33,23 @@ class CustomLoginView(LoginView):
             )
         return super().dispatch(request, *args, **kwargs)
 
+    def _is_blocked(self, ip: str) -> bool:
+        from django.core.cache import cache
+        return cache.get(f'login_block_{ip}') is not None
+
+    def _block_ip(self, ip: str) -> None:
+        from django.core.cache import cache
+        cache.set(f'login_block_{ip}', True, 1800)
+
+    def _reset_rate_limit(self, ip: str) -> None:
+        from django.core.cache import cache
+        cache.delete(f'login_block_{ip}')
+
     def form_valid(self, form):
         user = form.get_user()
         logger.info('Login bem-sucedido: %s', user.username)
+        ip = self.request.META.get('REMOTE_ADDR', '')
+        self._reset_rate_limit(ip)
         from tenants.models import TenantUser
         tenant_users = list(TenantUser.objects.filter(user=user).select_related('tenant')[:2])
         if len(tenant_users) == 1:
