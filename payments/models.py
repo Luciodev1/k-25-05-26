@@ -52,10 +52,13 @@ class Payment(SoftDeleteModel):
         """Soft delete com limpeza de contas."""
         with transaction.atomic():
             from accounts.models import CustomerAccountEntry, SupplierAccountEntry
+            tenant_filter = {}
+            if self.tenant_id:
+                tenant_filter['tenant'] = self.tenant
             if self.type == 'RECEIPT':
-                CustomerAccountEntry.objects.filter(payment=self).delete()
+                CustomerAccountEntry.objects.filter(payment=self, **tenant_filter).delete()
             else:
-                SupplierAccountEntry.objects.filter(payment=self).delete()
+                SupplierAccountEntry.objects.filter(payment=self, **tenant_filter).delete()
             # Log de auditoria
             from audit.signals import log_action
             log_action(self, 'DELETE')

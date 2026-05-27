@@ -23,7 +23,8 @@ class CustomerAccountListView(LoginRequiredMixin, PermissionRequiredMixin, ListV
         if tenant:
             qs = qs.filter(tenant=tenant)
         self.filterset = CustomerAccountFilter(self.request.GET, queryset=qs)
-        return self.filterset.qs
+        self.full_qs = self.filterset.qs
+        return self.full_qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -33,13 +34,13 @@ class CustomerAccountListView(LoginRequiredMixin, PermissionRequiredMixin, ListV
         if tenant:
             c_qs = c_qs.filter(tenant=tenant)
         customer = get_object_or_404(c_qs, pk=self.kwargs['pk'])
-        entries = self.get_queryset()
-        total_debit = entries.aggregate(total=Sum('debit'))['total'] or 0
-        total_credit = entries.aggregate(total=Sum('credit'))['total'] or 0
+        totals = self.full_qs.aggregate(
+            total_debit=Sum('debit'), total_credit=Sum('credit'),
+        )
         context['customer'] = customer
-        context['total_debit'] = total_debit
-        context['total_credit'] = total_credit
-        context['balance'] = total_credit - total_debit
+        context['total_debit'] = totals['total_debit'] or 0
+        context['total_credit'] = totals['total_credit'] or 0
+        context['balance'] = (totals['total_credit'] or 0) - (totals['total_debit'] or 0)
         return context
 
 
@@ -47,6 +48,11 @@ class CustomerPaymentCreateView(FinanceiroRequiredMixin, CreateView):
     model = Payment
     template_name = 'customer_payment.html'
     form_class = forms.CustomerPaymentForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tenant'] = getattr(self.request, 'tenant', None)
+        return kwargs
 
     def get_initial(self):
         initial = super().get_initial()
@@ -89,7 +95,8 @@ class SupplierAccountListView(LoginRequiredMixin, PermissionRequiredMixin, ListV
         if tenant:
             qs = qs.filter(tenant=tenant)
         self.filterset = SupplierAccountFilter(self.request.GET, queryset=qs)
-        return self.filterset.qs
+        self.full_qs = self.filterset.qs
+        return self.full_qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -99,13 +106,13 @@ class SupplierAccountListView(LoginRequiredMixin, PermissionRequiredMixin, ListV
         if tenant:
             s_qs = s_qs.filter(tenant=tenant)
         supplier = get_object_or_404(s_qs, pk=self.kwargs['pk'])
-        entries = self.get_queryset()
-        total_debit = entries.aggregate(total=Sum('debit'))['total'] or 0
-        total_credit = entries.aggregate(total=Sum('credit'))['total'] or 0
+        totals = self.full_qs.aggregate(
+            total_debit=Sum('debit'), total_credit=Sum('credit'),
+        )
         context['supplier'] = supplier
-        context['total_debit'] = total_debit
-        context['total_credit'] = total_credit
-        context['balance'] = total_debit - total_credit
+        context['total_debit'] = totals['total_debit'] or 0
+        context['total_credit'] = totals['total_credit'] or 0
+        context['balance'] = (totals['total_debit'] or 0) - (totals['total_credit'] or 0)
         return context
 
 
@@ -113,6 +120,11 @@ class SupplierPaymentCreateView(FinanceiroRequiredMixin, CreateView):
     model = Payment
     template_name = 'supplier_payment.html'
     form_class = forms.SupplierPaymentForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['tenant'] = getattr(self.request, 'tenant', None)
+        return kwargs
 
     def get_initial(self):
         initial = super().get_initial()

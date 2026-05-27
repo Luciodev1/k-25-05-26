@@ -44,8 +44,8 @@ class DriverViewTest(TestCase):
         response = self.client.post('/drivers/create/', {
             'name': 'NewDriver',
             'phone': '+244911111111',
-            'truck_plate': 'XX-00-00-XX',
-            'cistern_plate': 'YY-00-00-YY',
+            'truck_plate': 'AA-00-AA-00',
+            'cistern_plate': 'BB-00-BB-00',
         })
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Driver.objects.filter(name='NewDriver').exists())
@@ -60,7 +60,7 @@ class DriverViewTest(TestCase):
         self.client.force_login(self._create_user())
         response = self.client.post(f'/drivers/{self.driver.pk}/update/', {
             'name': 'Updated', 'phone': '+244911111111',
-            'truck_plate': 'XX-00-00-XX', 'cistern_plate': 'YY-00-00-YY',
+            'truck_plate': 'AA-00-AA-00', 'cistern_plate': 'BB-00-BB-00',
         })
         self.assertEqual(response.status_code, 302)
         self.driver.refresh_from_db()
@@ -105,7 +105,7 @@ class DriverFormTest(TestCase):
         from drivers.forms import DriverForm
         form = DriverForm(data={
             'name': 'Test', 'phone': '+244911111111',
-            'truck_plate': 'XX-00-00-XX', 'cistern_plate': 'YY-00-00-YY',
+            'truck_plate': 'AA-00-AA-00', 'cistern_plate': 'BB-00-BB-00',
         })
         self.assertTrue(form.is_valid(), form.errors)
 

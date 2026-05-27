@@ -4,8 +4,8 @@ from app.mixins import SoftDeleteModel
 
 class Category(SoftDeleteModel):
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='categories')
-    name = models.CharField(max_length=200, db_index=True)
-    description = models.TextField(null=True, blank=True)
+    name = models.CharField(max_length=200, db_index=True, verbose_name='Nome')
+    description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

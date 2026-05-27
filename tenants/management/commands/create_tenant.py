@@ -17,8 +17,14 @@ class Command(BaseCommand):
         parser.add_argument('--max-users', type=int, default=10, help='Número máximo de utilizadores')
 
     def handle(self, *args, **options):
+        from django.utils.text import slugify
+
         name = options['name']
         slug = options['slug']
+
+        if slug != slugify(slug):
+            self.stderr.write(self.style.ERROR('Slug inválido. Use apenas letras, números e hífen.'))
+            return
 
         if Tenant.objects.filter(slug=slug).exists():
             self.stderr.write(self.style.ERROR(f'Já existe uma empresa com o slug "{slug}".'))

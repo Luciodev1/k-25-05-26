@@ -325,14 +325,18 @@ class DeliveryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_delivery'
 
     def post(self, request, pk):
+        from django.db.models import ProtectedError
         qs = models.Delivery.objects
         tenant = getattr(request, 'tenant', None)
         if tenant:
             qs = qs.filter(tenant=tenant)
         delivery = get_object_or_404(qs, pk=pk)
         outflow_pk = delivery.outflow_id
-        delivery.delete()
-        messages.success(request, 'Entrega movida para o lixo.')
+        try:
+            delivery.delete()
+            messages.success(request, 'Entrega movida para o lixo.')
+        except ProtectedError:
+            messages.error(request, 'Não é possível eliminar esta entrega porque está associada a outros registos.')
         return redirect('outflows:outflow_detail', pk=outflow_pk)
 
 

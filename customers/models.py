@@ -5,11 +5,11 @@ from app.validators import validate_angolan_nif, email_validator
 
 class Customer(SoftDeleteModel):
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='customers')
-    name = models.CharField(max_length=500, db_index=True)
-    phone = models.CharField(max_length=20, blank=True)
-    nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True)
-    address = models.TextField(blank=True)
-    email = models.EmailField(blank=True, validators=[email_validator], db_index=True)
+    name = models.CharField(max_length=500, db_index=True, verbose_name='Nome')
+    phone = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
+    nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True, verbose_name='NIF')
+    address = models.TextField(blank=True, verbose_name='Endereço')
+    email = models.EmailField(blank=True, validators=[email_validator], db_index=True, verbose_name='Email')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

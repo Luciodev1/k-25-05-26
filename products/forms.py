@@ -35,6 +35,14 @@ class ProductForm(forms.ModelForm):
             self.fields['category'].queryset = self.fields['category'].queryset.filter(tenant=tenant)
             self.fields['brand'].queryset = self.fields['brand'].queryset.filter(tenant=tenant)
 
+    def clean(self):
+        cleaned_data = super().clean()
+        cost_price = cleaned_data.get('cost_price')
+        selling_price = cleaned_data.get('selling_price')
+        if cost_price is not None and selling_price is not None and selling_price < cost_price:
+            raise forms.ValidationError('O preço de venda não pode ser inferior ao preço de custo.')
+        return cleaned_data
+
     def clean_quantity(self):
         quantity = self.cleaned_data.get('quantity')
         if quantity is not None and quantity <= 0:

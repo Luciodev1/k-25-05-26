@@ -17,8 +17,13 @@ class Command(BaseCommand):
             self.stderr.write(self.style.ERROR(f'Ficheiro não encontrado: {path}'))
             return
 
-        parser = ConfigParser()
-        config = parser.parse(path)
+        try:
+            parser = ConfigParser()
+            config = parser.parse(path)
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f'Erro ao analisar config.json: {e}'))
+            return
+
         self.stdout.write(self.style.SUCCESS(f'Config válido: {path.name}'))
         self.stdout.write(f"  Empresa: {config.company.name}")
         self.stdout.write(f"  Debug: {config.debug}")
@@ -28,5 +33,8 @@ class Command(BaseCommand):
             settings.COMPANY_INFO['NAME'] = config.company.name
 
         if options.get('export'):
-            ConfigPrettyPrinter().to_file(config, Path(options['export']))
-            self.stdout.write(self.style.SUCCESS(f'Exportado para {options["export"]}'))
+            try:
+                ConfigPrettyPrinter().to_file(config, Path(options['export']))
+                self.stdout.write(self.style.SUCCESS(f'Exportado para {options["export"]}'))
+            except Exception as e:
+                self.stderr.write(self.style.ERROR(f'Erro ao exportar config: {e}'))

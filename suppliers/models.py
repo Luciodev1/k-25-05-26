@@ -5,10 +5,10 @@ from app.validators import validate_angolan_nif, email_validator
 
 class Supplier(SoftDeleteModel):
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='suppliers')
-    name = models.CharField(max_length=500, db_index=True)
-    description = models.TextField(null=True, blank=True)
-    nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True)
-    email = models.EmailField(blank=True, validators=[email_validator], db_index=True)
+    name = models.CharField(max_length=500, db_index=True, verbose_name='Nome')
+    description = models.TextField(null=True, blank=True, verbose_name='Descrição')
+    nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True, verbose_name='NIF')
+    email = models.EmailField(blank=True, validators=[email_validator], db_index=True, verbose_name='Email')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

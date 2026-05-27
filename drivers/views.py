@@ -73,3 +73,4 @@ class DriverHardDeleteView(BaseHardDeleteView):
     redirect_url = 'drivers:driver_trash'
     permission_required = 'drivers.delete_driver'
     success_message = "Motorista eliminado permanentemente!"
+    protected_error_message = "Não é possível eliminar permanentemente este motorista porque está associado a entregas."

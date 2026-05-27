@@ -31,8 +31,11 @@ class CustomerPaymentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         self.fields['customer'].disabled = True
+        if tenant:
+            self.fields['customer'].queryset = self.fields['customer'].queryset.filter(tenant=tenant)
 
 
 class SupplierPaymentForm(forms.ModelForm):
@@ -61,6 +64,9 @@ class SupplierPaymentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
         self.fields['supplier'].disabled = True
+        if tenant:
+            self.fields['supplier'].queryset = self.fields['supplier'].queryset.filter(tenant=tenant)
 

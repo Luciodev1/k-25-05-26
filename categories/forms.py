@@ -1,4 +1,5 @@
 from django import forms
+from django.db import IntegrityError
 from . import models
 
 
@@ -15,3 +16,9 @@ class CategoryForm(forms.ModelForm):
             'name': 'Nome',
             'description': 'Descrição',
         }
+
+    def save(self, commit=True):
+        try:
+            return super().save(commit=commit)
+        except IntegrityError:
+            raise forms.ValidationError({'name': 'Já existe uma categoria com este nome para esta empresa.'})

@@ -148,18 +148,26 @@ class ProductBulkDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
         raise PermissionDenied("Nao tem permissao para eliminar produtos.")
 
     def post(self, request, *args, **kwargs):
+        from django.db.models import ProtectedError
         ids = request.POST.getlist('ids')
         if ids:
             with transaction.atomic():
                 count = 0
+                errors = []
                 qs = models.Product.objects.filter(id__in=ids)
                 tenant = getattr(request, 'tenant', None)
                 if tenant:
                     qs = qs.filter(tenant=tenant)
                 for product in qs:
-                    product.delete()
-                    count += 1
-            messages.success(request, f"{count} produto(s) eliminado(s) com sucesso!")
+                    try:
+                        product.delete()
+                        count += 1
+                    except ProtectedError:
+                        errors.append(str(product))
+            if count:
+                messages.success(request, f"{count} produto(s) eliminado(s) com sucesso!")
+            if errors:
+                messages.error(request, f"Não foi possível eliminar: {', '.join(errors)}")
         return redirect('products:product_list')
 
 

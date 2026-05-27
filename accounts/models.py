@@ -20,9 +20,9 @@ class BaseAccountEntry(Model):
 
 class CustomerAccountEntry(BaseAccountEntry):
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='customer_account_entries')
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='account_entries')
-    outflow = models.ForeignKey(Outflow, on_delete=models.SET_NULL, null=True, blank=True, related_name='account_entries')
-    payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='customer_account_entries')
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='account_entries', verbose_name='Cliente')
+    outflow = models.ForeignKey(Outflow, on_delete=models.SET_NULL, null=True, blank=True, related_name='account_entries', verbose_name='Saída')
+    payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='customer_account_entries', verbose_name='Pagamento')
 
     class Meta:
         verbose_name = 'Lançamento de Cliente'
@@ -47,9 +47,9 @@ class CustomerAccountEntry(BaseAccountEntry):
 
 class SupplierAccountEntry(BaseAccountEntry):
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='supplier_account_entries')
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='account_entries')
-    inflow = models.ForeignKey(Inflow, on_delete=models.SET_NULL, null=True, blank=True, related_name='account_entries')
-    payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='supplier_account_entries')
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='account_entries', verbose_name='Fornecedor')
+    inflow = models.ForeignKey(Inflow, on_delete=models.SET_NULL, null=True, blank=True, related_name='account_entries', verbose_name='Entrada')
+    payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='supplier_account_entries', verbose_name='Pagamento')
 
     class Meta:
         verbose_name = 'Lançamento de Fornecedor'

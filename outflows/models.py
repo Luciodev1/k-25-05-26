@@ -26,19 +26,19 @@ class Outflow(SoftDeleteModel):
     ]
 
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='outflows')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='outflows')
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='outflows')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='outflows', verbose_name='Produto')
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='outflows', verbose_name='Cliente')
     quantity = models.DecimalField(
         max_digits=20, decimal_places=4,
-        validators=[MinValueValidator(0.0001)],
+        validators=[MinValueValidator(0.0001)], verbose_name='Quantidade',
     )
-    quantity_delivered = models.DecimalField(max_digits=20, decimal_places=4, default=0, db_index=True)
+    quantity_delivered = models.DecimalField(max_digits=20, decimal_places=4, default=0, db_index=True, verbose_name='Quantidade Entregue')
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True,
         verbose_name='Estado',
     )
     price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, verbose_name='Preço de Saída')
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -85,17 +85,14 @@ class Outflow(SoftDeleteModel):
         return f'{self.product} - {self.customer} ({self.quantity})'
 
     def delete(self, using=None, keep_parents=False):
-        """
-        Soft delete com limpeza consistente:
-        1. Apaga os lançamentos de conta do cliente.
-        2. Soft-delete de cada entrega (restaura stock atomicamente).
-        3. Regista auditoria e executa o soft-delete.
-        """
         with transaction.atomic():
             from accounts.models import CustomerAccountEntry
-            CustomerAccountEntry.objects.filter(outflow=self).delete()
+            tenant_filter = {}
+            if self.tenant_id:
+                tenant_filter['tenant'] = self.tenant
+            CustomerAccountEntry.objects.filter(outflow=self, **tenant_filter).delete()
 
-            for delivery in self.deliveries.all():
+            for delivery in self.deliveries.select_for_update().all():
                 delivery.delete()
 
             self.quantity_delivered = 0

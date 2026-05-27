@@ -18,6 +18,12 @@ class Command(BaseCommand):
             default=str(settings.BASE_DIR / 'backups'),
             help='Diretorio para guardar os backups (default: backups/)',
         )
+        parser.add_argument(
+            '--keep',
+            type=int,
+            default=10,
+            help='Número de backups a manter (default: 10)',
+        )
 
     def handle(self, *args, **options):
         db_path = Path(settings.DATABASES['default']['NAME'])
@@ -27,6 +33,7 @@ class Command(BaseCommand):
 
         output_dir = Path(options['output_dir'])
         output_dir.mkdir(parents=True, exist_ok=True)
+        keep = options['keep']
 
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_name = f'db_backup_{timestamp}.sqlite3'
@@ -39,9 +46,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(msg))
             logger.info(msg)
 
-            # Limpar backups antigos (manter ultimos 10)
             backups = sorted(output_dir.glob('db_backup_*.sqlite3'), reverse=True)
-            for old_backup in backups[10:]:
+            for old_backup in backups[keep:]:
                 old_backup.unlink()
                 logger.info(f'Backup antigo removido: {old_backup}')
 
