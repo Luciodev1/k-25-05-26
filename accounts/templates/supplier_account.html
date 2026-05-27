@@ -2,7 +2,7 @@
 {% block title %}Extrato: {{ supplier.name }} | SGE{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce }}">
     /* Printing logic based on template report.html */
     @media print {
         @page { size: portrait; margin: 10mm; }

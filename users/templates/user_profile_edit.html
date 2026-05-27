@@ -241,7 +241,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   var input = document.querySelector('#{{ profile_form.avatar.id_for_label }}');
   if (!input) return;

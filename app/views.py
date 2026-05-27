@@ -6,6 +6,7 @@ from django.db.models import Sum, F, Value, DecimalField
 from django.db.models.functions import Coalesce, TruncMonth
 from django.db.models import Count
 from django.utils import timezone
+from django.http import JsonResponse
 from products.models import Product
 from suppliers.models import Supplier
 from customers.models import Customer
@@ -16,6 +17,31 @@ from accounts.models import CustomerAccountEntry, SupplierAccountEntry
 from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
+
+
+def health_check(request):
+    from django.db import connection
+    db_ok = False
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+            db_ok = cursor.fetchone() is not None
+    except Exception as e:
+        logger.exception('Health check DB failed')
+        return JsonResponse({'status': 'unhealthy', 'database': str(e)}, status=503)
+    cache_ok = None
+    try:
+        from django.core.cache import cache
+        cache.set('__health__', 'ok', 5)
+        cache_ok = cache.get('__health__') == 'ok'
+    except Exception:
+        cache_ok = False
+    return JsonResponse({
+        'status': 'healthy' if db_ok else 'unhealthy',
+        'database': db_ok,
+        'cache': cache_ok,
+        'version': '1.0.0',
+    })
 
 
 def custom_404(request, exception):

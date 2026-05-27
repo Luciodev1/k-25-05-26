@@ -45,7 +45,7 @@
   {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const typeSelect = document.getElementById('id_type');
     const customerGroup = document.getElementById('customer-group');

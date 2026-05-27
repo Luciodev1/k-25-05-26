@@ -105,7 +105,7 @@
                     {% if not tu.is_primary %}
                       <form method="post" action="{% url 'tenants:tenant_user_remove' pk=tenant.pk user_pk=tu.user.pk %}" class="d-inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remover {{ tu.user.username }} da empresa?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remover {{ tu.user.username|escapejs }} da empresa?')">
                           <i class="bi bi-person-x"></i>
                         </button>
                       </form>
