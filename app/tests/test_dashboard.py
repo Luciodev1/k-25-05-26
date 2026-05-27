@@ -9,6 +9,7 @@ from customers.models import Customer
 from suppliers.models import Supplier
 from inflows.models import Inflow
 from outflows.models import Outflow
+from tenants.models import Tenant, TenantUser
 
 
 class DashboardViewTest(TestCase):
@@ -99,3 +100,35 @@ class ErrorHandlerTest(TestCase):
     def test_404_page(self):
         response = self.client.get('/this-page-does-not-exist-999/')
         self.assertEqual(response.status_code, 404)
+
+
+class DashboardTenantScopedTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('50'), tenant=cls.tenant,
+        )
+        Inflow.objects.create(
+            product=cls.product, supplier=cls.supplier,
+            quantity=Decimal('20'), price=Decimal('10'), tenant=cls.tenant,
+        )
+        Outflow.objects.create(
+            product=cls.product, customer=cls.customer,
+            quantity=Decimal('5'), price=Decimal('15'), tenant=cls.tenant,
+        )
+
+    def test_dashboard_with_tenant(self):
+        self.client.force_login(self.user)
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_products'], 1)
+        self.assertEqual(response.context['total_suppliers'], 1)

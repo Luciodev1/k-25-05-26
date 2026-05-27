@@ -11,6 +11,7 @@ from customers.models import Customer
 from suppliers.models import Supplier
 from outflows.models import Outflow, Delivery
 from inflows.models import Inflow
+from tenants.models import Tenant, TenantUser
 from reports.tasks import generate_large_excel_export, generate_large_pdf_export
 
 
@@ -224,6 +225,194 @@ class ReportContentTest(TestCase):
         response = self.client.get('/reports/balances/?export=excel')
         self.assertEqual(response.status_code, 200)
         self.assertIn('application/vnd.openxmlformats', response['Content-Type'])
+
+
+class ReportPermissionTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.user = User.objects.create_user('noperm', 'noperm@test.com', 'pass')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
+
+    def test_report_index_permission_denied(self):
+        self.client.force_login(self.user)
+        response = self.client.get('/reports/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_balances_report_permission_denied(self):
+        self.client.force_login(self.user)
+        response = self.client.get('/reports/balances/')
+        self.assertEqual(response.status_code, 403)
+
+    def test_task_status_permission_denied(self):
+        self.client.force_login(self.user)
+        response = self.client.get('/reports/task-status/abc123/')
+        self.assertEqual(response.status_code, 403)
+
+    @patch('celery.result.AsyncResult')
+    def test_task_status_success(self, mock_async):
+        mock_async.return_value.status = 'PENDING'
+        mock_async.return_value.ready.return_value = False
+        self.client.force_login(self.user)
+        perm = Permission.objects.get(codename='view_outflow')
+        self.user.user_permissions.add(perm)
+        response = self.client.get('/reports/task-status/abc123/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['task_id'], 'abc123')
+        self.assertEqual(data['status'], 'PENDING')
+
+
+class ReportDetailedFilterTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser('admin', 'admin@test.com', 'pass')
+        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
+        cls.brand = Brand.objects.create(name='B')
+        cls.cat = Category.objects.create(name='C')
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
+        cls.product = Product.objects.create(
+            title='P', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'), quantity=Decimal('100'),
+            tenant=cls.tenant,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_outflows_report_with_tenant_and_product_filter(self):
+        Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        response = self.client.get(
+            f'/reports/outflows-by-customer/?product={self.product.pk}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_deliveries_report_with_date_filters(self):
+        outflow = Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('10'), tenant=self.tenant)
+        today = date.today().isoformat()
+        response = self.client.get(
+            f'/reports/deliveries/?start_date={today}&end_date={today}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_deliveries_report_with_customer_filter(self):
+        outflow = Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
+        response = self.client.get(
+            f'/reports/deliveries/?customer={self.customer.pk}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_deliveries_report_with_product_filter(self):
+        outflow = Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
+        response = self.client.get(
+            f'/reports/deliveries/?product={self.product.pk}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_deliveries_report_delivered_status(self):
+        outflow = Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('10'), tenant=self.tenant)
+        response = self.client.get('/reports/deliveries/?status=delivered')
+        self.assertEqual(response.status_code, 200)
+
+    def test_pending_outflows_in_deliveries(self):
+        outflow = Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
+        response = self.client.get('/reports/deliveries/?status=pending')
+        self.assertEqual(response.status_code, 200)
+
+    def test_customer_account_with_date_filters(self):
+        Outflow.objects.create(
+            product=self.product, customer=self.customer,
+            quantity=Decimal('10'), price=Decimal('15'), tenant=self.tenant,
+        )
+        today = date.today().isoformat()
+        response = self.client.get(
+            f'/reports/customer-account/?start_date={today}&end_date={today}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_customer_account_htmx(self):
+        response = self.client.get(
+            '/reports/customer-account/', HTTP_HX_REQUEST='true'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_supplier_account_with_date_filters(self):
+        Inflow.objects.create(
+            supplier=self.supplier, product=self.product,
+            quantity=Decimal('20'), price=Decimal('10'), tenant=self.tenant,
+        )
+        today = date.today().isoformat()
+        response = self.client.get(
+            f'/reports/supplier-account/?start_date={today}&end_date={today}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_supplier_account_export_excel(self):
+        Inflow.objects.create(
+            supplier=self.supplier, product=self.product,
+            quantity=Decimal('20'), price=Decimal('10'), tenant=self.tenant,
+        )
+        response = self.client.get('/reports/supplier-account/?export=excel')
+        self.assertEqual(response.status_code, 200)
+
+    def test_supplier_account_export_pdf(self):
+        Inflow.objects.create(
+            supplier=self.supplier, product=self.product,
+            quantity=Decimal('20'), price=Decimal('10'), tenant=self.tenant,
+        )
+        response = self.client.get('/reports/supplier-account/?export=pdf')
+        self.assertEqual(response.status_code, 200)
+
+    def test_balances_pdf_customers_section(self):
+        response = self.client.get('/reports/balances/?export=pdf&section=customers')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_balances_pdf_suppliers_section(self):
+        response = self.client.get('/reports/balances/?export=pdf&section=suppliers')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_balances_pdf_all_section(self):
+        response = self.client.get('/reports/balances/?export=pdf')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_balances_with_date_filters(self):
+        today = date.today().isoformat()
+        response = self.client.get(
+            f'/reports/balances/?start_date={today}&end_date={today}'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_balances_excel_suppliers_section(self):
+        response = self.client.get('/reports/balances/?export=excel&section=suppliers')
+        self.assertEqual(response.status_code, 200)
 
 
 class ReportTasksTest(TestCase):

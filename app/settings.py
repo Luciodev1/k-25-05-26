@@ -25,6 +25,15 @@ if not SECRET_KEY:
     raise ValueError("A variavel de ambiente DJANGO_SECRET_KEY nao esta definida.")
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
+# Always enable debug mode when running tests (pytest or manage.py test)
+if not DEBUG:
+    import sys as _sys
+    DEBUG = (
+        'pytest' in _sys.modules
+        or 'PYTEST_CURRENT_TEST' in os.environ
+        or (len(_sys.argv) > 1 and _sys.argv[1] in ('test', 'pytest'))
+    )
+    del _sys
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
