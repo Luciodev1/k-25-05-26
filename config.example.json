@@ -1,0 +1,21 @@
+{
+  "company": {
+    "name": "K - Gestão de Stocks e Contas",
+    "location": "Luanda, Angola",
+    "email": "contato@k-gestao.ao",
+    "phone": "+244 923 000 000"
+  },
+  "database": {
+    "engine": "django.db.backends.sqlite3",
+    "name": "db.sqlite3"
+  },
+  "redis": {
+    "url": "redis://127.0.0.1:6379/0"
+  },
+  "celery": {
+    "broker_url": "redis://127.0.0.1:6379/0",
+    "result_backend": "redis://127.0.0.1:6379/0"
+  },
+  "debug": false,
+  "allowed_hosts": ["localhost", "127.0.0.1"]
+}

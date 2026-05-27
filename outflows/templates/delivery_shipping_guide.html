@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Guia de Remessa #{{ delivery.shipping_guide_number|default:delivery.id }} - SGE</title>
+    <style>
+        :root {
+            --primary-color: #000;
+            --border-color: #333;
+            --header-bg: #eeeeee;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 0;
+            color: #000;
+            background: #f0f2f5;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            margin: 10mm auto;
+            background: white;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Cabeçalho Superior */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .logo-box {
+            width: 50%;
+            vertical-align: top;
+        }
+
+        .logo-box h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .doc-info {
+            width: 50%;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .doc-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--primary-color);
+            display: inline-block;
+        }
+
+        /* Blocos de Endereço */
+        .address-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .address-box {
+            border: 1.5px solid var(--border-color);
+            padding: 12px;
+            min-height: 90px;
+        }
+
+        .address-box strong {
+            display: block;
+            margin-bottom: 8px;
+            text-decoration: underline;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        /* Tabela de Itens */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            background: var(--header-bg);
+            border: 1.5px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .items-table td {
+            border: 1.5px solid var(--border-color);
+            padding: 12px 10px;
+            vertical-align: top;
+            font-size: 12px;
+        }
+
+        /* Dados Logísticos */
+        .logistics-box {
+            border: 1.5px solid var(--border-color);
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #fafafa;
+        }
+
+        .logistics-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Assinaturas */
+        .signatures {
+            margin-top: 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            text-align: center;
+        }
+
+        .sig-line {
+            border-top: 1.5px solid #000;
+            padding-top: 8px;
+            margin-top: 50px;
+            font-weight: bold;
+        }
+
+        @media print {
+            body { background: none; }
+            .no-print { display: none; }
+            .page { margin: 0; box-shadow: none; width: 100%; padding: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <table class="header-table">
+        <tr>
+            <td class="logo-box">
+                <h1>SGE</h1>
+                <p><strong>Sistema de Gestão de Stocks</strong><br>
+                Luanda, Angola</p>
+            </td>
+            <td class="doc-info">
+                <div class="doc-title">Guia de Remessa</div>
+                <p style="font-size: 12px; margin-top: 10px;">
+                    <strong>Nº Documento:</strong> {{ delivery.shipping_guide_number|default:"(Não Atribuído)" }}<br>
+                    <strong>Data de Saída:</strong> {{ delivery.delivery_date|date:"d/m/Y" }} {{ delivery.delivered_at|date:"H:i" }}<br>
+                    <strong>Ref. Pedido:</strong> #OUT-{{ delivery.outflow.id }}
+                </p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="address-container">
+        <div class="address-box">
+            <strong>ORIGEM (Carga)</strong>
+            {{ delivery.origin|default:"Estaleiro Central - SGE" }}<br>
+            Responsável: {{ user.get_full_name|default:user.username }}
+        </div>
+        <div class="address-box">
+            <strong>DESTINO (Descarga)</strong>
+            Cliente: {{ delivery.outflow.customer.name }}<br>
+            Local: {{ delivery.destination|default:"Instalações do Cliente" }}<br>
+            NIF: {{ delivery.outflow.customer.nif|default:"Consumidor Final" }}
+        </div>
+    </div>
+
+    <div class="logistics-box">
+        <div class="logistics-title">INFORMAÇÕES DE TRANSPORTE</div>
+        <div class="grid-3">
+            <div><strong>Motorista:</strong><br>{{ delivery.driver.name|default:"N/A" }}</div>
+            <div><strong>Viatura (Camião):</strong><br>{{ delivery.driver.truck_plate|default:"N/A" }}</div>
+            <div><strong>Reboque/Cisterna:</strong><br>{{ delivery.driver.cistern_plate|default:"N/A" }}</div>
+        </div>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 20%;">Referência</th>
+                <th style="width: 50%;">Designação do Produto</th>
+                <th style="width: 10%;">Unidade</th>
+                <th style="width: 20%;">Quantidade</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ delivery.outflow.product.category.name|slice:":3"|upper }}-{{ delivery.outflow.product.id }}</td>
+                <td>{{ delivery.outflow.product.title }}</td>
+                <td>UN</td>
+                <td style="font-weight: bold; font-size: 14px;">
+                    {% if delivery.is_confirmed %}
+                        {{ delivery.actual_quantity|floatformat:"g" }}
+                    {% else %}
+                        {{ delivery.quantity|floatformat:"g" }} <br>
+                        <small style="font-weight: normal; font-size: 8px; color: #666;">(Previsão)</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% if not delivery.is_confirmed %}
+            <tr>
+                <td colspan="3" style="text-align: right; border-right: none;"><strong>PESO REAL DESCARREGADO (Balança):</strong></td>
+                <td style="border-left: none;">____________________</td>
+            </tr>
+            {% endif %}
+            <!-- Espaço em branco para manter o layout -->
+            {% for i in "12" %}
+            <tr><td style="border:none;">&nbsp;</td><td style="border:none;">&nbsp;</td><td style="border:none;">&nbsp;</td><td style="border:none;">&nbsp;</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-bottom: 30px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+        <strong>Observações / Notas de Entrega:</strong><br>
+        <p style="margin-top: 5px; color: #444;">
+            {% if delivery.description %}
+                {{ delivery.description }}
+            {% else %}
+                Entrega referente ao pedido #OUT-{{ delivery.outflow.id }}. 
+                Estado: {{ delivery.outflow.status_display }}.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="signatures">
+        <div>
+            <div class="sig-line">O Motorista</div>
+            <small>(Assinatura legível)</small>
+        </div>
+        <div>
+            <div class="sig-line">Recebido por (Carimbo e Assinatura)</div>
+            <small>Data: ____/____/2026</small>
+        </div>
+    </div>
+
+    <div style="margin-top: 50px; font-size: 10px; text-align: center; color: #999; border-top: 1px solid #eee; padding-top: 10px;">
+        SGE v4.0 Premium | Documento processado por computador | Licenciado para: {{ delivery.outflow.customer.name }}
+    </div>
+</div>
+
+<div class="no-print" style="position: fixed; bottom: 20px; right: 20px;">
+    <button class="js-print-trigger" style="padding: 12px 30px; cursor: pointer; font-weight: bold; background: #000; color: white; border: none; border-radius: 50px; shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <i class="bi bi-printer"></i> IMPRIMIR AGORA
+    </button>
+</div>
+
+</body>
+</html>

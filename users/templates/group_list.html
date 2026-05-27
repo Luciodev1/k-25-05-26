@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Grupos — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-collection"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Grupos de Permissoes</h1><span class="text-muted small">Gerir grupos e permissoes do sistema</span></div>
+  </div>
+  {% if perms.auth.add_group %}<a href="{% url 'users:group_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo Grupo</a>{% endif %}
+</div>
+<div class="card"><div class="card-body">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr><th>Nome</th><th>Permissoes</th><th>Membros</th><th class="text-end">Acoes</th></tr></thead>
+      <tbody>
+        {% for g in groups %}<tr>
+          <td class="fw-semibold">{{ g.name }}</td>
+          <td><span class="badge bg-body-secondary text-body">{{ g.permissions.count }}</span></td>
+          <td><span class="badge bg-body-secondary text-body">{{ g.user_set.count }}</span></td>
+          <td class="text-end">
+            {% if perms.auth.change_group %}<a href="{% url 'users:group_update' g.pk %}" class="btn-action text-primary" title="Editar"><i class="bi bi-pencil"></i></a>{% endif %}
+            {% if perms.auth.delete_group %}<a href="{% url 'users:group_delete' g.pk %}" class="btn-action text-danger ms-2" title="Eliminar"><i class="bi bi-trash3"></i></a>{% endif %}
+          </td>
+        </tr>{% empty %}
+        <tr><td colspan="4"><div class="text-center py-4 text-muted"><i class="bi bi-collection fs-1 d-block mb-2"></i>Nenhum grupo encontrado.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div></div>
+{% endblock %}

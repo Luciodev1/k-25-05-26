@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Auditoria — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-shield-check"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Auditoria</h1><span class="text-muted small">Registo de todas as alteracoes no sistema</span></div>
+  </div>
+</div>
+
+<div class="card mb-4"><div class="card-body py-3">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label">Acao</label>
+      <select name="action" class="form-select">
+        <option value="">Todas</option>
+        {% for val, label in action_choices %}<option value="{{ val }}" {% if action_filter == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Modelo</label>
+      <select name="model" class="form-select">
+        <option value="">Todos</option>
+        {% for m in model_choices %}<option value="{{ m }}" {% if model_filter == m %}selected{% endif %}>{{ m }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+    </div>
+  </form>
+</div></div>
+
+<div class="card"><div class="card-body">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead><tr>
+        <th>Data/Hora</th>
+        <th>Acao</th>
+        <th>Modelo</th>
+        <th>Objeto</th>
+        <th>Utilizador</th>
+      </tr></thead>
+      <tbody>
+        {% for log in logs %}<tr>
+          <td class="small">{{ log.timestamp|date:"d/m/Y H:i:s" }}</td>
+          <td>
+            {% if log.action == 'CREATE' %}<span class="badge bg-success">Criacao</span>
+            {% elif log.action == 'UPDATE' %}<span class="badge bg-warning text-dark">Alteracao</span>
+            {% elif log.action == 'DELETE' %}<span class="badge bg-danger">Eliminacao</span>
+            {% endif %}
+          </td>
+          <td><span class="badge bg-body-secondary text-body">{{ log.model_name }}</span></td>
+          <td class="fw-semibold">{{ log.object_repr|truncatechars:60 }}</td>
+          <td>{{ log.user|default:"Sistema" }}</td>
+        </tr>{% empty %}
+        <tr><td colspan="5"><div class="sge-empty-state py-4"><i class="bi bi-shield-check fs-1 text-muted"></i><p class="mt-2 text-muted">Nenhum registo de auditoria encontrado.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if is_paginated %}{% include 'components/_pagination.html' %}{% endif %}
+</div></div>
+{% endblock %}

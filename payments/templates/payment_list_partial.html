@@ -1,0 +1,21 @@
+<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr>
+  <th>Data</th><th>Tipo</th><th>Entidade</th><th>Método</th><th class="text-end">Valor</th><th>Descrição</th><th class="text-end">Ações</th>
+</tr></thead><tbody>
+  {% for p in payments %}<tr>
+    <td class="text-muted small">{{ p.date|date:"d/m/Y" }}</td>
+    <td>
+      {% if p.type == 'RECEIPT' %}<span class="badge bg-success-subtle text-success"><i class="bi bi-arrow-down-left me-1"></i>{{ p.get_type_display }}</span>
+      {% else %}<span class="badge bg-danger-subtle text-danger"><i class="bi bi-arrow-up-right me-1"></i>{{ p.get_type_display }}</span>{% endif %}
+    </td>
+    <td class="fw-semibold">{% if p.customer %}{{ p.customer.name }}{% else %}{{ p.supplier.name }}{% endif %}</td>
+    <td class="small">{{ p.get_payment_method_display }}</td>
+    <td class="text-end fw-bold {% if p.type == 'RECEIPT' %}text-success{% else %}text-danger{% endif %}">{{ p.amount|floatformat:"2g" }}</td>
+    <td class="text-muted small">{{ p.description|default:"—" }}</td>
+    <td class="text-end"><div class="d-flex justify-content-end gap-2">
+      {% if perms.payments.change_payment %}<a href="{% url 'payments:payment_update' p.pk %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>{% endif %}
+      {% if perms.payments.delete_payment %}<button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'payments:payment_delete' p.pk %}" data-delete-message="Tem certeza que deseja eliminar este pagamento?"><i class="bi bi-trash3"></i></button>{% endif %}
+    </div></td>
+  </tr>{% empty %}<tr><td colspan="7"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-cash-stack"></i></div><div class="text-muted small">Nenhum pagamento registado.</div></div></td></tr>{% endfor %}
+</tbody></table></div>
+
+{% include 'components/_pagination.html' %}

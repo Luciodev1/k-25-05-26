@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block title %}Detalhes da Saída — SGE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Premium Printing Logic based on detalhes de entregas.html */
+    @media print {
+        @page { size: portrait; margin: 10mm; }
+        :root {
+            --primary-color: #1a2a3a;
+            --secondary-color: #f4f7f9;
+            --accent-color: #e67e22;
+            --success-color: #27ae60;
+            --border-color: #dcdde1;
+        }
+        body, .sge-wrapper, .sge-content, .sge-header, .no-print, #sidebarToggle, .sge-sidebar, .messages-container {
+            background: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important;
+        }
+        .sge-sidebar, .sge-header, .no-print, .messages-container, .page-header, .btn-action, .pagination { 
+            display: none !important; 
+        }
+        .sge-content { margin-left: 0 !important; display: block !important; }
+
+        .report-print-container {
+            display: block !important;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+            color: #2f3640 !important;
+            background: white !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+        .report-header {
+            display: flex !important; justify-content: space-between !important; align-items: flex-start !important;
+            border-bottom: 2px solid var(--primary-color) !important;
+            padding-bottom: 10px !important; margin-bottom: 20px !important;
+        }
+        .brand h1 { margin: 0 !important; font-size: 24px !important; color: var(--primary-color) !important; letter-spacing: 1px !important; }
+        .report-info { text-align: right !important; }
+        .report-info h2 { margin: 0 !important; color: var(--primary-color) !important; font-size: 14px !important; text-transform: uppercase !important; }
+        
+        .summary-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 10px !important; margin-bottom: 20px !important; }
+        .print-card { border: 1px solid var(--border-color) !important; padding: 10px !important; text-align: center !important; border-radius: 4px !important; background: var(--secondary-color) !important; }
+        .print-card span { display: block !important; font-size: 10px !important; text-transform: uppercase !important; color: #7f8c8d !important; margin-bottom: 5px !important; }
+        .print-card strong { font-size: 14px !important; color: var(--primary-color) !important; }
+
+        .details-section { display: flex !important; gap: 20px !important; margin-bottom: 25px !important; }
+        .details-box { flex: 1 !important; border: 1px solid var(--border-color) !important; border-radius: 4px !important; overflow: hidden !important; }
+        .details-box-header { background: var(--primary-color) !important; color: white !important; padding: 6px 10px !important; font-weight: bold !important; font-size: 11px !important; -webkit-print-color-adjust: exact; }
+        .details-content { padding: 10px !important; }
+        .data-row { display: flex !important; justify-content: space-between !important; padding: 4px 0 !important; border-bottom: 1px dashed #eee !important; }
+        .data-label { font-weight: bold !important; color: #555 !important; }
+
+        .print-badge { padding: 2px 8px !important; border-radius: 10px !important; font-size: 10px !important; font-weight: bold !important; text-transform: uppercase !important; border: 1px solid #ddd !important; -webkit-print-color-adjust: exact; }
+        .pb-pending { background: #fff3e0 !important; color: #e67e22 !important; border-color: #ffe0b2 !important; }
+        .pb-success { background: #e8f5e9 !important; color: #2e7d32 !important; border-color: #c8e6c9 !important; }
+
+        .print-table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px !important; }
+        .print-table th { background-color: #f8f9fa !important; color: var(--primary-color) !important; text-align: left !important; padding: 10px 8px !important; border-bottom: 2px solid var(--border-color) !important; font-size: 10px !important; -webkit-print-color-adjust: exact; }
+        .print-table td { padding: 10px 8px !important; border-bottom: 1px solid var(--border-color) !important; vertical-align: middle !important; font-size: 10px !important; }
+        
+        .print-footer { margin-top: 50px !important; border-top: 1px solid var(--border-color) !important; padding-top: 10px !important; text-align: center !important; font-size: 9px !important; color: #95a5a6 !important; }
+        .signature-section { margin-top: 50px !important; display: flex !important; justify-content: space-around !important; text-align: center !important; }
+        .signature-box { border-top: 1px solid #333 !important; width: 200px !important; padding-top: 5px !important; }
+    }
+    .report-print-container { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Screen View -->
+<div class="no-print">
+    <div class="page-header">
+      <div class="page-header-title">
+        <a href="{% url 'outflows:outflow_list' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+        <div><h1 class="fw-bold mb-0 fs-5">Detalhes da Saída</h1><span class="text-muted small">Informações completas do pedido</span></div>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-dark js-print-trigger"><i class="bi bi-printer me-1"></i>Imprimir Detalhes</button>
+        <a href="{% url 'outflows:outflow_update' outflow.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+        {% if outflow.quantity_pending > 0 %}
+        <a href="{% url 'outflows:delivery_create' outflow.id %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Registar Entrega</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-8">
+        <div class="card h-100"><div class="card-body p-4">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="sge-stat-label">Produto</label>
+              <h4 class="fw-bold text-accent mb-0">{{ outflow.product.title }}</h4>
+            </div>
+            <div class="col-md-6">
+              <label class="sge-stat-label">Cliente</label>
+              <h4 class="fw-bold mb-0">{{ outflow.customer.name }}</h4>
+            </div>
+            <div class="col-md-3">
+              <label class="sge-stat-label">Qtd Total</label>
+              <div class="fs-5 fw-bold">{{ outflow.quantity|floatformat:"g" }}</div>
+            </div>
+            <div class="col-md-3">
+              <label class="sge-stat-label">Entregue</label>
+              <div class="fs-5 fw-bold text-success">{{ outflow.quantity_delivered|floatformat:"g" }}</div>
+            </div>
+            <div class="col-md-3">
+              <label class="sge-stat-label">Pendente</label>
+              <div class="fs-5 fw-bold text-danger">{{ outflow.quantity_pending|floatformat:"g" }}</div>
+            </div>
+            <div class="col-md-3">
+              <label class="sge-stat-label">Estado</label>
+              <div>
+                {% if outflow.quantity_delivered == 0 %}<span class="badge bg-warning-subtle text-warning">Pendente</span>
+                {% elif outflow.quantity_delivered < outflow.quantity %}<span class="badge bg-info-subtle text-info">Parcial</span>
+                {% else %}<span class="badge bg-success-subtle text-success">Concluído</span>{% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="sge-stat-label">Preço Unitário</label>
+              <div class="fs-5 fw-bold">{{ outflow.price|floatformat:"2g" }} <span class="text-muted small fw-normal">AO</span></div>
+            </div>
+            <div class="col-md-6">
+              <label class="sge-stat-label">Data do Pedido</label>
+              <div class="text-muted">{{ outflow.created_at|date:"d/m/Y H:i" }}</div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header bg-transparent border-bottom py-3"><h6 class="fw-bold mb-0">Notas / Observações</h6></div>
+          <div class="card-body"><p class="text-muted small mb-0">{{ outflow.description|default:"Sem observações registadas." }}</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-body p-0">
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+        <thead><tr>
+          <th class="ps-4">Data</th><th>Motorista / Matrículas</th><th>Qtd</th><th>Documentos</th><th>Rota</th><th class="pe-4">Anexo</th>
+        </tr></thead>
+        <tbody>
+          {% for delivery in deliveries %}<tr>
+            <td class="ps-4">
+              <div class="fw-bold">{{ delivery.delivery_date|date:"d/m/Y" }}</div>
+              <div class="extra-small text-muted">{{ delivery.delivered_at|date:"H:i" }}</div>
+            </td>
+            <td>
+              <div class="fw-semibold text-accent">{{ delivery.driver.name }}</div>
+              <div class="extra-small text-muted"><i class="bi bi-truck me-1"></i>{{ delivery.driver.truck_plate }} | {{ delivery.driver.cistern_plate }}</div>
+            </td>
+            <td><span class="badge bg-primary-subtle text-primary">{{ delivery.quantity|floatformat:"g" }}</span></td>
+            <td class="small">
+              <div><span class="text-muted">Fat:</span> {{ delivery.invoice_number }}</div>
+              <div><span class="text-muted">Guia:</span> {{ delivery.shipping_guide_number }}</div>
+            </td>
+            <td class="small">
+              <div class="text-truncate" style="max-width:200px;"><span class="text-muted">De:</span> {{ delivery.origin }}</div>
+              <div class="text-truncate" style="max-width:200px;"><span class="text-muted">Para:</span> {{ delivery.destination }}</div>
+            </td>
+            <td class="pe-4">
+              <div class="d-flex gap-2 align-items-center">
+                {% if not delivery.is_confirmed %}
+                <a href="{% url 'outflows:delivery_confirm_weight' delivery.id %}" class="btn-action" style="color: #f59e0b !important; background: rgba(245, 158, 11, 0.1) !important;" title="Confirmar Peso Real (Balança)">
+                  <i class="bi bi-scales"></i>
+                </a>
+                {% else %}
+                <span class="text-success me-2" title="Peso Confirmado"><i class="bi bi-check-circle-fill"></i></span>
+                {% endif %}
+                
+                <a href="{% url 'outflows:delivery_shipping_guide' delivery.id %}" target="_blank" class="btn btn-action" title="Imprimir Guia de Remessa">
+                  <i class="bi bi-printer"></i>
+                </a>
+                {% if delivery.shipping_guide_file %}
+                <a href="{{ delivery.shipping_guide_file.url }}" target="_blank" class="btn btn-action" title="Ver Anexo Original">
+                  <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>{% empty %}<tr><td colspan="6"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-truck"></i></div><div class="text-muted small">Nenhuma entrega registada para esta saída.</div></div></td></tr>{% endfor %}
+        </tbody>
+      </table></div>
+    </div></div>
+</div>
+
+<!-- Print-Only View based on model detalhes de entregas.html -->
+<div class="report-print-container">
+    <div class="report-header">
+        <div class="brand">
+            <h1>SGE</h1>
+            <p style="margin:0; font-size: 10px;">Sistema de Gestão Inteligente</p>
+        </div>
+        <div class="report-info">
+            <h2>Detalhes da Saída / Entrega</h2>
+            <p>Data de Emissão: {% now "d/m/Y H:i" %}</p>
+        </div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="print-card">
+            <span>Qtd Total</span>
+            <strong>{{ outflow.quantity|floatformat:"g" }}</strong>
+        </div>
+        <div class="print-card">
+            <span>Entregue</span>
+            <strong style="color: var(--success-color);">{{ outflow.quantity_delivered|floatformat:"g" }}</strong>
+        </div>
+        <div class="print-card">
+            <span>Pendente</span>
+            <strong style="color: var(--accent-color);">{{ outflow.quantity_pending|floatformat:"g" }}</strong>
+        </div>
+        <div class="print-card">
+            <span>Estado</span>
+            {% if outflow.quantity_delivered == 0 %}
+                <span class="print-badge pb-pending">Pendente</span>
+            {% elif outflow.quantity_delivered < outflow.quantity %}
+                <span class="print-badge pb-pending">Parcial</span>
+            {% else %}
+                <span class="print-badge pb-success">Concluído</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="details-section">
+        <div class="details-box">
+            <div class="details-box-header">INFORMAÇÕES DO PEDIDO</div>
+            <div class="details-content">
+                <div class="data-row"><span class="data-label">Cliente:</span> <span>{{ outflow.customer.name }}</span></div>
+                <div class="data-row"><span class="data-label">Produto:</span> <span>{{ outflow.product.title }}</span></div>
+                <div class="data-row"><span class="data-label">Data do Pedido:</span> <span>{{ outflow.created_at|date:"d/m/Y H:i" }}</span></div>
+                <div class="data-row"><span class="data-label">Preço Unitário:</span> <span>{{ outflow.price|floatformat:"2g" }} AO</span></div>
+            </div>
+        </div>
+        <div class="details-box">
+            <div class="details-box-header">NOTAS / OBSERVAÇÕES</div>
+            <div class="details-content">
+                <p style="margin:0; color: #666; font-style: italic;">
+                    "{{ outflow.description|default:"Nenhuma observação registada." }}"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="border-left: 4px solid var(--primary-color); padding-left: 10px; font-size: 12px; margin-bottom: 10px;">HISTÓRICO DE ENTREGAS</h3>
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>DATA/HORA</th>
+                <th>MOTORISTA / MATRÍCULA</th>
+                <th>QTD</th>
+                <th>DOCUMENTOS</th>
+                <th>ROTA (ORIGEM -> DESTINO)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for delivery in deliveries %}
+            <tr>
+                <td>{{ delivery.delivery_date|date:"d/m/Y" }} {{ delivery.delivered_at|date:"H:i" }}</td>
+                <td>{{ delivery.driver.name }}<br><small style="color: #7f8c8d;">{{ delivery.driver.truck_plate }} | {{ delivery.driver.cistern_plate }}</small></td>
+                <td style="font-weight: bold;">{{ delivery.quantity|floatformat:"g" }}</td>
+                <td>Guia: {{ delivery.shipping_guide_number|default:"-" }}<br>Fat: {{ delivery.invoice_number|default:"-" }}</td>
+                <td>De: {{ delivery.origin|default:"-" }}<br>Para: {{ delivery.destination|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="signature-section">
+        <div class="signature-box">Responsável SGE</div>
+        <div class="signature-box">Receptor ({{ outflow.customer.name }})</div>
+    </div>
+
+    <div class="print-footer">
+        <p>SGE-Sistema de Gestão Inteligente v4.0 Premium | 2026 Todos os direitos reservados</p>
+        <p>Página 1 de 1</p>
+    </div>
+</div>
+{% endblock %}

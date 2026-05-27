@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ driver.name }} — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(234,179,8,0.1);color:#eab308;"><i class="bi bi-person-badge"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">{{ driver.name }}</h1><span class="text-muted small">Detalhes do motorista</span></div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'drivers:driver_update' driver.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+    <a href="{% url 'drivers:driver_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header"><h6 class="mb-0"><i class="bi bi-person me-2"></i>Dados Pessoais</h6></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">Nome</dt>
+          <dd class="col-sm-8 fw-semibold">{{ driver.name }}</dd>
+          <dt class="col-sm-4 text-muted">Telefone</dt>
+          <dd class="col-sm-8">{{ driver.phone|default:"—" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header"><h6 class="mb-0"><i class="bi bi-truck me-2"></i>Viatura</h6></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">Matricula Camiao</dt>
+          <dd class="col-sm-8"><span class="badge bg-body-secondary text-body">{{ driver.truck_plate|default:"—" }}</span></dd>
+          <dt class="col-sm-4 text-muted">Matricula Cisterna</dt>
+          <dd class="col-sm-8"><span class="badge bg-body-secondary text-body">{{ driver.cistern_plate|default:"—" }}</span></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header"><h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Registo</h6></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-2 text-muted">Criado em</dt>
+          <dd class="col-sm-4">{{ driver.created_at|date:"d/m/Y H:i" }}</dd>
+          <dt class="col-sm-2 text-muted">Atualizado em</dt>
+          <dd class="col-sm-4">{{ driver.updated_at|date:"d/m/Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

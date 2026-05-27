@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}{{ brand.name }} — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title"><a href="{% url 'brands:brand_list' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a><div><h1 class="fw-bold mb-0 fs-5">{{ brand.name }}</h1><span class="text-muted small">Detalhes da marca</span></div></div>
+  <div class="d-flex gap-2"><a href="{% url 'brands:brand_update' brand.id %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Editar</a><a href="{% url 'brands:brand_delete' brand.id %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash3 me-1"></i>Eliminar</a></div>
+</div>
+<div class="sge-form-card"><div class="card"><div class="card-body p-4">
+  <div class="sge-detail-row"><div class="sge-detail-label">Nome</div><div class="sge-detail-value">{{ brand.name }}</div></div>
+  <div class="sge-detail-row"><div class="sge-detail-label">Descrição</div><div class="sge-detail-value">{{ brand.description|default:"—" }}</div></div>
+</div></div></div>
+{% endblock %}

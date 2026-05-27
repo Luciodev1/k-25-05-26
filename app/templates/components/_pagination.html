@@ -1,0 +1,35 @@
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center mb-0">
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+         hx-get="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+         hx-target="#list-table-wrapper"
+         hx-swap="innerHTML"
+         hx-push-url="true"><i class="bi bi-chevron-left" style="font-size:0.7rem;"></i></a>
+    </li>
+    {% endif %}
+    {% for page_number in page_obj.paginator.page_range %}
+      {% if page_number <= page_obj.number|add:2 and page_number >= page_obj.number|add:-2 %}
+      <li class="page-item {% if page_obj.number == page_number %}active{% endif %}">
+        <a class="page-link" href="?page={{ page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+           hx-get="?page={{ page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+           hx-target="#list-table-wrapper"
+           hx-swap="innerHTML"
+           hx-push-url="true">{{ page_number }}</a>
+      </li>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+         hx-get="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+         hx-target="#list-table-wrapper"
+         hx-swap="innerHTML"
+         hx-push-url="true"><i class="bi bi-chevron-right" style="font-size:0.7rem;"></i></a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

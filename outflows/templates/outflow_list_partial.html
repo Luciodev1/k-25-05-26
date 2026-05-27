@@ -1,0 +1,21 @@
+<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr>
+  <th>Produto</th><th>Cliente</th><th class="text-center">Qtd. Pedida</th><th class="text-center">Qtd. Entregue</th><th class="text-center">Estado</th><th class="text-end">Ações</th>
+</tr></thead><tbody>
+  {% for outflow in outflows %}<tr>
+    <td class="fw-semibold">{{ outflow.product.title }}</td>
+    <td><span class="badge bg-body-secondary text-body">{{ outflow.customer.name }}</span></td>
+    <td class="text-center">{{ outflow.quantity|floatformat:"g" }}</td>
+    <td class="text-center fw-semibold text-success">{{ outflow.quantity_delivered|floatformat:"g" }}</td>
+    <td class="text-center">
+      {% if outflow.quantity_delivered == 0 %}<span class="badge bg-warning-subtle text-warning">Pendente</span>
+      {% elif outflow.quantity_delivered < outflow.quantity %}<span class="badge bg-info-subtle text-info">Parcial</span>
+      {% else %}<span class="badge bg-success-subtle text-success">Concluído</span>{% endif %}
+    </td>
+    <td class="text-end"><div class="d-flex justify-content-end gap-2">
+      <a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn-action" title="Ver"><i class="bi bi-eye"></i></a>
+      <a href="{% url 'outflows:outflow_update' outflow.id %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
+      <button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'outflows:outflow_delete' outflow.id %}" data-delete-message="Tem certeza que deseja eliminar esta saída de stock?"><i class="bi bi-trash3"></i></button>
+    </div></td>
+  </tr>{% empty %}<tr><td colspan="6"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-arrow-up-right-square"></i></div><div class="text-muted small">Nenhuma saída registada.</div></div></td></tr>{% endfor %}
+</tbody></table></div>
+{% include 'components/_pagination.html' %}

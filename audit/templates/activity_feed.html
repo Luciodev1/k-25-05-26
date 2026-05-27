@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Atividade Recente — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-activity"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Atividade Recente</h1><span class="text-muted small">Timeline de todas as acoes no sistema</span></div>
+  </div>
+  <a href="{% url 'audit:audit_list' %}" class="btn btn-outline-secondary"><i class="bi bi-shield-check me-1"></i>Ver Auditoria Completa</a>
+</div>
+
+<div class="card"><div class="card-body">
+  <div class="position-relative ps-4">
+    <!-- Timeline line -->
+    <div class="position-absolute top-0 bottom-0 start-0" style="width:2px;background:var(--bs-border-color);"></div>
+
+    {% for log in recent_activities %}
+    <div class="position-relative mb-4">
+      <!-- Timeline dot -->
+      <div class="position-absolute rounded-circle d-flex align-items-center justify-content-center"
+           style="width:32px;height:32px;left:-16px;top:0;z-index:1;
+           {% if log.action == 'CREATE' %}background:#dcfce7;color:#16a34a;
+           {% elif log.action == 'UPDATE' %}background:#fef9c3;color:#ca8a04;
+           {% else %}background:#fee2e2;color:#dc2626;{% endif %}">
+        {% if log.action == 'CREATE' %}<i class="bi bi-plus-lg" style="font-size:12px;"></i>
+        {% elif log.action == 'UPDATE' %}<i class="bi bi-pencil" style="font-size:12px;"></i>
+        {% else %}<i class="bi bi-trash3" style="font-size:12px;"></i>{% endif %}
+      </div>
+
+      <!-- Content -->
+      <div class="ms-4 p-3 bg-body-tertiary rounded-3">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <div>
+            <span class="badge bg-body-secondary text-body me-2">{{ log.model_name }}</span>
+            <span class="fw-semibold">{{ log.object_repr|truncatechars:50 }}</span>
+          </div>
+          <small class="text-muted">{{ log.timestamp|date:"d/m/Y H:i" }}</small>
+        </div>
+        <div class="small text-muted">
+          {% if log.action == 'CREATE' %}Criado{% elif log.action == 'UPDATE' %}Alterado{% else %}Eliminado{% endif %}
+          por <strong>{{ log.user|default:"Sistema" }}</strong>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+      <i class="bi bi-activity fs-1 text-muted d-block mb-2"></i>
+      <p class="text-muted">Nenhuma atividade registada.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div></div>
+{% endblock %}

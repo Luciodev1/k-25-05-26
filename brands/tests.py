@@ -1,0 +1,58 @@
+from django.test import TestCase
+from .models import Brand
+
+
+class BrandModelTest(TestCase):
+    def test_create_brand(self):
+        brand = Brand.objects.create(name='TestBrand', description='Test description')
+        self.assertEqual(str(brand), 'TestBrand')
+        self.assertEqual(brand.description, 'Test description')
+
+    def test_brand_ordering(self):
+        Brand.objects.create(name='Zebra')
+        Brand.objects.create(name='Alpha')
+        brands = list(Brand.objects.values_list('name', flat=True))
+        self.assertEqual(brands, ['Alpha', 'Zebra'])
+
+    def test_brand_optional_description(self):
+        brand = Brand.objects.create(name='NoDesc')
+        self.assertIn(brand.description, ('', None))
+
+
+class BrandViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.brand = Brand.objects.create(name='TestBrand')
+
+    def test_list_requires_login(self):
+        response = self.client.get('/brands/list/')
+        self.assertEqual(response.status_code, 302)
+
+    def test_list_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.get('/brands/list/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TestBrand')
+
+    def test_create_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.post('/brands/create/', {'name': 'NewBrand', 'description': ''})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Brand.objects.filter(name='NewBrand').exists())
+
+    def test_update_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.post(f'/brands/{self.brand.pk}/update/', {'name': 'Updated', 'description': ''})
+        self.assertEqual(response.status_code, 302)
+        self.brand.refresh_from_db()
+        self.assertEqual(self.brand.name, 'Updated')
+
+    def test_detail_view(self):
+        self.client.force_login(self._create_user())
+        response = self.client.get(f'/brands/{self.brand.pk}/detail/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TestBrand')
+
+    def _create_user(self):
+        from django.contrib.auth.models import User
+        return User.objects.create_superuser('testuser', 'test@test.com', 'testpass123')

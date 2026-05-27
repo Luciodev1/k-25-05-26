@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Fornecedor - SGE{% endblock %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'suppliers:supplier_list' %}" class="btn btn-link text-decoration-none p-0 me-3">
+                <i class="bi bi-arrow-left fs-4"></i>
+            </a>
+            <div>
+                <h2 class="fw-bold mb-0">Perfil do Fornecedor</h2>
+                <p class="text-muted small mb-0">Gestão de parcerias e fornecimento</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'suppliers:supplier_update' object.id %}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-pencil me-1"></i> Editar
+        </a>
+        <a href="{% url 'accounts:supplier_account' object.id %}" class="btn btn-primary shadow-sm">
+            <i class="bi bi-wallet2 me-1"></i> Ver Conta Corrente
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Info Card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="card-header bg-dark py-4 text-center">
+                <div class="avatar-circle mx-auto mb-3 bg-white text-dark fs-2 fw-bold d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 50%;">
+                    {{ object.name|slice:":1"|upper }}
+                </div>
+                <h4 class="text-white fw-bold mb-1">{{ object.name }}</h4>
+                <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-25 px-3">Fornecedor Ativo</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-0">
+                    <label class="small text-muted text-uppercase fw-bold mb-1 d-block">Descrição / Notas</label>
+                    <div class="fw-medium text-dark">{{ object.description|default:"Nenhuma descrição adicional." }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary / Activity -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="fw-bold mb-0">Resumo de Fornecimento</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row text-center g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <span class="text-muted small text-uppercase d-block mb-1">Entradas Registadas</span>
+                            <h4 class="fw-bold mb-0 text-primary">{{ object.inflows.count }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3">
+                            <span class="text-muted small text-uppercase d-block mb-1">Total de Lançamentos</span>
+                            <h4 class="fw-bold mb-0 text-success">{{ object.account_entries.count }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Note -->
+        <div class="card border-0 shadow-sm rounded-3 bg-dark bg-opacity-10">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle me-2"></i>Informação de Auditoria</h6>
+                <p class="text-dark-emphasis small mb-0">
+                    Este fornecedor foi registado no sistema em {{ object.created_at|date:"d/m/Y" }}. 
+                    Todas as compras e pagamentos associados estão disponíveis no extrato de conta corrente para reconciliação financeira.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Selecionar Empresa — SGE{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="padding: 4rem 1rem;">
+  <div style="max-width: 520px; width: 100%;">
+    <div class="text-center mb-5">
+      <div class="d-inline-flex align-items-center justify-content-center mb-4">
+        <div class="logo-box-lg">K</div>
+      </div>
+      <h1 class="fw-bold fs-3 mb-1 text-main">Bem-vindo ao SGE</h1>
+      <p class="text-muted">Selecione a empresa para aceder ao sistema</p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-flex flex-column gap-3">
+        {% for tu in tenants_users %}
+          {% if forloop.first and tu.is_primary %}
+            <div class="text-start mb-1">
+              <small class="text-muted fw-semibold" style="letter-spacing: 0.5px;">EMPRESA PRINCIPAL</small>
+            </div>
+          {% endif %}
+          {% if not tu.is_primary and forloop.first or not tu.is_primary and forloop.counter0 == 1 and tenants_users.0.is_primary %}
+            <div class="text-start mt-2 mb-1">
+              <small class="text-muted fw-semibold" style="letter-spacing: 0.5px;">OUTRAS EMPRESAS</small>
+            </div>
+          {% endif %}
+          <button type="submit" name="tenant_id" value="{{ tu.tenant.id }}"
+                  class="btn btn-tenant-card {% if tu.is_primary %}primary{% endif %}">
+            <div class="tenant-card-avatar">
+              <i class="bi bi-building"></i>
+            </div>
+            <div class="flex-grow-1 text-start">
+              <div class="fw-bold tenant-card-name">{{ tu.tenant.name }}</div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="tenant-card-role">{{ tu.get_role_display }}</span>
+                {% if tu.is_primary %}
+                  <span class="tenant-card-badge">Principal</span>
+                {% endif %}
+              </div>
+            </div>
+            <i class="bi bi-chevron-right tenant-card-arrow"></i>
+          </button>
+        {% endfor %}
+      </div>
+    </form>
+
+    {% if not tenants_users %}
+      <div class="text-center py-5">
+        <div class="text-muted mb-3"><i class="bi bi-building-slash fs-1"></i></div>
+        <p class="text-muted">Não está associado a nenhuma empresa.</p>
+        <p class="small text-muted">Contacte o administrador do sistema.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

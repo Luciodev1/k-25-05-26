@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Pagamentos — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="bi bi-cash-stack"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Pagamentos</h1><span class="text-muted small">Recebimentos e pagamentos registados</span></div>
+  </div>
+  {% if perms.payments.add_payment %}<a href="{% url 'payments:payment_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Pagamento</a>{% endif %}
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4"><div class="card-body py-3">
+  <form method="get" class="row g-3 align-items-end"
+        hx-get="{% url 'payments:payment_list' %}"
+        hx-trigger="submit"
+        hx-target="#list-table-wrapper"
+        hx-swap="innerHTML"
+        hx-push-url="true">
+    <div class="col-md-4">
+      <label class="form-label">Tipo</label>
+      <select name="type" class="form-select">
+        <option value="">Todos</option>
+        {% for val, label in type_choices %}<option value="{{ val }}" {% if type_filter == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Método</label>
+      <select name="method" class="form-select">
+        <option value="">Todos</option>
+        {% for val, label in method_choices %}<option value="{{ val }}" {% if method_filter == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+      <a href="{% url 'payments:payment_list' %}" class="btn btn-light flex-fill">Limpar</a>
+    </div>
+  </form>
+</div></div>
+
+<!-- Tabela -->
+<div class="card"><div class="card-body">
+  <div id="list-table-wrapper">
+    {% include 'payment_list_partial.html' %}
+  </div>
+</div></div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% load notification_tags %}
+{% get_notifications as notifs %}
+<li class="nav-item dropdown">
+    <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-bell"></i>
+        {% if notifs.count > 0 %}<span class="badge bg-danger rounded-pill">{{ notifs.count }}</span>{% endif %}
+    </a>
+    <div class="dropdown-menu dropdown-menu-end" style="width:350px;max-height:400px;overflow-y:auto;">
+        <h6 class="dropdown-header">Notificacoes</h6>
+        {% for n in notifs.items %}
+        <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="{{ n.url }}">
+            <i class="bi {{ n.icon }} {{ n.color }} mt-1"></i>
+            <div>
+                <div class="small fw-semibold">{{ n.title }}</div>
+                <div class="small text-muted">{{ n.message }}</div>
+            </div>
+        </a>
+        {% empty %}
+        <div class="dropdown-item text-muted text-center py-3">
+            <i class="bi bi-check-circle me-1"></i>Sem notificacoes
+        </div>
+        {% endfor %}
+    </div>
+</li>

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Saídas — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-arrow-up-right-square"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Saídas de Stock</h1><span class="text-muted small">Gestão de vendas e entregas</span></div>
+  </div>
+  <a href="{% url 'outflows:outflow_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Nova Saída</a>
+</div>
+<div class="card"><div class="card-body">
+  <form method="get" class="row g-3 mb-4"
+        hx-get="{% url 'outflows:outflow_list' %}"
+        hx-trigger="submit"
+        hx-target="#list-table-wrapper"
+        hx-swap="innerHTML"
+        hx-push-url="true">
+    <div class="col-md-5"><div class="sge-search-group"><i class="bi bi-search"></i><input type="text" name="product" class="form-control" placeholder="Filtrar por produto…" value="{{ request.GET.product }}"></div></div>
+    <div class="col-md-5"><div class="sge-search-group"><i class="bi bi-search"></i><input type="text" name="customer" class="form-control" placeholder="Filtrar por cliente…" value="{{ request.GET.customer }}"></div></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Filtrar</button></div>
+  </form>
+  <div id="list-table-wrapper">
+    {% include 'outflow_list_partial.html' %}
+  </div>
+</div></div>
+{% endblock %}

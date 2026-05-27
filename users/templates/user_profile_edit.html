@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Perfil — SGE{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-card {
+    border: 1px solid var(--border);
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+  .profile-cover {
+    height: 120px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    position: relative;
+  }
+  .profile-avatar-container {
+    position: relative;
+    margin-top: -60px;
+    margin-bottom: 15px;
+    display: inline-block;
+  }
+  .profile-avatar {
+    width: 110px;
+    height: 110px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 800;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--bg-card);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .detail-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-icon {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-md);
+    background-color: var(--primary-soft);
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+  .cargo-badge {
+    font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; padding: 0.35rem 0.85rem; border-radius: var(--radius-sm);
+  }
+  .avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--border);
+    background: var(--bg-body);
+  }
+  .avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-size: 3rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid var(--border);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+  <div class="page-header-title">
+    <a href="{% url 'users:user_profile' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+    <div class="page-header-icon" style="background:rgba(16, 185, 129, 0.1);color:var(--primary-dark);">
+      <i class="bi bi-pencil-square"></i>
+    </div>
+    <div>
+      <h1 class="fw-bold mb-0 fs-5">Editar Perfil</h1>
+      <span class="text-muted small">Atualize suas informações pessoais</span>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Sidebar -->
+  <div class="col-lg-4 col-xl-3">
+    <div class="profile-card text-center pb-2">
+      <div class="profile-cover"></div>
+      <div class="profile-avatar-container">
+        <div class="profile-avatar">
+          {% if profile.avatar %}
+            <img src="{{ profile.avatar.url }}" alt="{{ request.user.username }}">
+          {% else %}
+            {{ request.user.username|slice:":1"|upper }}
+          {% endif %}
+        </div>
+      </div>
+      <h4 class="fw-bold mb-1 text-main">{{ request.user.get_full_name|default:request.user.username }}</h4>
+      <p class="text-muted small mb-3">@{{ request.user.username }}</p>
+      <div class="mb-4">
+        {% if request.user.is_superuser %}
+          <span class="badge cargo-badge bg-danger-subtle text-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ user_cargo }}</span>
+        {% elif "Gerente" in user_cargo %}
+          <span class="badge cargo-badge bg-warning-subtle text-warning"><i class="bi bi-person-workspace me-1"></i> {{ user_cargo }}</span>
+        {% elif "Financeiro" in user_cargo %}
+          <span class="badge cargo-badge bg-info-subtle text-info"><i class="bi bi-cash-coin me-1"></i> {{ user_cargo }}</span>
+        {% else %}
+          <span class="badge cargo-badge bg-success-subtle text-success"><i class="bi bi-person me-1"></i> {{ user_cargo }}</span>
+        {% endif %}
+      </div>
+      <div class="text-start border-top mt-3">
+        <div class="detail-row">
+          <div class="detail-icon"><i class="bi bi-calendar-check"></i></div>
+          <div class="flex-grow-1">
+            <span class="text-muted extra-small d-block">Registado em</span>
+            <span class="fw-semibold text-main small">{{ request.user.date_joined|date:"d/m/Y H:i" }}</span>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-icon"><i class="bi bi-clock-history"></i></div>
+          <div class="flex-grow-1">
+            <span class="text-muted extra-small d-block">Último Acesso</span>
+            <span class="fw-semibold text-main small">{{ request.user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso hoje" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="col-lg-8 col-xl-9">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Informações Pessoais -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3 text-main"><i class="bi bi-person me-2"></i> Informações Pessoais</h5>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="{{ user_form.first_name.id_for_label }}" class="form-label">{{ user_form.first_name.label }}</label>
+              {{ user_form.first_name }}
+              {% if user_form.first_name.errors %}<div class="text-danger small mt-1">{{ user_form.first_name.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label for="{{ user_form.last_name.id_for_label }}" class="form-label">{{ user_form.last_name.label }}</label>
+              {{ user_form.last_name }}
+              {% if user_form.last_name.errors %}<div class="text-danger small mt-1">{{ user_form.last_name.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label for="{{ user_form.email.id_for_label }}" class="form-label">{{ user_form.email.label }}</label>
+              {{ user_form.email }}
+              {% if user_form.email.errors %}<div class="text-danger small mt-1">{{ user_form.email.errors|striptags }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Foto e Contacto -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3 text-main"><i class="bi bi-camera me-2"></i> Foto e Contacto</h5>
+          <div class="row g-4">
+            <div class="col-md-4 text-center">
+              <label class="form-label d-block">{{ profile_form.avatar.label }}</label>
+              <div class="d-flex justify-content-center mb-3">
+                <div id="avatarPreview">
+                  {% if profile.avatar %}
+                    <img src="{{ profile.avatar.url }}" class="avatar-preview" id="previewImage">
+                  {% else %}
+                    <div class="avatar-placeholder" id="previewPlaceholder">{{ request.user.username|slice:":1"|upper }}</div>
+                    <img src="" class="avatar-preview d-none" id="previewImage">
+                  {% endif %}
+                </div>
+              </div>
+              {{ profile_form.avatar }}
+              {% if profile_form.avatar.errors %}<div class="text-danger small mt-1">{{ profile_form.avatar.errors|striptags }}</div>{% endif %}
+              <small class="text-muted d-block mt-1">PNG, JPG máx 2MB</small>
+            </div>
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label for="{{ profile_form.phone.id_for_label }}" class="form-label">{{ profile_form.phone.label }}</label>
+                {{ profile_form.phone }}
+                {% if profile_form.phone.errors %}<div class="text-danger small mt-1">{{ profile_form.phone.errors|striptags }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label for="{{ profile_form.bio.id_for_label }}" class="form-label">{{ profile_form.bio.label }}</label>
+                {{ profile_form.bio }}
+                {% if profile_form.bio.errors %}<div class="text-danger small mt-1">{{ profile_form.bio.errors|striptags }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferências -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3 text-main"><i class="bi bi-gear me-2"></i> Preferências</h5>
+          <div class="form-check form-switch">
+            {{ profile_form.email_notifications }}
+            <label class="form-check-label" for="{{ profile_form.email_notifications.id_for_label }}">
+              {{ profile_form.email_notifications.label }}
+            </label>
+          </div>
+          <small class="text-muted d-block mt-1">Receba notificações sobre stock baixo, entregas pendentes e outras atualizações importantes.</small>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'users:user_profile' %}" class="btn btn-light">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-1"></i> Guardar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var input = document.querySelector('#{{ profile_form.avatar.id_for_label }}');
+  if (!input) return;
+  input.classList.add('form-control', 'form-control-sm', 'mt-2');
+  input.accept = 'image/png,image/jpeg,image/jpg';
+
+  input.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = document.getElementById('previewImage');
+      var placeholder = document.getElementById('previewPlaceholder');
+      img.src = ev.target.result;
+      img.classList.remove('d-none');
+      if (placeholder) placeholder.classList.add('d-none');
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+</script>
+{% endblock %}

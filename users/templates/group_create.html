@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Novo Grupo — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-collection"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Novo Grupo</h1><span class="text-muted small">Criar grupo de permissoes</span></div>
+  </div>
+  <a href="{% url 'users:group_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+</div>
+<div class="card"><div class="card-body">
+  <form method="post">{% csrf_token %}{{ form.non_field_errors }}
+    <div class="mb-3">
+      <label class="form-label">Nome do Grupo</label>
+      {{ form.name }}
+      {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+    </div>
+    <div class="mb-4">
+      <label class="form-label fw-bold mb-3 fs-5">Permissões de Acesso</label>
+      <div class="accordion" id="permissionsAccordion">
+        {% for app_name, perms in grouped_permissions.items %}
+        <div class="accordion-item border rounded mb-2">
+          <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+            <button class="accordion-button collapsed fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+              Módulo: {{ app_name }}
+              <span class="badge bg-primary ms-3 rounded-pill">{{ perms|length }}</span>
+            </button>
+          </h2>
+          <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}">
+            <div class="accordion-body bg-light rounded-bottom">
+              <div class="row g-3">
+                {% for perm in perms %}
+                <div class="col-md-6 col-lg-3">
+                  <div class="form-check form-switch bg-white border p-3 rounded shadow-sm h-100 d-flex align-items-center">
+                    <input class="form-check-input ms-0 me-3 mt-0" type="checkbox" role="switch" name="permissions" value="{{ perm.id }}" id="perm_{{ perm.id }}" {% if perm.selected %}checked{% endif %}>
+                    <label class="form-check-label w-100 mb-0" style="cursor: pointer; font-size: 0.9rem;" for="perm_{{ perm.id }}">
+                      {{ perm.name }}
+                    </label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Criar Grupo</button>
+  </form>
+</div></div>
+{% endblock %}

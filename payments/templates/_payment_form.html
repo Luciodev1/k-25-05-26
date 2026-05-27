@@ -1,0 +1,47 @@
+{% load static %}
+{% csrf_token %}{{ form.non_field_errors }}
+
+<div class="mb-3">
+    <label class="form-label fw-semibold">Tipo <span class="text-danger">*</span></label>
+    {{ form.type }}
+    {% if form.type.errors %}<div class="text-danger small mt-1">{{ form.type.errors }}</div>{% endif %}
+</div>
+
+<div id="customer_field" class="mb-3">
+    <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
+    {{ form.customer }}
+    {% if form.customer.errors %}<div class="text-danger small mt-1">{{ form.customer.errors }}</div>{% endif %}
+</div>
+
+<div id="supplier_field" class="mb-3" style="display:none;">
+    <label class="form-label fw-semibold">Fornecedor <span class="text-danger">*</span></label>
+    {{ form.supplier }}
+    {% if form.supplier.errors %}<div class="text-danger small mt-1">{{ form.supplier.errors }}</div>{% endif %}
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Valor (Kz) <span class="text-danger">*</span></label>
+        {{ form.amount }}
+        {% if form.amount.errors %}<div class="text-danger small mt-1">{{ form.amount.errors }}</div>{% endif %}
+    </div>
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Data <span class="text-danger">*</span></label>
+        {{ form.date }}
+        {% if form.date.errors %}<div class="text-danger small mt-1">{{ form.date.errors }}</div>{% endif %}
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label fw-semibold">Método de Pagamento <span class="text-danger">*</span></label>
+    {{ form.payment_method }}
+    {% if form.payment_method.errors %}<div class="text-danger small mt-1">{{ form.payment_method.errors }}</div>{% endif %}
+</div>
+
+<div class="mb-4">
+    <label class="form-label fw-semibold">Descrição / Observações</label>
+    {{ form.description }}
+    {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+</div>
+
+<script src="{% static 'js/payment-form.js' %}"></script>

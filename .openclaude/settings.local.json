@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(./venv/Scripts/pip install:*)",
+      "Bash(DJANGO_SECRET_KEY='test-key' ./venv/Scripts/python manage.py test brands categories suppliers customers drivers users reports audit --verbosity=1)"
+    ]
+  }
+}

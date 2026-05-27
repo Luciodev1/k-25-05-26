@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "django-best-practices": {
+      "source": "reyretee/django-skills",
+      "sourceType": "github",
+      "skillPath": "skills/django-best-practices/SKILL.md",
+      "computedHash": "934edc1ec986a8cd13a52909b1a1c2158c1040bb5c625d757be910bf99f4ed8c"
+    },
+    "django-celery-expert": {
+      "source": "vintasoftware/django-ai-plugins",
+      "sourceType": "github",
+      "skillPath": "plugins/django-celery-expert/skills/SKILL.md",
+      "computedHash": "163ad566532bf0a90f31bd27f70255742f06d6110c4508b5a0ee8ec8df301121"
+    },
+    "django-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/django-expert/SKILL.md",
+      "computedHash": "980bafbe21deb217078c9e26ecfb0b84f3363269831c7b50443aab46d3dd91c2"
+    },
+    "django-tdd": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/django-tdd/SKILL.md",
+      "computedHash": "60b9b893ef8931adcc996c3149ff69ac2a30efc6f21048d9e554ce780a1c1051"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
+    },
+    "owasp-top-10": {
+      "source": "nickcrew/claude-ctx-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/owasp-top-10/SKILL.md",
+      "computedHash": "5de0d055c386b9f563b1dd6f434a7dd686bc1ab96c0e67f3d054231a8cc5fc3b"
+    },
+    "python-performance-optimization": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/python-development/skills/python-performance-optimization/SKILL.md",
+      "computedHash": "6390615b25e5922057b15eb900d69a90db563c5f2d6bd3182be707592fc25f09"
+    }
+  }
+}

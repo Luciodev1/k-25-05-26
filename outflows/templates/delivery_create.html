@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Registar Entrega - SGE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="page-header"><div class="page-header-title"><a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a><div><h1 class="fw-bold mb-0 fs-5">Registar Entrega</h1><span class="text-muted small">{{ outflow.product.title }}</span></div></div></div>
+
+        <div class="row g-4">
+            <!-- Outflow Info -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-info-circle me-2 text-primary"></i> Informação do Pedido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="small text-muted text-uppercase fw-bold">Produto</label>
+                            <div class="fw-medium">{{ outflow.product.title }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted text-uppercase fw-bold">Cliente</label>
+                            <div class="fw-medium">{{ outflow.customer.name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted text-uppercase fw-bold">Quantidade Total</label>
+                            <div class="fw-medium">{{ outflow.quantity }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted text-uppercase fw-bold">Já Entregue</label>
+                            <div class="fw-medium text-success">{{ outflow.quantity_delivered }}</div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="small text-muted text-uppercase fw-bold">Pendente</label>
+                            <div class="fw-bold text-danger fs-5">{{ outflow.quantity_pending }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Form -->
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}{{ form.non_field_errors }}
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Data de Entrega</label>
+                                    {{ form.delivery_date }}
+                                    {% if form.delivery_date.errors %}
+                                        <div class="text-danger small">{{ form.delivery_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Motorista</label>
+                                    {{ form.driver }}
+                                    {% if form.driver.errors %}
+                                        <div class="text-danger small">{{ form.driver.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Quantidade a Entregar</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small">{{ form.quantity.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Nº da Factura</label>
+                                    {{ form.invoice_number }}
+                                    {% if form.invoice_number.errors %}
+                                        <div class="text-danger small">{{ form.invoice_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Nº Guia de Remessa</label>
+                                    {{ form.shipping_guide_number }}
+                                    {% if form.shipping_guide_number.errors %}
+                                        <div class="text-danger small">{{ form.shipping_guide_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Anexo da Guia (PDF/Imagem)</label>
+                                    {{ form.shipping_guide_file }}
+                                    {% if form.shipping_guide_file.errors %}
+                                        <div class="text-danger small">{{ form.shipping_guide_file.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Origem do Produto</label>
+                                    {{ form.origin }}
+                                    {% if form.origin.errors %}
+                                        <div class="text-danger small">{{ form.origin.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Local de Entrega</label>
+                                    {{ form.destination }}
+                                    {% if form.destination.errors %}
+                                        <div class="text-danger small">{{ form.destination.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Nome do Receptor</label>
+                                    {{ form.receiver_name }}
+                                    {% if form.receiver_name.errors %}
+                                        <div class="text-danger small">{{ form.receiver_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Descrição</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger small">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-12 mt-4 text-end">
+                                    <a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn btn-link text-secondary me-2">Cancelar</a>
+                                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                        <i class="bi bi-check-lg me-1"></i> Confirmar Entrega
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Painel de Controlo | SGE{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-title">
+        <div class="page-header-icon bg-accent-soft text-accent"><i class="bi bi-speedometer2"></i></div>
+        <div><h1 class="fw-bold mb-0 fs-5">Visão Geral</h1><span class="text-muted small">Bem-vindo ao centro de operações do SGE</span></div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary"><i class="bi bi-download"></i> Exportar Dados</button>
+        <button class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> Novo Registo</button>
+    </div>
+</div>
+
+<!-- Primary Stats: Bento Grid -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="card-body p-4">
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Produtos em Stock</h6>
+                <h2 class="fw-bold mb-0">{{ total_products }}</h2>
+                <div class="mt-3 small text-success fw-bold">
+                    <i class="bi bi-arrow-up-short"></i> +12% este mês
+                </div>
+            </div>
+            <div class="position-absolute bottom-0 start-0 end-0 bg-primary opacity-10" style="height: 4px;"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="card-body p-4">
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="bi bi-truck"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Entregas Pendentes</h6>
+                <h2 class="fw-bold mb-0">{{ outflows_pending.count|default:0 }}</h2>
+                <div class="mt-3 small text-warning fw-bold">
+                    <i class="bi bi-clock-history"></i> Requer atenção
+                </div>
+            </div>
+            <div class="position-absolute bottom-0 start-0 end-0 bg-info opacity-10" style="height: 4px;"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="card-body p-4">
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Volume de Saídas</h6>
+                <h2 class="fw-bold mb-0">{{ outflows_this_month|floatformat:"g" }}</h2>
+                <div class="mt-3 small text-muted">Últimos 30 dias</div>
+            </div>
+            <div class="position-absolute bottom-0 start-0 end-0 bg-success opacity-10" style="height: 4px;"></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="card-body p-4">
+                <div class="stat-icon bg-danger-subtle text-danger">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <h6 class="text-muted small fw-bold text-uppercase mb-1">Dívida de Clientes</h6>
+                <h2 class="fw-bold mb-0 text-danger">{{ total_receivable|floatformat:"2g" }}</h2>
+                <div class="mt-3 small text-danger fw-bold">Pendente regularização</div>
+            </div>
+            <div class="position-absolute bottom-0 start-0 end-0 bg-danger opacity-10" style="height: 4px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Chart Section -->
+    <div class="col-lg-8">
+        <div class="card h-100 p-4 border-0 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Análise de Movimentações</h5>
+                <select class="form-select form-select-sm border-0 bg-light" style="width: auto;">
+                    <option>Últimos 6 Meses</option>
+                    <option>Último Ano</option>
+                </select>
+            </div>
+            <div style="height: 350px;">
+                <canvas id="movementsChart" data-labels='{{ month_labels|safe }}' data-inflows='{{ inflows_monthly|safe }}' data-outflows='{{ outflows_monthly|safe }}'></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Stats -->
+    <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Atividade Recente</h5>
+            </div>
+            <div class="card-body p-4 pt-2">
+                <div class="list-group list-group-flush">
+                    {% for o in recent_outflows|slice:":5" %}
+                    <div class="list-group-item bg-transparent px-0 py-3 border-bottom border-light">
+                        <div class="d-flex gap-3">
+                            <div class="bg-primary-subtle text-primary p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-arrow-up-right"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold">{{ o.customer.name }}</h6>
+                                    <small class="text-muted">{{ o.created_at|timesince }} atrás</small>
+                                </div>
+                                <div class="small text-muted">{{ o.product.title }} ({{ o.quantity|floatformat:"g" }} un.)</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted display-4"></i>
+                        <p class="text-muted">Sem atividades recentes.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'outflows:outflow_list' %}" class="btn btn-light w-100 mt-3 small fw-bold">Ver Todo Histórico</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Top Clientes -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-trophy text-warning me-2"></i>Top Clientes</h5>
+            </div>
+            <div class="card-body px-4">
+                <div class="list-group list-group-flush">
+                    {% for c in top_customers %}
+                    <div class="list-group-item bg-transparent px-0 py-2 border-bottom border-light d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">{{ c.customer__name }}</span>
+                        <span class="badge bg-success-subtle text-success">{{ c.total|floatformat:"2g" }} Kz</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small text-center py-3">Sem dados de vendas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Baixo -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Stock Baixo</h5>
+            </div>
+            <div class="card-body px-4">
+                <div class="list-group list-group-flush">
+                    {% for p in low_stock_products %}
+                    <div class="list-group-item bg-transparent px-0 py-2 border-bottom border-light d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold small">{{ p.title|truncatechars:25 }}</span>
+                        <span class="badge {% if p.quantity <= 0 %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ p.quantity|floatformat:"g" }} un.</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small text-center py-3">Stock saudavel.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Margem -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-percent text-info me-2"></i>Margem de Lucro</h5>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div class="text-center">
+                    <div class="display-4 fw-bold {% if margin_pct > 20 %}text-success{% elif margin_pct > 10 %}text-warning{% else %}text-danger{% endif %}">{{ margin_pct }}%</div>
+                    <p class="text-muted small mt-2 mb-0">Margem media sobre stock</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="fw-bold mb-4">Entregas de Hoje</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Horário</th>
+                            <th>Cliente</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in recent_deliveries|slice:":5" %}
+                        <tr>
+                            <td class="text-muted fw-bold small">{{ d.delivered_at|date:"H:i" }}</td>
+                            <td class="fw-bold text-dark">{{ d.outflow.customer.name }}</td>
+                            <td>{{ d.outflow.product.title }}</td>
+                            <td><span class="badge bg-secondary bg-opacity-10 text-dark">{{ d.quantity|floatformat:"g" }} un.</span></td>
+                            <td><span class="badge bg-success">Concluído</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Nenhuma entrega registada hoje.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/chart-init.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Categorias — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><i class="bi bi-tags"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Categorias</h1><span class="text-muted small">Classificação de produtos</span></div>
+  </div>
+  <a href="{% url 'categories:category_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Nova Categoria</a>
+</div>
+<div class="card"><div class="card-body">
+  <form method="get" class="row g-3 mb-4"
+        hx-get="{% url 'categories:category_list' %}"
+        hx-trigger="submit"
+        hx-target="#list-table-wrapper"
+        hx-swap="innerHTML"
+        hx-push-url="true">
+    <div class="col"><div class="sge-search-group"><i class="bi bi-search"></i><input type="text" name="name" class="form-control" placeholder="Pesquisar por nome…" value="{{ request.GET.name }}"></div></div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Filtrar</button></div>
+  </form>
+  <div id="list-table-wrapper">
+    {% include 'category_list_partial.html' %}
+  </div>
+</div></div>
+{% endblock %}

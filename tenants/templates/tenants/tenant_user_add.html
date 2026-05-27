@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Adicionar Utilizador — {{ tenant.name }} — SGE{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+  <div class="page-header-title">
+    <a href="{% url 'tenants:tenant_detail' pk=tenant.pk %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+    <div class="page-header-icon" style="background:rgba(16, 185, 129, 0.1);color:var(--primary-dark);">
+      <i class="bi bi-person-plus"></i>
+    </div>
+    <div>
+      <h1 class="fw-bold mb-0 fs-5">Adicionar Utilizador</h1>
+      <span class="text-muted small">Associar um utilizador à empresa <strong>{{ tenant.name }}</strong></span>
+    </div>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        {% if form.fields.user.queryset.count == 0 %}
+          <div class="text-center py-4">
+            <div class="text-muted mb-3"><i class="bi bi-check-circle fs-1"></i></div>
+            <h6 class="fw-bold text-muted">Todos os utilizadores já estão associados</h6>
+            <p class="text-muted small mb-4">Não existem utilizadores disponíveis para adicionar a esta empresa.</p>
+            <a href="{% url 'tenants:tenant_detail' pk=tenant.pk %}" class="btn btn-primary">Voltar</a>
+          </div>
+        {% else %}
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="{{ form.user.id_for_label }}" class="form-label">{{ form.user.label }}</label>
+              {{ form.user }}
+              {% if form.user.errors %}<div class="text-danger small mt-1">{{ form.user.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label for="{{ form.role.id_for_label }}" class="form-label">{{ form.role.label }}</label>
+              {{ form.role }}
+              <div class="mt-2 small text-muted">
+                <span class="d-block"><strong>Administrador</strong> — Acesso total ao sistema</span>
+                <span class="d-block"><strong>Manager</strong> — Gerir registos, sem definições</span>
+                <span class="d-block"><strong>Operador</strong> — Criar e editar registos</span>
+                <span class="d-block"><strong>Viewer</strong> — Apenas visualização</span>
+              </div>
+              {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+              <a href="{% url 'tenants:tenant_detail' pk=tenant.pk %}" class="btn btn-light">Cancelar</a>
+              <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg me-1"></i> Adicionar</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

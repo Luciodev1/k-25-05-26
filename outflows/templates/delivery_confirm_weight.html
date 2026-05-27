@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Confirmar Peso — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <a href="{% url 'outflows:outflow_detail' object.outflow.id %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+    <div><h1 class="fw-bold mb-0 fs-5">Confirmar Peso Real</h1><span class="text-muted small">Validação pós-descarga na balança</span></div>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body p-4">
+        <div class="alert alert-info border-0 rounded-3 small mb-4">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          Introduza o valor exato registado na balança após a descarga. O sistema ajustará o stock automaticamente se houver sobras.
+        </div>
+        
+        <div class="mb-4">
+          <label class="sge-stat-label">Produto / Entrega</label>
+          <h6 class="fw-bold">{{ object.outflow.product.title }}</h6>
+          <div class="text-muted small">Quantidade Estimada: <strong>{{ object.quantity|floatformat:"g" }}</strong></div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          
+          {% if form.errors %}
+          <div class="alert alert-danger border-0 small mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Por favor, corrija os erros abaixo.
+          </div>
+          {% endif %}
+
+          <div class="mb-4">
+            <label class="form-label fw-bold">Quantidade Real (Balança)</label>
+            <div class="input-group input-group-lg">
+              <input type="number" step="0.0001" name="actual_quantity" 
+                     class="form-control decimal-input {% if form.actual_quantity.errors %}is-invalid{% endif %}" 
+                     placeholder="Ex: 24.5600" value="{{ object.actual_quantity|default:object.quantity|floatformat:4|stringformat:'s' }}" required autofocus>
+              <span class="input-group-text bg-light">TON</span>
+            </div>
+            {% for error in form.actual_quantity.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+          
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Confirmar e Ajustar Stock</button>
+            <a href="{% url 'outflows:outflow_detail' object.outflow.id %}" class="btn btn-light">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

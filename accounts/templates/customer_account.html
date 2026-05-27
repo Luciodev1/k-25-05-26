@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% block title %}Extrato: {{ customer.name }} | SGE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Printing logic based on template report.html */
+    @media print {
+        @page {
+            size: portrait;
+            margin: 10mm;
+        }
+
+        :root {
+            --report-primary: #2c3e50;
+            --report-secondary: #f8f9fa;
+            --report-accent: #0056b3;
+            --report-success: #28a745;
+            --report-danger: #d9534f;
+            --report-border: #dee2e6;
+        }
+
+        /* Hide all UI elements */
+        body, .sge-wrapper, .sge-content, .sge-header, .no-print, #sidebarToggle, .sge-sidebar {
+            background: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .sge-sidebar, .sge-header, .no-print, .messages-container {
+            display: none !important;
+        }
+
+        .sge-content {
+            margin-left: 0 !important;
+            display: block !important;
+        }
+
+        /* Report Structure */
+        .report-print-container {
+            display: block !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            font-size: 11px !important;
+            color: #333 !important;
+            width: 100% !important;
+        }
+
+        .report-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            border-bottom: 2px solid var(--report-primary) !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 20px !important;
+        }
+
+        .company-info h1 {
+            margin: 0 !important;
+            font-size: 18px !important;
+            color: var(--report-primary) !important;
+            text-transform: uppercase !important;
+        }
+
+        .company-info p { margin: 0 !important; font-size: 10px !important; color: #666 !important; }
+
+        .report-title-section { text-align: right !important; }
+        .report-title-section h2 {
+            margin: 0 !important;
+            color: var(--report-accent) !important;
+            font-size: 16px !important;
+        }
+
+        .report-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 20px !important;
+            margin-bottom: 20px !important;
+        }
+
+        .report-info-box {
+            border: 1px solid var(--report-border) !important;
+            padding: 12px !important;
+            background-color: var(--report-secondary) !important;
+            border-radius: 4px !important;
+        }
+
+        .report-info-box h3 {
+            margin-top: 0 !important;
+            font-size: 12px !important;
+            border-bottom: 1px solid var(--report-border) !important;
+            padding-bottom: 5px !important;
+            color: var(--report-primary) !important;
+            text-transform: uppercase !important;
+        }
+
+        .report-info-row { display: flex !important; margin-bottom: 4px !important; }
+        .report-info-label { font-weight: bold !important; width: 120px !important; }
+
+        .report-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 15px !important;
+        }
+
+        .report-table th {
+            background-color: var(--report-primary) !important;
+            color: white !important;
+            text-align: left !important;
+            padding: 8px !important;
+            font-size: 10px !important;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .report-table td {
+            padding: 8px !important;
+            border-bottom: 1px solid var(--report-border) !important;
+            font-size: 10px !important;
+        }
+
+        .report-footer {
+            margin-top: 30px !important;
+            border-top: 1px solid var(--report-border) !important;
+            padding-top: 10px !important;
+            text-align: center !important;
+            font-size: 9px !important;
+            color: #777 !important;
+        }
+
+        .text-right { text-align: right !important; }
+        .status-badge-p {
+            display: inline-block !important;
+            padding: 3px 8px !important;
+            border-radius: 3px !important;
+            font-weight: bold !important;
+            font-size: 9px !important;
+            margin-top: 8px !important;
+            text-transform: uppercase !important;
+            border: 1px solid #ddd !important;
+            -webkit-print-color-adjust: exact;
+        }
+        .status-d { background-color: #f8d7da !important; color: #721c24 !important; }
+        .status-c { background-color: #d4edda !important; color: #155724 !important; }
+    }
+
+    /* Screen-only reset for the print container */
+    .report-print-container { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header no-print">
+    <div class="page-header-title">
+        <a href="{% url 'accounts:customer_balances' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+        <div><h1 class="fw-bold mb-0 fs-5">{{ customer.name }}</h1><span class="text-muted small">Extrato detalhado de conta corrente</span></div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-dark js-print-trigger"><i class="bi bi-printer"></i> Imprimir Extrato</button>
+        <a href="{% url 'accounts:customer_payment' customer.id %}" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> Registar Pagamento</a>
+    </div>
+</div>
+
+<!-- Screen View (V4.0 Cards) -->
+<div class="no-print">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Débito</h6>
+                    <h3 class="fw-bold text-danger mb-0">{{ total_debit|floatformat:"2g" }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Crédito</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ total_credit|floatformat:"2g" }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-dark text-white h-100">
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-white-50 small fw-bold text-uppercase mb-1">Saldo Final</h6>
+                    <h3 class="fw-bold mb-0 {% if balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ balance|floatformat:"2g" }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Data</th>
+                            <th>Nº Doc</th>
+                            <th>Descrição</th>
+                            <th class="text-end">Débito (-)</th>
+                            <th class="text-end pe-3">Crédito (+)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                        <tr>
+                            <td class="ps-3 small text-muted">{{ entry.date|date:"d/m/Y H:i" }}</td>
+                            <td>{% if entry.outflow %}<span class="badge bg-light text-dark">#OUT-{{ entry.outflow.id }}</span>{% else %}-{% endif %}</td>
+                            <td class="small">{{ entry.description }}</td>
+                            <td class="text-end text-danger fw-bold">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}-{% endif %}</td>
+                            <td class="text-end text-success fw-bold pe-3">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}-{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print-Only View (The template structure) -->
+<div class="report-print-container">
+    <div class="report-header">
+        <div class="company-info">
+            <h1>SGE - SISTEMA DE GESTÃO DE STOCKS</h1>
+            <p>Relatório Financeiro Profissional</p>
+        </div>
+        <div class="report-title-section">
+            <h2>EXTRATO DE CONTA</h2>
+            <p>Emissão: {% now "d/m/Y H:i" %}</p>
+        </div>
+    </div>
+
+    <div class="report-grid">
+        <div class="report-info-box">
+            <h3>DADOS DO CLIENTE</h3>
+            <div class="report-info-row"><span class="report-info-label">Cliente/Entidade:</span> <span>{{ customer.name }}</span></div>
+            <div class="report-info-row"><span class="report-info-label">NIF:</span> <span>{{ customer.nif|default:"—" }}</span></div>
+            <div class="report-info-row"><span class="report-info-label">Contacto:</span> <span>{{ customer.phone|default:"—" }}</span></div>
+            <div class="report-info-row"><span class="report-info-label">Localização:</span> <span>{{ customer.address|default:"—" }}</span></div>
+        </div>
+
+        <div class="report-info-box">
+            <h3>RESUMO DE SALDOS (AO)</h3>
+            <div class="report-info-row"><span class="report-info-label">Total Débito:</span> <span>{{ total_debit|floatformat:"2g" }}</span></div>
+            <div class="report-info-row"><span class="report-info-label">Total Crédito:</span> <span>{{ total_credit|floatformat:"2g" }}</span></div>
+            <div class="report-info-row" style="margin-top: 8px; font-size: 13px; font-weight: bold;">
+                <span class="report-info-label">SALDO FINAL:</span> 
+                <span style="color: {% if balance < 0 %}#d9534f{% else %}#28a745{% endif %};">{{ balance|floatformat:"2g" }}</span>
+            </div>
+            
+            {% if balance < 0 %}
+            <div class="status-badge-p status-d">● Saldo Devedor</div>
+            {% else %}
+            <div class="status-badge-p status-c">● Saldo Credor</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Nº Doc</th>
+                <th>Produto / Serviço</th>
+                <th>Qtd</th>
+                <th class="text-right">Débito (-)</th>
+                <th class="text-right">Crédito (+)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td>{{ entry.date|date:"d/m/Y H:i" }}</td>
+                <td>{% if entry.outflow %}#OUT-{{ entry.outflow.id }}{% else %}-{% endif %}</td>
+                <td>{% if entry.outflow %}{{ entry.outflow.product.title }}{% else %}Pagamento / Ajuste{% endif %}</td>
+                <td>{% if entry.outflow %}{{ entry.outflow.quantity|floatformat:"g" }}{% else %}-{% endif %}</td>
+                <td class="text-right">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}-{% endif %}</td>
+                <td class="text-right">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}-{% endif %}</td>
+            </tr>
+            {% endfor %}
+            <tr style="background-color: #f1f1f1 !important; font-weight: bold;">
+                <td colspan="4" class="text-right">TOTAL GERAL (AO)</td>
+                <td class="text-right">{{ total_debit|floatformat:"2g" }}</td>
+                <td class="text-right">{{ total_credit|floatformat:"2g" }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="report-footer">
+        <p>SGE - Sistema de Gestão Inteligente | v4.0 Premium</p>
+        <p>&copy; 2026 Todos os direitos reservados. | Página 1 de 1</p>
+    </div>
+</div>
+{% endblock %}

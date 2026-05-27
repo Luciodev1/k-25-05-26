@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Relatório: Saídas por Cliente — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+    <div><h1 class="fw-bold mb-0 fs-5">Saídas por Cliente</h1><span class="text-muted small">Listagem detalhada de vendas e movimentações</span></div>
+  </div>
+</div>
+
+<div class="card mb-4"><div class="card-body">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-md-2">
+      <label class="form-label">Data Início</label>
+      <input type="date" class="form-control" name="start_date" value="{{ filters.start_date }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Data Fim</label>
+      <input type="date" class="form-control" name="end_date" value="{{ filters.end_date }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Cliente</label>
+      <select class="form-select" name="customer">
+        <option value="">Todos</option>
+        {% for c in customers %}<option value="{{ c.id }}" {% if filters.customer_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Produto</label>
+      <select class="form-select" name="product">
+        <option value="">Todos</option>
+        {% for p in products %}<option value="{{ p.id }}" {% if filters.product_id == p.id|stringformat:"s" %}selected{% endif %}>{{ p.title }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+      <button type="submit" name="export" value="excel" class="btn btn-outline-success border-2 px-3" title="Exportar para Excel">
+        <i class="bi bi-file-earmark-excel fs-5"></i>
+      </button>
+      <button type="submit" name="export" value="pdf" class="btn btn-outline-danger border-2 px-3" title="Exportar para PDF">
+        <i class="bi bi-file-earmark-pdf fs-5"></i>
+      </button>
+
+      <a href="{% url 'reports:report_outflows_by_customer' %}" class="btn btn-light"><i class="bi bi-x-lg"></i></a>
+    </div>
+  </form>
+</div></div>
+
+<div class="card"><div class="card-body">
+  <div id="list-table-wrapper">
+  <div class="table-responsive"><table class="table table-hover align-middle">
+    <thead><tr>
+      <th>Data</th><th>Cliente</th><th>Produto</th><th class="text-center">Qtd</th><th class="text-center">Entregue</th><th class="text-center">Pendente</th><th>Estado</th>
+    </tr></thead>
+    <tbody>
+      {% for o in outflows %}<tr>
+        <td class="text-muted small">{{ o.created_at|date:"d/m/Y" }}</td>
+        <td class="fw-semibold">{{ o.customer.name }}</td>
+        <td class="fw-semibold text-accent">{{ o.product.title }}</td>
+        <td class="text-center">{{ o.quantity }}</td>
+        <td class="text-center text-success fw-bold">{{ o.quantity_delivered }}</td>
+        <td class="text-center text-danger fw-bold">{{ o.quantity_pending }}</td>
+        <td>
+          {% if o.status_display == 'Entregue' %}<span class="badge bg-success-subtle text-success">{{ o.status_display }}</span>
+          {% elif o.status_display == 'Parcial' %}<span class="badge bg-info-subtle text-info">{{ o.status_display }}</span>
+          {% else %}<span class="badge bg-body-secondary text-body">{{ o.status_display }}</span>{% endif %}
+        </td>
+      </tr>{% empty %}<tr><td colspan="7" class="text-center py-4 text-muted">Nenhuma saída encontrada.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  {% include 'components/_pagination.html' %}
+  </div>
+</div></div>
+{% endblock %}

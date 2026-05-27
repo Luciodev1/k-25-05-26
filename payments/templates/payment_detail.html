@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Pagamento #{{ payment.pk }} — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="bi bi-cash-stack"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Pagamento #{{ payment.pk }}</h1><span class="text-muted small">Detalhes do pagamento</span></div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'payments:payment_update' payment.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+    <a href="{% url 'payments:payment_delete' payment.pk %}" class="btn btn-outline-danger"><i class="bi bi-trash3 me-1"></i>Eliminar</a>
+    <a href="{% url 'payments:payment_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header"><h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informacoes</h6></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">Tipo</dt>
+          <dd class="col-sm-8">
+            {% if payment.type == 'RECEIPT' %}
+              <span class="badge bg-success">Recebimento</span>
+            {% else %}
+              <span class="badge bg-primary">Pagamento</span>
+            {% endif %}
+          </dd>
+          <dt class="col-sm-4 text-muted">Valor</dt>
+          <dd class="col-sm-8 fw-bold fs-5">{{ payment.amount }}</dd>
+          <dt class="col-sm-4 text-muted">Metodo</dt>
+          <dd class="col-sm-8">{{ payment.get_payment_method_display }}</dd>
+          <dt class="col-sm-4 text-muted">Data</dt>
+          <dd class="col-sm-8">{{ payment.date|date:"d/m/Y" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header"><h6 class="mb-0"><i class="bi bi-person me-2"></i>Entidade</h6></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          {% if payment.customer %}
+            <dt class="col-sm-4 text-muted">Cliente</dt>
+            <dd class="col-sm-8 fw-semibold">{{ payment.customer.name }}</dd>
+          {% endif %}
+          {% if payment.supplier %}
+            <dt class="col-sm-4 text-muted">Fornecedor</dt>
+            <dd class="col-sm-8 fw-semibold">{{ payment.supplier.name }}</dd>
+          {% endif %}
+          {% if payment.description %}
+            <dt class="col-sm-4 text-muted">Descricao</dt>
+            <dd class="col-sm-8">{{ payment.description }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header"><h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Registo</h6></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-2 text-muted">Criado em</dt>
+          <dd class="col-sm-4">{{ payment.created_at|date:"d/m/Y H:i" }}</dd>
+          <dt class="col-sm-2 text-muted">Atualizado em</dt>
+          <dd class="col-sm-4">{{ payment.updated_at|date:"d/m/Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" data-bs-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}Sistema de Gestao de Stocks e Contas - Gestao inteligente de inventario, entregas e financas.{% endblock %}">
+    <meta name="theme-color" content="#059669">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}SGE - Gestao Inteligente{% endblock %}">
+    <meta property="og:description" content="Sistema de Gestao de Stocks e Contas">
+    <meta property="og:type" content="website">
+
+    <title>{% block title %}SGE - Gestao Inteligente{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23059669'/><text x='50' y='72' font-size='60' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>K</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SGE Core CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div id="htmx-loading-bar"></div>
+    <div class="sge-wrapper">
+        <!-- Persistent Sidebar -->
+        {% include 'components/_sidebar.html' %}
+
+        <!-- Main Content Area -->
+        <div class="sge-content">
+            <!-- Dynamic Header -->
+            {% include 'components/_header.html' %}
+
+            <!-- Page Body -->
+            <main class="container-fluid px-4 px-lg-5 py-4">
+                {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm border-0 mb-4 animate-up" role="alert">
+                        <div class="d-flex align-items-center">
+                            {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-3 fs-5"></i>{% endif %}
+                            {% if message.tags == 'danger' %}<i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>{% endif %}
+                            <div>{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% include 'components/_breadcrumbs.html' %}
+                <div class="animate-up">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+
+            <!-- Footer -->
+            {% include 'components/_footer.html' %}
+    </div>
+
+    <!-- Delete Modal -->
+    {% include 'components/_delete_modal.html' %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
+    <script src="{% static 'js/csrf.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

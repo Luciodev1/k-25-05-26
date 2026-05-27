@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Motoristas — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(234,179,8,0.1);color:#eab308;"><i class="bi bi-person-badge"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Motoristas</h1><span class="text-muted small">Gestão de motoristas e viaturas</span></div>
+  </div>
+  <a href="{% url 'drivers:driver_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Motorista</a>
+</div>
+<div class="card"><div class="card-body">
+  <form method="get" class="row g-3 mb-4"
+        hx-get="{% url 'drivers:driver_list' %}"
+        hx-trigger="submit"
+        hx-target="#list-table-wrapper"
+        hx-swap="innerHTML"
+        hx-push-url="true">
+    <div class="col"><div class="sge-search-group"><i class="bi bi-search"></i><input type="text" name="name" class="form-control" placeholder="Pesquisar por nome…" value="{{ request.GET.name }}"></div></div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Filtrar</button></div>
+  </form>
+  <div id="list-table-wrapper">
+    {% include 'driver_list_partial.html' %}
+  </div>
+</div></div>
+{% endblock %}

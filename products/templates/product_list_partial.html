@@ -1,0 +1,103 @@
+{% load static %}
+<!-- Bulk Actions Bar -->
+<div id="bulk-actions" class="d-none mb-3">
+    <div class="d-flex align-items-center gap-3 p-3 bg-body-secondary rounded-3">
+        <span class="small fw-semibold"><span id="selected-count">0</span> selecionado(s)</span>
+        <button type="button" class="btn btn-sm btn-danger" id="bulk-delete-btn" data-bs-toggle="modal" data-bs-target="#bulkDeleteModal">
+            <i class="bi bi-trash3 me-1"></i>Eliminar Selecionados
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-selection">Limpar</button>
+    </div>
+</div>
+
+<!-- Table -->
+<div id="product-table" class="table-responsive">
+    <form id="bulk-form" method="post" action="{% url 'products:product_bulk_delete' %}">
+        {% csrf_token %}
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th style="width:40px" class="ps-3">
+                        <input type="checkbox" class="form-check-input" id="select-all">
+                    </th>
+                    <th>Produto</th>
+                    <th>Categoria / Marca</th>
+                    <th class="text-center">Stock Atual</th>
+                    <th class="text-end">Preco de Venda</th>
+                    <th class="text-end pe-3">Acoes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td class="ps-3">
+                        <input type="checkbox" class="form-check-input bulk-checkbox" name="ids" value="{{ product.id }}">
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">{{ product.title }}</div>
+                        <small class="text-muted">{{ product.serial_number|default:"N/A" }}</small>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary-subtle text-primary">{{ product.category.name }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary">{{ product.brand.name }}</span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        {% if product.quantity <= 5 %}
+                        <span class="badge bg-danger-subtle text-danger fw-bold px-3">
+                            <i class="bi bi-exclamation-circle me-1"></i> {{ product.quantity|floatformat:"g" }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-success-subtle text-success fw-bold px-3">
+                            {{ product.quantity|floatformat:"g" }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-bold text-dark">
+                        {{ product.selling_price|floatformat:"2g" }} <small class="text-muted fw-normal">AO</small>
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'products:product_detail' product.id %}" class="btn btn-action" title="Ver Detalhes"><i class="bi bi-eye"></i></a>
+                            <a href="{% url 'products:product_update' product.id %}" class="btn btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'products:product_delete' product.id %}" data-delete-message="Tem certeza que deseja eliminar o produto '{{ product.title }}'?"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <i class="bi bi-box-seam text-muted display-4 d-block mb-3"></i>
+                        <p class="text-muted">Nenhum produto encontrado na sua base de dados.</p>
+                        <a href="{% url 'products:product_create' %}" class="btn btn-primary btn-sm">Adicionar Primeiro Produto</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div>
+
+<!-- Bulk Delete Modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 bg-danger-subtle">
+        <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Eliminar Selecionados</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-4">
+        <p>Tem certeza que deseja eliminar <strong id="bulk-count">0</strong> produto(s)? Esta acao nao pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirm-bulk-delete"><i class="bi bi-trash3 me-1"></i>Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mt-4">
+    {% include 'components/_pagination.html' %}
+</div>

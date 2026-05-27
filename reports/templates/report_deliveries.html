@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Relatório: Entregas | SGE{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Printing logic based on template report.html */
+    @media print {
+        @page { size: landscape; margin: 10mm; }
+        :root {
+            --report-primary: #2c3e50;
+            --report-secondary: #f8f9fa;
+            --report-accent: #0056b3;
+            --report-border: #dee2e6;
+        }
+        body, .sge-wrapper, .sge-content, .sge-header, .no-print, #sidebarToggle, .sge-sidebar {
+            background: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important;
+        }
+        .sge-sidebar, .sge-header, .no-print, .messages-container { display: none !important; }
+        .sge-content { margin-left: 0 !important; display: block !important; }
+
+        .report-print-container {
+            display: block !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            font-size: 10px !important;
+            color: #333 !important;
+            width: 100% !important;
+        }
+        .report-header {
+            display: flex !important; justify-content: space-between !important;
+            border-bottom: 2px solid var(--report-primary) !important;
+            padding-bottom: 10px !important; margin-bottom: 15px !important;
+        }
+        .company-info h1 { margin: 0 !important; font-size: 18px !important; color: var(--report-primary) !important; text-transform: uppercase !important; }
+        .report-title-section { text-align: right !important; }
+        .report-title-section h2 { margin: 0 !important; color: var(--report-accent) !important; font-size: 16px !important; }
+        .report-table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px !important; }
+        .report-table th { background-color: var(--report-primary) !important; color: white !important; text-align: left !important; padding: 6px !important; font-size: 9px !important; -webkit-print-color-adjust: exact; }
+        .report-table td { padding: 6px !important; border-bottom: 1px solid var(--report-border) !important; font-size: 9px !important; }
+        .report-footer { margin-top: 20px !important; border-top: 1px solid var(--report-border) !important; padding-top: 10px !important; text-align: center !important; font-size: 8px !important; color: #777 !important; }
+    }
+    .report-print-container { display: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header no-print">
+    <div class="page-header-title">
+        <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+        <div><h1 class="fw-bold mb-0 fs-5">Relatório de Entregas</h1><span class="text-muted small">Gestão e acompanhamento de logística de saída</span></div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-dark js-print-trigger"><i class="bi bi-printer"></i> Imprimir Relatório</button>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4 no-print">
+    <div class="card-body p-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Início</label>
+                <input type="date" class="form-control" name="start_date" value="{{ filters.start_date }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Fim</label>
+                <input type="date" class="form-control" name="end_date" value="{{ filters.end_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Cliente</label>
+                <select class="form-select" name="customer">
+                    <option value="">Todos os Clientes</option>
+                    {% for c in customers %}<option value="{{ c.id }}" {% if filters.customer_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-dark w-100"><i class="bi bi-funnel"></i> Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Screen View -->
+<div class="no-print">
+    <div class="card border-0 shadow-sm overflow-hidden"><div class="card-body p-4">
+        <div id="list-table-wrapper">
+        <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th class="ps-3">Data</th><th>Cliente</th><th>Produto</th><th class="text-center">Qtd Entregue</th><th>Motorista</th></tr></thead>
+            <tbody>
+                {% for d in deliveries %}
+                <tr>
+                    <td class="ps-3 small text-muted">{{ d.delivered_at|date:"d/m/Y H:i" }}</td>
+                    <td class="fw-bold text-dark">{{ d.outflow.customer.name }}</td>
+                    <td class="fw-semibold text-primary">{{ d.outflow.product.title }}</td>
+                    <td class="text-center"><span class="badge bg-success-subtle text-success px-3">{{ d.quantity|floatformat:"g" }}</span></td>
+                    <td class="small">{{ d.driver.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% include 'components/_pagination.html' %}
+        </div>
+    </div></div>
+</div>
+
+<!-- Print-Only View -->
+<div class="report-print-container">
+    <div class="report-header">
+        <div class="company-info">
+            <h1>SGE - SISTEMA DE GESTÃO DE STOCKS</h1>
+            <p>Relatório de Logística de Entregas</p>
+        </div>
+        <div class="report-title-section">
+            <h2>RELATÓRIO DE ENTREGAS</h2>
+            <p>Emissão: {% now "d/m/Y H:i" %}</p>
+        </div>
+    </div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Produto</th>
+                <th class="text-center">Qtd</th>
+                <th>Motorista</th>
+                <th>Viatura / Matrícula</th>
+                <th>Doc Ref.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in deliveries %}
+            <tr>
+                <td>{{ d.delivered_at|date:"d/m/Y H:i" }}</td>
+                <td class="fw-bold">{{ d.outflow.customer.name }}</td>
+                <td>{{ d.outflow.product.title }}</td>
+                <td class="text-center"><b>{{ d.quantity|floatformat:"g" }}</b></td>
+                <td>{{ d.driver.name }}</td>
+                <td>{{ d.driver.truck_plate }} / {{ d.driver.cistern_plate }}</td>
+                <td>F: {{ d.invoice_number|default:"-" }} / G: {{ d.shipping_guide_number|default:"-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="report-footer"><p>SGE - Sistema de Gestão Inteligente | v4.0 Premium</p><p>&copy; 2026 Todos os direitos reservados. | Página 1 de 1</p></div>
+</div>
+{% endblock %}

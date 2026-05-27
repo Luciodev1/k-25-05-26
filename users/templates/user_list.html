@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Utilizadores — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <div class="page-header-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;"><i class="bi bi-shield-lock"></i></div>
+    <div><h1 class="fw-bold mb-0 fs-5">Utilizadores</h1><span class="text-muted small">Gestão de acessos ao sistema</span></div>
+  </div>
+  <a href="{% url 'users:user_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Utilizador</a>
+</div>
+<div class="card"><div class="card-body">
+  <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Utilizador</th><th>Nome Completo</th><th>E-mail</th><th>Grupos</th><th class="text-center">Estado</th><th class="text-end">Ações</th></tr></thead><tbody>
+    {% for u in users %}
+    <tr>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div class="sidebar-user-avatar" style="width:30px;height:30px;font-size:0.7rem;border-radius:8px;">{{ u.username|slice:":1"|upper }}</div>
+          <span class="fw-semibold">{{ u.username }}</span>
+        </div>
+      </td>
+      <td class="small">{{ u.get_full_name|default:"—" }}</td>
+      <td class="text-muted small">{{ u.email|default:"—" }}</td>
+      <td>{% for g in u.groups.all %}<span class="badge bg-primary-subtle text-primary me-1">{{ g.name }}</span>{% empty %}<span class="text-muted small">—</span>{% endfor %}</td>
+      <td class="text-center">
+        {% if u.is_active %}<span class="badge sge-badge-stock-ok">Activo</span>{% else %}<span class="badge sge-badge-stock-low">Inactivo</span>{% endif %}
+      </td>
+      <td class="text-end"><div class="d-flex justify-content-end gap-1">
+        <a href="{% url 'users:user_update' u.id %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
+        <a href="{% url 'users:user_delete' u.id %}" class="btn-action text-danger" title="Eliminar"><i class="bi bi-trash3"></i></a>
+      </div></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-shield-lock"></i></div><div class="text-muted small">Nenhum utilizador encontrado.</div></div></td></tr>
+    {% endfor %}
+  </tbody></table></div>
+</div></div>
+{% endblock %}
