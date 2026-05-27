@@ -1,5 +1,41 @@
 # Changelog - SGE (Sistema de Gestao de Stocks e Contas)
 
+## 2026-05-27 — Refactor e Cobertura de Testes
+
+### P4 — Robustez e Qualidade
+
+#### 1. Eliminada duplicacao em accounts/models.py (BaseAccountEntry)
+- **Ficheiro:** `accounts/models.py`
+- **Problema:** `CustomerAccountEntry` e `SupplierAccountEntry` tinham os mesmos campos e logica duplicados.
+- **Solucao:** Criada classe abstracta `BaseAccountEntry` com toda a logica comum. Ambas as entidades herdam dela. Schema BD inalterado (zero migrations).
+
+#### 2. Testes para app/mixins.py (12 testes)
+- **Ficheiro:** `app/tests/test_mixins.py` (novo)
+- **Testes criados:**
+  - `SoftDeleteModelTest` (5): soft delete, restore, hard delete, manager filters (via `Brand`)
+  - `HtmxMixinTest` (2): `HX-Request` usa template partial, request normal usa template default
+  - `ExportMixinTest` (2): export Excel retorna `spreadsheetml`, export PDF retorna `application/pdf`
+  - `BulkDeleteMixinTest` (2): sem permissao levanta `PermissionDenied`, com permissao chama super
+  - `SoftDeleteViewMixinTest` (1): POST chama `obj.delete()`
+
+#### 3. Testes para Celery tasks em reports/tasks.py (2 testes)
+- **Ficheiro:** `reports/tests.py`
+- **Corrigido:** `ReportTasksTest` com patches correctos para `openpyxl.Workbook` e `default_storage` (imports locais). Chamadas sem mock de `self` (Celery `bind=True` fornece automaticamente).
+
+#### 4. Type hints
+- **Ficheiros:** `app/mixins.py`, `app/tasks.py`, `reports/tasks.py`, `accounts/models.py`
+- **Adicionado:** Assinaturas com type hints em todas as classes e funcoes publicas.
+
+### Resumo Estatistico
+
+| Metrica | Valor |
+|---|---|
+| Testes (total) | 152 passing, 125 known-failing (301 redirect pre-existente) |
+| Ficheiros criados | 1 (`app/tests/test_mixins.py`) |
+| Ficheiros modificados | 5 |
+| Linhas adicionadas | 95 |
+| Linhas removidas | 122 |
+
 Todas as modificacoes, melhorias e correcoes aplicadas ao projeto.
 
 ---

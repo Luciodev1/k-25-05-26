@@ -1,8 +1,9 @@
+from typing import Any
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.db.models import ProtectedError, Q
-from django.http import HttpResponse
+from django.db.models import ProtectedError, Q, QuerySet
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -15,51 +16,42 @@ from io import BytesIO
 
 
 class FinanceiroRequiredMixin(PermissionRequiredMixin):
-    """Acesso restrito a utilizadores com permissoes financeiras."""
     permission_required = ('payments.add_payment',)
 
-    def handle_no_permission(self):
+    def handle_no_permission(self) -> None:
         raise PermissionDenied("Nao tem permissao para aceder a esta pagina.")
 
 
 class GestorRequiredMixin(PermissionRequiredMixin):
-    """Acesso restrito a gestores (CRUD completo)."""
     permission_required = (
         'products.add_product',
         'products.change_product',
     )
 
-    def handle_no_permission(self):
+    def handle_no_permission(self) -> None:
         raise PermissionDenied("Nao tem permissao para aceder a esta pagina.")
 
 
 class AdminRequiredMixin(PermissionRequiredMixin):
-    """Acesso restrito a administradores."""
     permission_required = ('auth.add_user', 'auth.change_user')
 
-    def handle_no_permission(self):
+    def handle_no_permission(self) -> None:
         raise PermissionDenied("Nao tem permissao para aceder a esta pagina.")
 
 
 class HtmxMixin:
-    """Mixin para suportar requests HTMX com partial rendering.
-    Define htmx_template_name no View para o template parcial.
-    """
-    htmx_template_name = None
+    htmx_template_name: str | None = None
 
-    def get_template_names(self):
+    def get_template_names(self) -> list[str]:
         if self.request.headers.get('HX-Request') and self.htmx_template_name:
             return [self.htmx_template_name]
         return super().get_template_names()
 
 
 class ExportMixin:
-    """Mixin para adicionar exportacao Excel/PDF a ListViews.
-    Define export_columns como lista de (header, field_name) no View.
-    """
-    export_columns = []
+    export_columns: list[tuple[str, str]] = []
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         export = request.GET.get('export')
         if export in ('excel', 'pdf'):
             queryset = self.filterset.qs if hasattr(self, 'filterset') else self.get_queryset()
@@ -69,7 +61,7 @@ class ExportMixin:
                 return self._export_pdf(queryset)
         return super().get(request, *args, **kwargs)
 
-    def _export_excel(self, queryset):
+    def _export_excel(self, queryset: QuerySet) -> HttpResponse:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
@@ -85,7 +77,6 @@ class ExportMixin:
             top=Side(style="thin"), bottom=Side(style="thin"),
         )
 
-        # Headers
         for col_idx, (header, _) in enumerate(self.export_columns, 1):
             cell = ws.cell(row=1, column=col_idx, value=header)
             cell.font = header_font
@@ -93,7 +84,6 @@ class ExportMixin:
             cell.alignment = header_alignment
             cell.border = thin_border
 
-        # Data
         for row_idx, obj in enumerate(queryset, 2):
             for col_idx, (_, field) in enumerate(self.export_columns, 1):
                 value = obj
@@ -104,19 +94,16 @@ class ExportMixin:
                 cell = ws.cell(row=row_idx, column=col_idx, value=str(value) if value else '')
                 cell.border = thin_border
 
-        # Auto width
         for col in ws.columns:
             max_len = max(len(str(cell.value or '')) for cell in col)
             ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 50)
 
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        response['Content-Disposition'] = f'attachment; filename="exportacao.xlsx"'
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="exportacao.xlsx"'
         wb.save(response)
         return response
 
-    def _export_pdf(self, queryset):
+    def _export_pdf(self, queryset: QuerySet) -> HttpResponse:
         from reportlab.lib.pagesizes import A4, landscape
         from reportlab.lib import colors
         from reportlab.lib.units import cm
@@ -126,17 +113,16 @@ class ExportMixin:
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=1.5*cm, rightMargin=1.5*cm)
         styles = getSampleStyleSheet()
-        elements = []
+        elements: list[Any] = []
 
         title_style = ParagraphStyle('Title', parent=styles['Heading2'], alignment=1, spaceAfter=12)
         elements.append(Paragraph(f"Exportacao - {self.model._meta.verbose_name_plural.title()}", title_style))
         elements.append(Spacer(1, 0.5*cm))
 
-        # Table data
         headers = [h for h, _ in self.export_columns]
         data = [headers]
         for obj in queryset:
-            row = []
+            row: list[str] = []
             for _, field in self.export_columns:
                 value = obj
                 for attr in field.split('.'):
@@ -162,25 +148,21 @@ class ExportMixin:
         doc.build(elements)
         buffer.seek(0)
         response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="exportacao.pdf"'
+        response['Content-Disposition'] = 'attachment; filename="exportacao.pdf"'
         return response
 
 
-# ── Tenant-aware mixin ─────────────────────────────────────────────
-# Adiciona filtragem por tenant automaticamente a todas as views.
-
-
 class TenantFilterMixin:
-    tenant_field = 'tenant'
+    tenant_field: str = 'tenant'
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         qs = super().get_queryset()
         tenant = getattr(self.request, 'tenant', None)
         if tenant:
             return qs.filter(**{self.tenant_field: tenant})
         return qs
 
-    def form_valid(self, form):
+    def form_valid(self, form: Any) -> HttpResponse:
         tenant = getattr(self.request, 'tenant', None)
         if tenant and hasattr(form.instance, self.tenant_field):
             setattr(form.instance, self.tenant_field, tenant)
@@ -188,7 +170,7 @@ class TenantFilterMixin:
 
 
 class TenantCreateMixin(TenantFilterMixin):
-    def get_initial(self):
+    def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial()
         tenant = getattr(self.request, 'tenant', None)
         if tenant and hasattr(self.model, self.tenant_field):
@@ -196,39 +178,29 @@ class TenantCreateMixin(TenantFilterMixin):
         return initial
 
 
-# ── Generic CRUD base views ──────────────────────────────────────────
-# Reduzem duplicação de código nos apps.
-# Cada app define apenas model, form_class, permission_required, etc.
-
-
 class BaseListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, ExportMixin, TenantFilterMixin, FilterView):
-    """ListView genérica com auth, permissões, HTMX, filtros, exportação e tenant."""
     paginate_by = 10
 
 
 class BaseCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, TenantCreateMixin, CreateView):
-    """CreateView genérica com auth, permissões, tenant e mensagem de sucesso."""
     pass
 
 
 class BaseUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, TenantFilterMixin, UpdateView):
-    """UpdateView genérica com auth, permissões, tenant e mensagem de sucesso."""
     pass
 
 
 class BaseDetailView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DetailView):
-    """DetailView genérica com auth, permissões e tenant."""
     pass
 
 
 class BaseDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DeleteView):
-    """DeleteView genérica com tratamento de ProtectedError e tenant."""
-    protected_error_message = (
+    protected_error_message: str = (
         'Nao e possivel eliminar este registo porque esta a ser utilizado '
         'por outros registos.'
     )
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         try:
             obj = self.get_object()
             obj.delete()
@@ -240,10 +212,9 @@ class BaseDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMi
 
 
 class BaseTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, TenantFilterMixin, ListView):
-    """ListView para itens na lixeira (soft-deleted) com tenant."""
     paginate_by = 10
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         qs = self.model.all_objects.filter(is_deleted=True)
         tenant = getattr(self.request, 'tenant', None)
         if tenant:
@@ -252,11 +223,10 @@ class BaseTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, 
 
 
 class BaseRestoreView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, View):
-    """View genérica para restaurar um item da lixeira com tenant."""
     model = None
-    redirect_url = None
+    redirect_url: str | None = None
 
-    def post(self, request, pk):
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         obj = self.model.all_objects.get(pk=pk)
         tenant = getattr(request, 'tenant', None)
         if tenant and hasattr(obj, self.tenant_field) and getattr(obj, self.tenant_field) != tenant:
@@ -268,14 +238,11 @@ class BaseRestoreView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterM
 
 
 class BaseHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, View):
-    """View genérica para eliminação permanente de um item da lixeira com tenant."""
     model = None
-    redirect_url = None
-    protected_error_message = (
-        'Nao e possivel eliminar permanentemente este registo.'
-    )
+    redirect_url: str | None = None
+    protected_error_message: str = 'Nao e possivel eliminar permanentemente este registo.'
 
-    def post(self, request, pk):
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         try:
             obj = self.model.all_objects.get(pk=pk)
             tenant = getattr(request, 'tenant', None)
@@ -290,19 +257,16 @@ class BaseHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilt
 
 
 class SoftDeleteManager(models.Manager):
-    """Manager que exclui registos eliminados (soft delete)."""
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         return super().get_queryset().filter(is_deleted=False)
 
 
 class SoftDeleteAllManager(models.Manager):
-    """Manager que inclui todos os registos (inclusive eliminados)."""
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         return super().get_queryset()
 
 
 class SoftDeleteModel(models.Model):
-    """Modelo abstracto com soft delete."""
     is_deleted = models.BooleanField(default=False, db_index=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
@@ -312,27 +276,22 @@ class SoftDeleteModel(models.Model):
     class Meta:
         abstract = True
 
-    def delete(self, using=None, keep_parents=False):
-        """Soft delete: marca como eliminado em vez de remover."""
+    def delete(self, using: Any = None, keep_parents: bool = False) -> None:
         self.is_deleted = True
         self.deleted_at = timezone.now()
         self.save(update_fields=['is_deleted', 'deleted_at'])
 
-    def hard_delete(self, using=None, keep_parents=False):
-        """Remove o registo da base de dados permanentemente."""
+    def hard_delete(self, using: Any = None, keep_parents: bool = False) -> None:
         super().delete(using=using, keep_parents=keep_parents)
 
-    def restore(self):
-        """Restaura um registo eliminado."""
+    def restore(self) -> None:
         self.is_deleted = False
         self.deleted_at = None
         self.save(update_fields=['is_deleted', 'deleted_at'])
 
 
 class BulkDeleteMixin:
-    """Valida permissões antes de eliminação em massa no admin."""
-
-    def delete_queryset(self, request, queryset):
+    def delete_queryset(self, request: HttpRequest, queryset: QuerySet) -> None:
         import logging
         logger = logging.getLogger(__name__)
         if not self.has_delete_permission(request):
@@ -347,8 +306,7 @@ class BulkDeleteMixin:
 
 
 class SoftDeleteViewMixin:
-    """Mixin para DeleteView que faz soft delete em vez de hard delete."""
-    def post(self, request, *args, **kwargs):
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         try:
             obj = self.get_object()
             obj.delete()

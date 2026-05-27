@@ -2,8 +2,10 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from celery import shared_task
+from celery.app.task import Task
 from django.conf import settings
 from django.core.mail import send_mail
 
@@ -11,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, max_retries=3)
-def backup_database(self):
-    """Backup diário da base de dados SQLite com rotação."""
+def backup_database(self: Task) -> dict[str, Any]:
     db_path = Path(settings.DATABASES['default']['NAME'])
     if not db_path.exists():
         logger.error('Base de dados não encontrada: %s', db_path)
@@ -41,8 +42,7 @@ def backup_database(self):
 
 
 @shared_task
-def notify_task_completion(user_email, task_name, result_path=None):
-    """Notifica por email a conclusão de uma tarefa assíncrona."""
+def notify_task_completion(user_email: str | None, task_name: str, result_path: str | None = None) -> None:
     if not user_email:
         return
     body = f'A tarefa "{task_name}" foi concluída com sucesso.'
@@ -57,6 +57,4 @@ def notify_task_completion(user_email, task_name, result_path=None):
             fail_silently=True,
         )
     except Exception:
-        # smtplib.SMTPException ou outras falhas de email não devem
-        # interromper o fluxo principal.
         logger.exception('Falha ao enviar email de notificação')

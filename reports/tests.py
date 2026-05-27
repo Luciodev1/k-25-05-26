@@ -1,6 +1,7 @@
 """Tests for report views: filters, exports, and access control."""
 from decimal import Decimal
 from datetime import date, timedelta
+from unittest.mock import patch, MagicMock
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 from brands.models import Brand
@@ -10,6 +11,7 @@ from customers.models import Customer
 from suppliers.models import Supplier
 from outflows.models import Outflow, Delivery
 from inflows.models import Inflow
+from reports.tasks import generate_large_excel_export, generate_large_pdf_export
 
 
 class ReportAccessTest(TestCase):
@@ -222,3 +224,30 @@ class ReportContentTest(TestCase):
         response = self.client.get('/reports/balances/?export=excel')
         self.assertEqual(response.status_code, 200)
         self.assertIn('application/vnd.openxmlformats', response['Content-Type'])
+
+
+class ReportTasksTest(TestCase):
+    @patch('django.core.files.storage.default_storage')
+    @patch('openpyxl.Workbook')
+    def test_generate_large_excel_export(self, mock_workbook, mock_storage):
+        mock_wb = MagicMock()
+        mock_ws = MagicMock()
+        mock_workbook.return_value = mock_wb
+        mock_wb.active = mock_ws
+        mock_model = MagicMock()
+        mock_model.objects.filter.return_value.iterator.return_value = [
+            MagicMock(pk=1),
+            MagicMock(pk=2),
+        ]
+
+        with patch('reports.tasks.apps.get_model', return_value=mock_model):
+            result = generate_large_excel_export('app.Model', [1, 2], 'test.xlsx')
+
+        self.assertEqual(result['status'], 'ok')
+        self.assertIn('exports/', result['path'])
+        mock_storage.save.assert_called_once()
+
+    def test_generate_large_pdf_export(self):
+        result = generate_large_pdf_export('app.Model', [1, 2, 3], 'test.pdf')
+        self.assertEqual(result['status'], 'ok')
+        self.assertIn('exports/', result['path'])

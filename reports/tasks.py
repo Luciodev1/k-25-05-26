@@ -1,12 +1,14 @@
 import logging
+from typing import Any
 from celery import shared_task
+from celery.app.task import Task
 from django.apps import apps
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True)
-def generate_large_excel_export(self, model_label, object_ids, filename):
+def generate_large_excel_export(self: Task, model_label: str, object_ids: list[int], filename: str) -> dict[str, Any]:
     from openpyxl import Workbook
     from io import BytesIO
     from django.core.files.storage import default_storage
@@ -27,6 +29,6 @@ def generate_large_excel_export(self, model_label, object_ids, filename):
 
 
 @shared_task(bind=True)
-def generate_large_pdf_export(self, model_label, object_ids, filename):
+def generate_large_pdf_export(self: Task, model_label: str, object_ids: list[int], filename: str) -> dict[str, Any]:
     logger.info('Export PDF agendado para %s (%d registos)', model_label, len(object_ids))
     return {'status': 'ok', 'path': f'exports/{self.request.id}_{filename}'}
