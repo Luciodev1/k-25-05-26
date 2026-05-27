@@ -2,7 +2,75 @@ from decimal import Decimal
 
 from django import forms
 from django.core.validators import MinValueValidator
+from django.db.models import Q
 from payments.models import Payment
+from .models import CustomerAccountEntry, SupplierAccountEntry
+
+
+class CustomerAccountEntryForm(forms.ModelForm):
+    debit = forms.DecimalField(
+        max_digits=20, decimal_places=2, required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        label='Débito',
+    )
+    credit = forms.DecimalField(
+        max_digits=20, decimal_places=2, required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        label='Crédito',
+    )
+
+    class Meta:
+        model = CustomerAccountEntry
+        fields = ['description', 'debit', 'credit']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'description': 'Descrição',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        debit = cleaned_data.get('debit') or 0
+        credit = cleaned_data.get('credit') or 0
+        if debit > 0 and credit > 0:
+            raise forms.ValidationError('Débito e crédito não podem ser ambos positivos.')
+        if debit == 0 and credit == 0:
+            raise forms.ValidationError('Débito ou crédito deve ser maior que zero.')
+        return cleaned_data
+
+
+class SupplierAccountEntryForm(forms.ModelForm):
+    debit = forms.DecimalField(
+        max_digits=20, decimal_places=2, required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        label='Débito',
+    )
+    credit = forms.DecimalField(
+        max_digits=20, decimal_places=2, required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        label='Crédito',
+    )
+
+    class Meta:
+        model = SupplierAccountEntry
+        fields = ['description', 'debit', 'credit']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'description': 'Descrição',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        debit = cleaned_data.get('debit') or 0
+        credit = cleaned_data.get('credit') or 0
+        if debit > 0 and credit > 0:
+            raise forms.ValidationError('Débito e crédito não podem ser ambos positivos.')
+        if debit == 0 and credit == 0:
+            raise forms.ValidationError('Débito ou crédito deve ser maior que zero.')
+        return cleaned_data
 
 
 class CustomerPaymentForm(forms.ModelForm):

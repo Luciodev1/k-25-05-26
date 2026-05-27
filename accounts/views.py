@@ -1,8 +1,11 @@
-from django.shortcuts import get_object_or_404
-from django.views.generic import ListView, CreateView
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Sum, F
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from app.mixins import FinanceiroRequiredMixin
+from django.db.models import ProtectedError
+from app.mixins import FinanceiroRequiredMixin, TenantFilterMixin
 from payments.models import Payment
 from . import models, forms
 from .filters import CustomerAccountFilter, SupplierAccountFilter
@@ -151,6 +154,76 @@ class SupplierPaymentCreateView(FinanceiroRequiredMixin, CreateView):
         from django.urls import reverse
         return reverse('accounts:supplier_account', kwargs={'pk': self.object.supplier.pk})
 
+
+
+class CustomerAccountEntryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, UpdateView):
+    model = models.CustomerAccountEntry
+    template_name = 'customer_accountentry_update.html'
+    form_class = forms.CustomerAccountEntryForm
+    permission_required = 'payments.change_payment'
+    success_message = "Lançamento atualizado com sucesso!"
+
+    def get_success_url(self):
+        return reverse('accounts:customer_account', kwargs={'pk': self.object.customer_id})
+
+    def form_valid(self, form):
+        messages.success(self.request, self.success_message)
+        return super().form_valid(form)
+
+
+class CustomerAccountEntryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DeleteView):
+    model = models.CustomerAccountEntry
+    template_name = 'customer_accountentry_delete.html'
+    permission_required = 'payments.delete_payment'
+    success_message = "Lançamento eliminado com sucesso!"
+
+    def get_success_url(self):
+        return reverse('accounts:customer_account', kwargs={'pk': self.object.customer_id})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            self.object.delete()
+            messages.success(request, self.success_message)
+            return redirect(self.get_success_url())
+        except ProtectedError:
+            messages.error(request, 'Não é possível eliminar este lançamento.')
+            return redirect(self.get_success_url())
+
+
+class SupplierAccountEntryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, UpdateView):
+    model = models.SupplierAccountEntry
+    template_name = 'supplier_accountentry_update.html'
+    form_class = forms.SupplierAccountEntryForm
+    permission_required = 'payments.change_payment'
+    success_message = "Lançamento atualizado com sucesso!"
+
+    def get_success_url(self):
+        return reverse('accounts:supplier_account', kwargs={'pk': self.object.supplier_id})
+
+    def form_valid(self, form):
+        messages.success(self.request, self.success_message)
+        return super().form_valid(form)
+
+
+class SupplierAccountEntryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DeleteView):
+    model = models.SupplierAccountEntry
+    template_name = 'supplier_accountentry_delete.html'
+    permission_required = 'payments.delete_payment'
+    success_message = "Lançamento eliminado com sucesso!"
+
+    def get_success_url(self):
+        return reverse('accounts:supplier_account', kwargs={'pk': self.object.supplier_id})
+
+    def post(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            self.object.delete()
+            messages.success(request, self.success_message)
+            return redirect(self.get_success_url())
+        except ProtectedError:
+            messages.error(request, 'Não é possível eliminar este lançamento.')
+            return redirect(self.get_success_url())
 
 
 class CustomerBalanceListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):

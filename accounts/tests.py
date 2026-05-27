@@ -117,6 +117,80 @@ class AccountViewTest(TestCase):
         self.assertContains(response, 'Test Supplier')
 
 
+class AccountEntryUpdateDeleteTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
+        cls.brand = Brand.objects.create(name='B')
+        cls.category = Category.objects.create(name='C')
+        cls.customer = Customer.objects.create(name='Cust')
+        cls.supplier = Supplier.objects.create(name='Supp')
+        cls.product = Product.objects.create(
+            title='P', category=cls.category, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('100'),
+        )
+        cls.customer_entry = CustomerAccountEntry.objects.create(
+            customer=cls.customer, debit=Decimal('100'), credit=Decimal('0'),
+            description='Test debit', date='2026-01-01',
+        )
+        cls.supplier_entry = SupplierAccountEntry.objects.create(
+            supplier=cls.supplier, debit=Decimal('0'), credit=Decimal('200'),
+            description='Test credit', date='2026-01-01',
+        )
+
+    def test_customer_entry_update_view_get(self):
+        self.client.force_login(self.user)
+        response = self.client.get(f'/accounts/customer-entry/{self.customer_entry.pk}/update/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test debit')
+
+    def test_customer_entry_update_view_post(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            f'/accounts/customer-entry/{self.customer_entry.pk}/update/',
+            {'description': 'Updated', 'debit': '150', 'credit': '0'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.customer_entry.refresh_from_db()
+        self.assertEqual(self.customer_entry.description, 'Updated')
+        self.assertEqual(self.customer_entry.debit, Decimal('150'))
+
+    def test_customer_entry_delete_view_get(self):
+        self.client.force_login(self.user)
+        response = self.client.get(f'/accounts/customer-entry/{self.customer_entry.pk}/delete/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_customer_entry_delete_view_post(self):
+        self.client.force_login(self.user)
+        response = self.client.post(f'/accounts/customer-entry/{self.customer_entry.pk}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(CustomerAccountEntry.objects.filter(pk=self.customer_entry.pk).exists())
+
+    def test_supplier_entry_update_view_get(self):
+        self.client.force_login(self.user)
+        response = self.client.get(f'/accounts/supplier-entry/{self.supplier_entry.pk}/update/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test credit')
+
+    def test_supplier_entry_update_view_post(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            f'/accounts/supplier-entry/{self.supplier_entry.pk}/update/',
+            {'description': 'Updated supp', 'debit': '0', 'credit': '250'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.supplier_entry.refresh_from_db()
+        self.assertEqual(self.supplier_entry.description, 'Updated supp')
+        self.assertEqual(self.supplier_entry.credit, Decimal('250'))
+
+    def test_supplier_entry_delete_view_post(self):
+        self.client.force_login(self.user)
+        response = self.client.post(f'/accounts/supplier-entry/{self.supplier_entry.pk}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(SupplierAccountEntry.objects.filter(pk=self.supplier_entry.pk).exists())
+
+
 class AccountEntryModelTest(TestCase):
     """Test CheckConstraints on account entries."""
 

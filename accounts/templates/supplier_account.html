@@ -84,7 +84,7 @@
     </div>
     <div class="card border-0 shadow-sm overflow-hidden"><div class="card-body p-4"><div class="table-responsive">
         <table class="table table-hover align-middle">
-            <thead><tr><th class="ps-3">Data</th><th>Nº Doc</th><th>Descrição</th><th class="text-end">Débito (+)</th><th class="text-end pe-3">Crédito (-)</th></tr></thead>
+            <thead><tr><th class="ps-3">Data</th><th>Nº Doc</th><th>Descrição</th><th class="text-end">Débito (+)</th><th class="text-end pe-3">Crédito (-)</th><th class="text-end pe-3">Ações</th></tr></thead>
             <tbody>
                 {% for entry in entries %}
                 <tr>
@@ -93,6 +93,10 @@
                     <td class="small">{{ entry.description }}</td>
                     <td class="text-end text-success fw-bold">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}-{% endif %}</td>
                     <td class="text-end text-danger fw-bold pe-3">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}-{% endif %}</td>
+                    <td class="text-end pe-3">
+                        <a href="{% url 'accounts:supplier_accountentry_update' entry.pk %}" class="btn btn-sm btn-outline-secondary me-1" title="Editar"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'accounts:supplier_accountentry_delete' entry.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
