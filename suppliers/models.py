@@ -13,8 +13,8 @@ class Supplier(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Supplier'
-        verbose_name_plural = 'Suppliers'
+        verbose_name = 'Fornecedor'
+        verbose_name_plural = 'Fornecedores'
         ordering = ['name']
         indexes = [
             models.Index(fields=['tenant', 'name']),

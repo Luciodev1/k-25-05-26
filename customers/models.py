@@ -14,8 +14,8 @@ class Customer(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Customer'
-        verbose_name_plural = 'Customers'
+        verbose_name = 'Cliente'
+        verbose_name_plural = 'Clientes'
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(

@@ -25,8 +25,8 @@ class CustomerAccountEntry(BaseAccountEntry):
     payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='customer_account_entries')
 
     class Meta:
-        verbose_name = 'Customer Account Entry'
-        verbose_name_plural = 'Customer Account Entries'
+        verbose_name = 'Lançamento de Cliente'
+        verbose_name_plural = 'Lançamentos de Clientes'
         ordering = ['-date']
         indexes = [
             models.Index(fields=['customer', 'date']),
@@ -52,8 +52,8 @@ class SupplierAccountEntry(BaseAccountEntry):
     payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='supplier_account_entries')
 
     class Meta:
-        verbose_name = 'Supplier Account Entry'
-        verbose_name_plural = 'Supplier Account Entries'
+        verbose_name = 'Lançamento de Fornecedor'
+        verbose_name_plural = 'Lançamentos de Fornecedores'
         ordering = ['-date']
         indexes = [
             models.Index(fields=['supplier', 'date']),

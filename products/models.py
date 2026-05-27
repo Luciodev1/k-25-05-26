@@ -22,8 +22,8 @@ class Product(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Product'
-        verbose_name_plural = 'Products'
+        verbose_name = 'Produto'
+        verbose_name_plural = 'Produtos'
         ordering = ['title']
         constraints = [
             models.CheckConstraint(

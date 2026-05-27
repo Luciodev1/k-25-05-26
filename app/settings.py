@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'users',
     'audit',
     'tenants',
+    'app.apps.SgeConfig',
 ]
 
 MIDDLEWARE = [

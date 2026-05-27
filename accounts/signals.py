@@ -35,6 +35,7 @@ def sync_customer_account_entry(sender, instance, created, **kwargs):
         outflow=instance,
         defaults={
             'customer': instance.customer,
+            'tenant': instance.tenant,
             'description': f'Venda - {instance.product.title}(Qtd:{str(instance.quantity.quantize(Decimal("0.01"))).replace(".", ",")})',
             'debit': total,
             'credit': 0,
@@ -73,6 +74,7 @@ def sync_supplier_account_entry(sender, instance, created, **kwargs):
         inflow=instance,
         defaults={
             'supplier': instance.supplier,
+            'tenant': instance.tenant,
             'description': f'Compra - {instance.product.title} (Qtd: {instance.quantity})',
             'debit': 0,
             'credit': total,

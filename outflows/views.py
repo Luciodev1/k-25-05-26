@@ -158,9 +158,13 @@ class OutflowDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView)
         return qs
 
     def post(self, request, *args, **kwargs):
-        obj = self.get_object()
-        obj.delete()
-        messages.success(request, "Saida excluida com sucesso!")
+        from django.db.models import ProtectedError
+        try:
+            obj = self.get_object()
+            obj.delete()
+            messages.success(request, "Saida excluida com sucesso!")
+        except ProtectedError:
+            messages.error(request, "Nao e possivel eliminar esta saida porque esta a ser utilizada por entregas.")
         return redirect(self.success_url)
 
 
@@ -371,11 +375,15 @@ class DeliveryHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_delivery'
 
     def post(self, request, pk):
+        from django.db.models import ProtectedError
         qs = models.Delivery.all_objects
         tenant = getattr(request, 'tenant', None)
         if tenant:
             qs = qs.filter(tenant=tenant)
         delivery = qs.get(pk=pk)
-        delivery.hard_delete()
-        messages.success(request, 'Entrega eliminada permanentemente.')
+        try:
+            delivery.hard_delete()
+            messages.success(request, 'Entrega eliminada permanentemente.')
+        except ProtectedError:
+            messages.error(request, 'Nao e possivel eliminar permanentemente esta entrega.')
         return redirect('outflows:delivery_trash')

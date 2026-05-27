@@ -132,8 +132,13 @@ class UserDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
         return qs
 
     def post(self, request, *args, **kwargs):
-        messages.success(request, "Utilizador excluído com sucesso!")
-        return super().post(request, *args, **kwargs)
+        from django.db.models import ProtectedError
+        try:
+            messages.success(request, "Utilizador excluído com sucesso!")
+            return super().post(request, *args, **kwargs)
+        except ProtectedError:
+            messages.error(request, "Não é possível eliminar este utilizador porque está associado a registos no sistema.")
+            return redirect(self.success_url)
 
 
 # --- Group Management ---
@@ -250,8 +255,13 @@ class GroupDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
         return qs
 
     def post(self, request, *args, **kwargs):
-        messages.success(request, "Grupo eliminado com sucesso!")
-        return super().post(request, *args, **kwargs)
+        from django.db.models import ProtectedError
+        try:
+            messages.success(request, "Grupo eliminado com sucesso!")
+            return super().post(request, *args, **kwargs)
+        except ProtectedError:
+            messages.error(request, "Não é possível eliminar este grupo porque está atribuído a utilizadores.")
+            return redirect(self.success_url)
 
 
 from django.contrib.auth.decorators import login_required

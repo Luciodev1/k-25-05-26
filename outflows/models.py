@@ -43,8 +43,8 @@ class Outflow(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Outflow'
-        verbose_name_plural = 'Outflows'
+        verbose_name = 'Saída'
+        verbose_name_plural = 'Saídas'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['customer', 'created_at']),
@@ -149,8 +149,8 @@ class Delivery(SoftDeleteModel):
     delivered_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
-        verbose_name = 'Delivery'
-        verbose_name_plural = 'Deliveries'
+        verbose_name = 'Entrega'
+        verbose_name_plural = 'Entregas'
         ordering = ['-delivered_at']
         indexes = [
             models.Index(fields=['outflow', 'delivered_at']),

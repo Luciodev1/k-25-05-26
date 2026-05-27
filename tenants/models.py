@@ -27,8 +27,8 @@ class Tenant(SoftDeleteModel):
     storage_limit = models.IntegerField(default=1024)  # MB
     
     class Meta:
-        verbose_name = 'Tenant'
-        verbose_name_plural = 'Tenants'
+        verbose_name = 'Empresa'
+        verbose_name_plural = 'Empresas'
         ordering = ['-created_at']
     
     def __str__(self):
@@ -68,8 +68,8 @@ class TenantUser(SoftDeleteModel):
     last_login = models.DateTimeField(null=True, blank=True)
     
     class Meta:
-        verbose_name = 'Tenant User'
-        verbose_name_plural = 'Tenant Users'
+        verbose_name = 'Utilizador da Empresa'
+        verbose_name_plural = 'Utilizadores da Empresa'
         unique_together = ['user', 'tenant']
         ordering = ['-joined_at']
     
@@ -129,8 +129,8 @@ class TenantSettings(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = 'Tenant Settings'
-        verbose_name_plural = 'Tenant Settings'
+        verbose_name = 'Configurações da Empresa'
+        verbose_name_plural = 'Configurações da Empresa'
     
     def __str__(self):
         return f"Settings for {self.tenant.name}"

@@ -59,6 +59,7 @@ class CustomerDeleteView(BaseDeleteView):
     success_url = reverse_lazy('customers:customer_list')
     permission_required = 'customers.delete_customer'
     success_message = "Cliente excluido com sucesso!"
+    protected_error_message = "Nao e possivel eliminar este cliente porque esta associado a registos de vendas."
 
 
 class CustomerTrashListView(BaseTrashListView):

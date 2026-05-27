@@ -10,8 +10,8 @@ class Category(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Category'
-        verbose_name_plural = 'Categories'
+        verbose_name = 'Categoria'
+        verbose_name_plural = 'Categorias'
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(

@@ -56,6 +56,7 @@ class SupplierDeleteView(BaseDeleteView):
     success_url = reverse_lazy('suppliers:supplier_list')
     permission_required = 'suppliers.delete_supplier'
     success_message = "Fornecedor excluido com sucesso!"
+    protected_error_message = "Nao e possivel eliminar este fornecedor porque esta associado a registos de compras."
 
 
 class SupplierTrashListView(BaseTrashListView):

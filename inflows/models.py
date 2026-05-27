@@ -20,8 +20,8 @@ class Inflow(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Inflow'
-        verbose_name_plural = 'Inflows'
+        verbose_name = 'Entrada'
+        verbose_name_plural = 'Entradas'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['supplier', 'created_at']),

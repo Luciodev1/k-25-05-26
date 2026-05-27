@@ -10,8 +10,8 @@ class Brand(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Brand'
-        verbose_name_plural = 'Brands'
+        verbose_name = 'Marca'
+        verbose_name_plural = 'Marcas'
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(

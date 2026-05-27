@@ -25,6 +25,7 @@ def sync_account_entry_on_payment(sender, instance, created, **kwargs):
             payment=instance,
             defaults={
                 'customer': instance.customer,
+                'tenant': instance.tenant,
                 'description': (
                     f'Pagamento Recebido - {instance.get_payment_method_display()}'
                     f' ({instance.description or ""})'
@@ -38,6 +39,7 @@ def sync_account_entry_on_payment(sender, instance, created, **kwargs):
             payment=instance,
             defaults={
                 'supplier': instance.supplier,
+                'tenant': instance.tenant,
                 'description': (
                     f'Pagamento Efetuado - {instance.get_payment_method_display()}'
                     f' ({instance.description or ""})'
