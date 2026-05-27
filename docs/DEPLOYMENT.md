@@ -33,6 +33,13 @@ celery -A app worker -l info
 celery -A app beat -l info
 ```
 
+## Flower (monitoramento Celery)
+
+```bash
+pip install flower
+celery -A app flower --port=5555 --basic_auth=admin:senha-segura
+```
+
 ## Health check
 
 ```bash

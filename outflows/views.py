@@ -8,6 +8,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django_filters.views import FilterView
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from products.models import Product
 from app.mixins import ExportMixin, HtmxMixin
 from . import models, forms
@@ -198,6 +200,7 @@ class OutflowRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('outflows:outflow_trash')
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class OutflowHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_outflow'
 
@@ -375,6 +378,7 @@ class DeliveryRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('outflows:delivery_trash')
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class DeliveryHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_delivery'
 

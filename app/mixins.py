@@ -13,6 +13,8 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django_filters.views import FilterView
 from io import BytesIO
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 
 class FinanceiroRequiredMixin(PermissionRequiredMixin):
@@ -241,7 +243,9 @@ class BaseHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilt
     model = None
     redirect_url: str | None = None
     protected_error_message: str = 'Nao e possivel eliminar permanentemente este registo.'
+    rate_limit = '10/m'
 
+    @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True))
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         try:
             obj = self.model.all_objects.get(pk=pk)

@@ -542,3 +542,73 @@ class ReportTenantScopedTest(TestCase):
         self.client.force_login(self.user_a)
         response = self.client.get('/reports/deliveries/')
         self.assertEqual(response.status_code, 200)
+
+
+class ReportExportMixinTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from tenants.models import Tenant
+        cls.tenant = Tenant.objects.create(name='TE', slug='te')
+        cls.user = User.objects.create_superuser('exportuser', 'e@t.com', 'pass')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
+        cls.brand = Brand.objects.create(name='B1', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C1', tenant=cls.tenant)
+        cls.product = Product.objects.create(
+            title='P1', category=cls.cat, brand=cls.brand,
+            cost_price=Decimal('10'), selling_price=Decimal('15'),
+            quantity=Decimal('50'), tenant=cls.tenant,
+        )
+        cls.customer = Customer.objects.create(name='CustE', tenant=cls.tenant)
+        cls.outflow = Outflow.objects.create(
+            product=cls.product, customer=cls.customer,
+            quantity=Decimal('1'), price=Decimal('15'),
+            tenant=cls.tenant,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_csv_export_delegates_to_celery_when_large(self):
+        from reports.mixins import ReportExportMixin
+        from django.http import HttpRequest, JsonResponse
+        request = HttpRequest()
+        request.user = self.user
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        mixin = ReportExportMixin()
+        queryset = Outflow.objects.all()
+        with patch.object(ReportExportMixin, '_delegate_async_export') as mock_delegate:
+            mock_delegate.return_value = JsonResponse({'task_id': 'abc', 'status': 'pending'})
+            with patch('reports.mixins.LARGE_EXPORT_THRESHOLD', 0):
+                response = mixin.export_csv_streaming(queryset, 'test.csv')
+        self.assertIsInstance(response, JsonResponse)
+        self.assertIn('task_id', response.content.decode())
+        mock_delegate.assert_called_once()
+
+    def test_csv_export_streams_when_small(self):
+        from reports.mixins import ReportExportMixin
+        from django.http import HttpRequest, HttpResponse
+        request = HttpRequest()
+        request.user = self.user
+        mixin = ReportExportMixin()
+        mixin.export_headers = ['ID', 'Nome']
+        mixin.export_fields = ['pk', 'product.title']
+        response = mixin.export_csv_streaming(Outflow.objects.none(), 'empty.csv')
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+
+
+class DashboardQueryCountTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from tenants.models import Tenant
+        cls.tenant = Tenant.objects.create(name='DQ', slug='dq')
+        cls.user = User.objects.create_superuser('dquser', 'dq@t.com', 'pass')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
+
+    def test_dashboard_loads_successfully(self):
+        self.client.force_login(self.user)
+        session = self.client.session
+        session['tenant_id'] = str(self.tenant.id)
+        session.save()
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)

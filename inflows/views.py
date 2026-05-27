@@ -7,6 +7,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django_filters.views import FilterView
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from products.models import Product
 from app.mixins import HtmxMixin
 from . import models, forms
@@ -157,6 +159,7 @@ class InflowRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('inflows:inflow_trash')
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class InflowHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'inflows.delete_inflow'
 

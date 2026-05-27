@@ -7,6 +7,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django_filters.views import FilterView
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from app.mixins import ExportMixin, HtmxMixin, GestorRequiredMixin
 from . import models, forms
 from .filters import ProductFilter
@@ -140,6 +142,7 @@ class ProductDeleteView(GestorRequiredMixin, DeleteView):
             return redirect(self.success_url)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class ProductBulkDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = ('products.delete_product',)
 
@@ -201,6 +204,7 @@ class ProductRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('products:product_trash')
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class ProductHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'products.delete_product'
 

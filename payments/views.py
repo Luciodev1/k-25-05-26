@@ -6,6 +6,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django_filters.views import FilterView
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from app.mixins import HtmxMixin
 from .models import Payment
 from .forms import PaymentForm
@@ -148,6 +150,7 @@ class PaymentRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('payments:payment_trash')
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class PaymentHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'payments.delete_payment'
 

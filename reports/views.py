@@ -37,6 +37,7 @@ def _get_filters(request):
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
+from django_ratelimit.decorators import ratelimit
 
 
 @login_required
@@ -50,6 +51,7 @@ def report_index(request):
 
 @login_required
 @permission_required('outflows.view_outflow', raise_exception=True)
+@ratelimit(key='user_or_ip', rate='10/m', method='GET', block=True)
 def outflows_by_customer_report(request):
     filters = _get_filters(request)
     tenant = getattr(request, 'tenant', None)
@@ -112,6 +114,7 @@ def outflows_by_customer_report(request):
 
 @login_required
 @permission_required('outflows.view_outflow', raise_exception=True)
+@ratelimit(key='user_or_ip', rate='10/m', method='GET', block=True)
 def deliveries_report(request):
     filters = _get_filters(request)
     tenant = getattr(request, 'tenant', None)
@@ -183,6 +186,7 @@ def deliveries_report(request):
 
 @login_required
 @permission_required('accounts.view_customeraccountentry', raise_exception=True)
+@ratelimit(key='user_or_ip', rate='10/m', method='GET', block=True)
 def customer_account_report(request):
     filters = _get_filters(request)
     tenant = getattr(request, 'tenant', None)
@@ -228,6 +232,7 @@ def customer_account_report(request):
 
 @login_required
 @permission_required('accounts.view_supplieraccountentry', raise_exception=True)
+@ratelimit(key='user_or_ip', rate='10/m', method='GET', block=True)
 def supplier_account_report(request):
     filters = _get_filters(request)
     tenant = getattr(request, 'tenant', None)
@@ -268,6 +273,7 @@ def supplier_account_report(request):
 
 
 @login_required
+@ratelimit(key='user_or_ip', rate='10/m', method='GET', block=True)
 def balances_report(request):
     if not (request.user.has_perm('accounts.view_customeraccountentry') or 
             request.user.has_perm('accounts.view_supplieraccountentry')):

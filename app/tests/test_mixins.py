@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import TestCase, RequestFactory
+from django.contrib.auth.models import AnonymousUser, User
 from django.http import HttpResponse
 from django.views.generic import TemplateView, View
 from django.core.exceptions import PermissionDenied
@@ -383,6 +384,7 @@ class BaseHardDeleteViewTest(TestCase):
     def _add_middleware(self, request):
         SessionMiddleware(lambda r: None).process_request(request)
         MessageMiddleware(lambda r: None).process_request(request)
+        request.user = AnonymousUser()
 
     def test_post_hard_deletes_object(self):
         pk = self.brand.pk

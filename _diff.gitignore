@@ -1,0 +1,22 @@
+--- .gitignore (原始)
+logs/
+backups/
+db.sqlite3
+*.pyc
+__pycache__/
+.env
+.env.*
+media/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+.pytest_cache/
+staticfiles/
+test_backups/
+
++++ .gitignore (修改后)
+Nothing needs to be added to .gitignore since only a markdown file (PLANO_MELHORIAS_DETALHADO.md) was added, which is a source/config file and should not be ignored.
