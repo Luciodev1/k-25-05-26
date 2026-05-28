@@ -2,7 +2,7 @@
 {% block title %}Detalhes da Saída — SGE{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce }}">
     /* Premium Printing Logic based on detalhes de entregas.html */
     @media print {
         @page { size: portrait; margin: 10mm; }

@@ -166,8 +166,12 @@ class TenantFilterMixin:
 
     def form_valid(self, form: Any) -> HttpResponse:
         tenant = getattr(self.request, 'tenant', None)
-        if tenant and hasattr(form.instance, self.tenant_field):
-            setattr(form.instance, self.tenant_field, tenant)
+        if tenant:
+            tenant_id_attr = f'{self.tenant_field}_id'
+            if hasattr(form.instance, self.tenant_field):
+                setattr(form.instance, self.tenant_field, tenant)
+            elif hasattr(form.instance, tenant_id_attr):
+                setattr(form.instance, tenant_id_attr, tenant.pk)
         return super().form_valid(form)
 
 

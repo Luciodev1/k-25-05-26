@@ -1,10 +1,11 @@
 from django.db import models
 from app.mixins import SoftDeleteModel
 from app.validators import validate_angolan_nif, email_validator
+from audit.signals import log_action
 
 
 class Supplier(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='suppliers')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='suppliers')
     name = models.CharField(max_length=500, db_index=True, verbose_name='Nome')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True, verbose_name='NIF')
@@ -31,6 +32,5 @@ class Supplier(SoftDeleteModel):
         return self.name
 
     def delete(self, using=None, keep_parents=False):
-        from audit.signals import log_action
         log_action(self, 'DELETE')
         super().delete(using=using, keep_parents=keep_parents)

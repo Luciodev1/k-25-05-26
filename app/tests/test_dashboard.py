@@ -15,33 +15,33 @@ from tenants.models import Tenant, TenantUser
 class DashboardViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='DashTest', slug='dash-test')
         cls.user = User.objects.create_superuser('admin', 'admin@test.com', 'adminpass')
-        cls.brand = Brand.objects.create(name='Brand')
-        cls.category = Category.objects.create(name='Cat')
-        cls.customer = Customer.objects.create(name='Customer')
-        cls.supplier = Supplier.objects.create(name='Supplier')
+        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Customer', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='Product', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('50'),
+            quantity=Decimal('50'), tenant=cls.tenant,
         )
         Product.objects.create(
             title='LowStock', category=cls.category, brand=cls.brand,
             cost_price=Decimal('5.00'), selling_price=Decimal('8.00'),
-            quantity=Decimal('3'),
+            quantity=Decimal('3'), tenant=cls.tenant,
         )
         Inflow.objects.create(
             product=cls.product, supplier=cls.supplier,
-            quantity=Decimal('20'), price=Decimal('10.00'),
+            quantity=Decimal('20'), price=Decimal('10.00'), tenant=cls.tenant,
         )
         Outflow.objects.create(
             product=cls.product, customer=cls.customer,
-            quantity=Decimal('5'), price=Decimal('15.00'),
+            quantity=Decimal('5'), price=Decimal('15.00'), tenant=cls.tenant,
         )
-        # Outflow pendente (not delivered)
         Outflow.objects.create(
             product=cls.product, customer=cls.customer,
-            quantity=Decimal('10'), price=Decimal('15.00'),
+            quantity=Decimal('10'), price=Decimal('15.00'), tenant=cls.tenant,
         )
 
     def test_dashboard_requires_login(self):

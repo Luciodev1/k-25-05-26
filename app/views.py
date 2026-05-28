@@ -2,19 +2,17 @@ import json
 import logging
 from decimal import Decimal
 from django.shortcuts import render
-from django.db.models import Sum, F, Value, DecimalField
+from django.db.models import Sum, F, Value, DecimalField, ExpressionWrapper, Count
 from django.db.models.functions import Coalesce, TruncMonth
-from django.db.models import Count
 from django.utils import timezone
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 from products.models import Product
 from suppliers.models import Supplier
 from customers.models import Customer
 from inflows.models import Inflow
 from outflows.models import Outflow, Delivery
 from accounts.models import CustomerAccountEntry, SupplierAccountEntry
-
-from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +86,6 @@ def dashboard(request):
         quantity_delivered__lt=F('quantity')
     ).select_related('customer', 'product')[:10])
 
-    from django.db.models import ExpressionWrapper
     total_stock_value = base_product.aggregate(
         total=Coalesce(
             Sum(ExpressionWrapper(F('quantity') * F('selling_price'), output_field=DecimalField(max_digits=30, decimal_places=2))),
@@ -123,22 +120,20 @@ def dashboard(request):
 
     low_stock_products = list(base_product.filter(quantity__lte=10).order_by('quantity')[:5])
 
-    cost_agg = base_product.aggregate(
-        total=Coalesce(
+    price_agg = base_product.aggregate(
+        total_cost=Coalesce(
             Sum(ExpressionWrapper(F('quantity') * F('cost_price'), output_field=DecimalField(max_digits=30, decimal_places=2))),
             Value(Decimal('0')),
             output_field=DecimalField(max_digits=30, decimal_places=2),
-        )
-    )
-    sell_agg = base_product.aggregate(
-        total=Coalesce(
+        ),
+        total_sell=Coalesce(
             Sum(ExpressionWrapper(F('quantity') * F('selling_price'), output_field=DecimalField(max_digits=30, decimal_places=2))),
             Value(Decimal('0')),
             output_field=DecimalField(max_digits=30, decimal_places=2),
-        )
+        ),
     )
-    total_cost = cost_agg['total']
-    total_sell = sell_agg['total']
+    total_cost = price_agg['total_cost']
+    total_sell = price_agg['total_sell']
     margin_pct = ((total_sell - total_cost) / total_cost * 100) if total_cost else Decimal('0')
 
     six_months_ago = first_of_month - timezone.timedelta(days=150)

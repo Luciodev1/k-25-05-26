@@ -14,7 +14,7 @@ class ContentSecurityPolicyMiddleware:
         response['Content-Security-Policy'] = (
             "default-src 'self'; "
             f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            f"style-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net; style-src-attr 'unsafe-inline'; "
             "img-src 'self' data:; "
             "font-src 'self' https://cdn.jsdelivr.net; "
             "frame-ancestors 'none'; "

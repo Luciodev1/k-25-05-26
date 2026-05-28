@@ -4,7 +4,7 @@
 {% block title %}Meu Perfil — SGE{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .profile-card {
     border: 1px solid var(--border);
     background-color: var(--bg-card);

@@ -6,18 +6,21 @@ from django.contrib.auth.models import User, Permission
 from customers.models import Customer
 from suppliers.models import Supplier
 from payments.models import Payment
+from tenants.models import Tenant, TenantUser
 
 
 class PaymentViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.customer = Customer.objects.create(name='Customer')
-        cls.supplier = Supplier.objects.create(name='Supplier')
+        cls.tenant = Tenant.objects.create(name='PayVT', slug='pay-vt')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
+        cls.customer = Customer.objects.create(name='Customer', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
         cls.payment = Payment.objects.create(
             type='RECEIPT', customer=cls.customer,
             amount=Decimal('500.00'), payment_method='CASH',
-            date=date.today(),
+            date=date.today(), tenant=cls.tenant,
         )
 
     def test_payment_list(self):
@@ -109,7 +112,7 @@ class PaymentViewTest(TestCase):
         payment = Payment.objects.create(
             type='RECEIPT', customer=self.customer,
             amount=Decimal('50.00'), payment_method='CASH',
-            date=date.today(),
+            date=date.today(), tenant=self.tenant,
         )
         payment.delete()
         response = self.client.post(f'/pagamentos/{payment.pk}/eliminar-permanente/')
@@ -120,8 +123,9 @@ class PaymentViewTest(TestCase):
 class PaymentFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.customer = Customer.objects.create(name='C')
-        cls.supplier = Supplier.objects.create(name='S')
+        cls.tenant = Tenant.objects.create(name='PayFT', slug='pay-ft')
+        cls.customer = Customer.objects.create(name='C', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='S', tenant=cls.tenant)
 
     def test_payment_form_valid_receipt(self):
         from payments.forms import PaymentForm
@@ -163,7 +167,6 @@ class PaymentFormTest(TestCase):
 
     def test_payment_form_tenant_filtering(self):
         from payments.forms import PaymentForm
-        from tenants.models import Tenant
         tenant = Tenant.objects.create(name='T', slug='t')
         tenant_cust = Customer.objects.create(name='TC', tenant=tenant)
         tenant_supp = Supplier.objects.create(name='TS', tenant=tenant)

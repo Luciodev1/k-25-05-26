@@ -1,16 +1,21 @@
 from django.test import TestCase
 from .models import Customer
 from .forms import CustomerForm
+from tenants.models import Tenant
 
 
 class CustomerModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='TestCustomerModel', slug='test-customer-model')
+
     def test_create_customer(self):
-        customer = Customer.objects.create(name='TestCustomer', phone='+244912345678', nif='123456789')
+        customer = Customer.objects.create(name='TestCustomer', phone='+244912345678', nif='123456789', tenant=self.tenant)
         self.assertEqual(str(customer), 'TestCustomer')
 
     def test_customer_ordering(self):
-        Customer.objects.create(name='Zebra')
-        Customer.objects.create(name='Alpha')
+        Customer.objects.create(name='Zebra', tenant=self.tenant)
+        Customer.objects.create(name='Alpha', tenant=self.tenant)
         customers = list(Customer.objects.values_list('name', flat=True))
         self.assertEqual(customers, ['Alpha', 'Zebra'])
 
@@ -42,7 +47,8 @@ class CustomerFormTest(TestCase):
 class CustomerViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.customer = Customer.objects.create(name='TestCustomer')
+        cls.tenant = Tenant.objects.create(name='TestCustomerView', slug='test-customer-view')
+        cls.customer = Customer.objects.create(name='TestCustomer', tenant=cls.tenant)
 
     def test_list_requires_login(self):
         response = self.client.get('/customers/list/')

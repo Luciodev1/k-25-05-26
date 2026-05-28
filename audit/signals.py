@@ -24,11 +24,22 @@ def _get_tracked_fields(instance):
     ]
 
 
+def _get_tenant(instance):
+    tenant = getattr(instance, 'tenant', None)
+    if tenant is None:
+        from audit.middleware import get_current_request
+        request = get_current_request()
+        if request:
+            tenant = getattr(request, 'tenant', None)
+    return tenant
+
+
 def create_audit_log(instance, action, changes=None):
     """Cria entrada de auditoria; falhas nunca interrompem operações de negócio."""
     from audit.models import AuditLog
     try:
         AuditLog.objects.create(
+            tenant=_get_tenant(instance),
             user=_get_user(),
             action=action,
             model_name=instance.__class__.__name__,
@@ -98,4 +109,3 @@ def _attach_signals(model):
             logger.warning('Erro no signal audit pre_delete: %s', exc, exc_info=True)
 
 
-_connect_signals()

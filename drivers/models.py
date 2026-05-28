@@ -1,9 +1,10 @@
 from django.db import models
 from app.mixins import SoftDeleteModel
+from audit.signals import log_action
 
 
 class Driver(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='drivers')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='drivers')
     name = models.CharField(max_length=200, verbose_name='Nome', db_index=True)
     phone = models.CharField(max_length=20, verbose_name='Telefone')
     truck_plate = models.CharField(max_length=50, verbose_name='Matrícula do Caminhão', db_index=True)
@@ -32,6 +33,5 @@ class Driver(SoftDeleteModel):
         return f'{self.name} ({self.truck_plate})'
 
     def delete(self, using=None, keep_parents=False):
-        from audit.signals import log_action
         log_action(self, 'DELETE')
         super().delete(using=using, keep_parents=keep_parents)

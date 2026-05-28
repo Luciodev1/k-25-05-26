@@ -23,8 +23,12 @@ from tenants.models import Tenant
 class SoftDeleteModelTest(TestCase):
     """Testa SoftDeleteModel através de Brand (modelo real com tabela BD)."""
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='Test', slug='test')
+
     def setUp(self):
-        self.brand = Brand.objects.create(name='SoftDeleteTestBrand')
+        self.brand = Brand.objects.create(name='SoftDeleteTestBrand', tenant=self.tenant)
 
     def test_soft_delete_marks_deleted(self):
         self.brand.delete()
@@ -203,7 +207,7 @@ class TenantFilterMixinTest(TestCase):
         view = _ConcreteView()
         view.request = request
         response = view.form_valid(form)
-        self.assertEqual(form.instance.tenant, self.tenant)
+        self.assertEqual(form.instance.tenant_id, self.tenant.pk)
 
     def test_form_valid_no_tenant_skips_set(self):
         class _ConcreteView(TenantFilterMixin, _BaseFormValidView):
@@ -276,9 +280,13 @@ class BaseDetailViewTest(TestCase):
 
 
 class BaseDeleteViewTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='DelTest', slug='del-test')
+
     def setUp(self):
         self.factory = RequestFactory()
-        self.brand = Brand.objects.create(name='DeleteTestBrand')
+        self.brand = Brand.objects.create(name='DeleteTestBrand', tenant=self.tenant)
 
     def _add_middleware(self, request):
         SessionMiddleware(lambda r: None).process_request(request)
@@ -310,8 +318,8 @@ class BaseDeleteViewTest(TestCase):
 class BaseTrashListViewTest(TestCase):
     def setUp(self):
         self.tenant = Tenant.objects.create(name='T', slug='t')
-        self.brand = Brand.objects.create(name='Active')
-        self.deleted = Brand.objects.create(name='Deleted')
+        self.brand = Brand.objects.create(name='Active', tenant=self.tenant)
+        self.deleted = Brand.objects.create(name='Deleted', tenant=self.tenant)
         self.deleted.delete()
 
     def test_get_queryset_returns_only_deleted(self):
@@ -413,7 +421,8 @@ class ExportMixinGetTest(TestCase):
         self.mixin.export_columns = [('Nome', 'name')]
         self.mixin.model = MagicMock()
         self.mixin.model._meta.verbose_name_plural = 'Items'
-        self.mixin.get_queryset = MagicMock(return_value=[Brand(name='X')])
+        self.tenant = Tenant.objects.create(name='ExportTest', slug='export-test')
+        self.mixin.get_queryset = MagicMock(return_value=[Brand(name='X', tenant=self.tenant)])
 
     def test_get_with_export_excel(self):
         request = self.factory.get('/?export=excel')

@@ -4,6 +4,7 @@ from customers.models import Customer
 from suppliers.models import Supplier
 from app.mixins import SoftDeleteModel
 from app.validators import validate_payment_date
+from audit.signals import log_action
 
 
 class Payment(SoftDeleteModel):
@@ -19,7 +20,7 @@ class Payment(SoftDeleteModel):
         ('DEPOSIT', 'Depósito'),
     ]
 
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='payments')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='payments')
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, verbose_name='Tipo')
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, null=True, blank=True, related_name='payments', verbose_name='Cliente')
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, null=True, blank=True, related_name='payments', verbose_name='Fornecedor')
@@ -52,15 +53,9 @@ class Payment(SoftDeleteModel):
         """Soft delete com limpeza de contas."""
         with transaction.atomic():
             from accounts.models import CustomerAccountEntry, SupplierAccountEntry
-            tenant_filter = {}
-            if self.tenant_id:
-                tenant_filter['tenant'] = self.tenant
             if self.type == 'RECEIPT':
-                CustomerAccountEntry.objects.filter(payment=self, **tenant_filter).delete()
+                CustomerAccountEntry.objects.filter(payment=self, tenant=self.tenant).delete()
             else:
-                SupplierAccountEntry.objects.filter(payment=self, **tenant_filter).delete()
-            # Log de auditoria
-            from audit.signals import log_action
+                SupplierAccountEntry.objects.filter(payment=self, tenant=self.tenant).delete()
             log_action(self, 'DELETE')
-            # Soft delete
             super().delete(using=using, keep_parents=keep_parents)

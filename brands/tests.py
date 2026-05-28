@@ -1,28 +1,34 @@
 from django.test import TestCase
 from .models import Brand
+from tenants.models import Tenant
 
 
 class BrandModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='BrandsTest', slug='brands-test')
+
     def test_create_brand(self):
-        brand = Brand.objects.create(name='TestBrand', description='Test description')
+        brand = Brand.objects.create(name='TestBrand', description='Test description', tenant=self.tenant)
         self.assertEqual(str(brand), 'TestBrand')
         self.assertEqual(brand.description, 'Test description')
 
     def test_brand_ordering(self):
-        Brand.objects.create(name='Zebra')
-        Brand.objects.create(name='Alpha')
+        Brand.objects.create(name='Zebra', tenant=self.tenant)
+        Brand.objects.create(name='Alpha', tenant=self.tenant)
         brands = list(Brand.objects.values_list('name', flat=True))
         self.assertEqual(brands, ['Alpha', 'Zebra'])
 
     def test_brand_optional_description(self):
-        brand = Brand.objects.create(name='NoDesc')
+        brand = Brand.objects.create(name='NoDesc', tenant=self.tenant)
         self.assertIn(brand.description, ('', None))
 
 
 class BrandViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.brand = Brand.objects.create(name='TestBrand')
+        cls.tenant = Tenant.objects.create(name='BrandsViewTest', slug='brands-view-test')
+        cls.brand = Brand.objects.create(name='TestBrand', tenant=cls.tenant)
 
     def test_list_requires_login(self):
         response = self.client.get('/brands/list/')

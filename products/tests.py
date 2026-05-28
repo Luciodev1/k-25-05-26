@@ -5,17 +5,19 @@ from django.contrib.auth.models import User, Permission
 from brands.models import Brand
 from categories.models import Category
 from products.models import Product
+from tenants.models import Tenant
 
 
 class ProductViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.brand = Brand.objects.create(name='TestBrand')
-        cls.category = Category.objects.create(name='TestCategory')
+        cls.tenant = Tenant.objects.create(name='ProdsTest', slug='prods-test')
+        cls.brand = Brand.objects.create(name='TestBrand', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='TestCategory', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='Test Product', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('100'),
+            quantity=Decimal('100'), tenant=cls.tenant,
         )
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
 
@@ -78,6 +80,7 @@ class ProductViewTest(TestCase):
         product = Product.objects.create(
             title='Del Me', category=self.category, brand=self.brand,
             cost_price=Decimal('5'), selling_price=Decimal('8'), quantity=Decimal('1'),
+            tenant=self.tenant,
         )
         response = self.client.post(f'/products/{product.pk}/delete/')
         self.assertEqual(response.status_code, 302)
@@ -104,6 +107,7 @@ class ProductViewTest(TestCase):
         product = Product.objects.create(
             title='HardDel', category=self.category, brand=self.brand,
             cost_price=Decimal('5'), selling_price=Decimal('8'), quantity=Decimal('1'),
+            tenant=self.tenant,
         )
         product.delete()  # soft-delete first
         response = self.client.post(f'/products/{product.pk}/hard-delete/')
@@ -115,6 +119,7 @@ class ProductViewTest(TestCase):
         p2 = Product.objects.create(
             title='BulkDel', category=self.category, brand=self.brand,
             cost_price=Decimal('5'), selling_price=Decimal('8'), quantity=Decimal('1'),
+            tenant=self.tenant,
         )
         response = self.client.post('/products/bulk-delete/', {
             'ids': [self.product.pk, p2.pk],
@@ -134,8 +139,9 @@ class ProductViewTest(TestCase):
 class ProductFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.brand = Brand.objects.create(name='B')
-        cls.cat = Category.objects.create(name='C')
+        cls.tenant = Tenant.objects.create(name='ProdsTest', slug='prods-test')
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
 
     def test_product_form_valid(self):
         from products.forms import ProductForm

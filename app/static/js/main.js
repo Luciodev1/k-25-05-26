@@ -22,10 +22,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Mobile sidebar toggle
     var sidebarToggle = document.querySelector('#sidebarToggle');
+    var sidebarBackdrop = document.querySelector('#sidebarBackdrop');
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function () {
             var sidebar = document.querySelector('.sge-sidebar');
-            if (sidebar) sidebar.classList.toggle('show');
+            if (sidebar) {
+                sidebar.classList.toggle('show');
+                if (sidebarBackdrop) sidebarBackdrop.classList.toggle('show');
+            }
+        });
+    }
+
+    // Close sidebar on backdrop click
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', function () {
+            var sidebar = document.querySelector('.sge-sidebar');
+            if (sidebar) sidebar.classList.remove('show');
+            sidebarBackdrop.classList.remove('show');
         });
     }
 
@@ -124,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (btn) {
             var sidebar = document.querySelector('.sge-sidebar');
             if (sidebar) sidebar.classList.remove('show');
+            if (sidebarBackdrop) sidebarBackdrop.classList.remove('show');
         }
     });
 

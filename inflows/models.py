@@ -4,10 +4,11 @@ from django.db.models import F
 from suppliers.models import Supplier
 from products.models import Product
 from app.mixins import SoftDeleteModel
+from audit.signals import log_action
 
 
 class Inflow(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='inflows')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='inflows')
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='inflows', verbose_name='Fornecedor')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='inflows', verbose_name='Produto')
     quantity = models.DecimalField(
@@ -40,10 +41,6 @@ class Inflow(SoftDeleteModel):
     def delete(self, using=None, keep_parents=False):
         with transaction.atomic():
             from accounts.models import SupplierAccountEntry
-            tenant_filter = {}
-            if self.tenant_id:
-                tenant_filter['tenant'] = self.tenant
-            SupplierAccountEntry.objects.filter(inflow=self, **tenant_filter).delete()
-            from audit.signals import log_action
+            SupplierAccountEntry.objects.filter(inflow=self, tenant=self.tenant).delete()
             log_action(self, 'DELETE')
             super().delete(using=using, keep_parents=keep_parents)

@@ -9,6 +9,7 @@ from customers.models import Customer
 from drivers.models import Driver
 from app.mixins import SoftDeleteModel
 from app.validators import validate_file_content
+from audit.signals import log_action
 
 
 def validate_file_size(value):
@@ -25,7 +26,7 @@ class Outflow(SoftDeleteModel):
         ('delivered', 'Entregue'),
     ]
 
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='outflows')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='outflows')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='outflows', verbose_name='Produto')
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='outflows', verbose_name='Cliente')
     quantity = models.DecimalField(
@@ -70,11 +71,13 @@ class Outflow(SoftDeleteModel):
         return 'delivered'
 
     def save(self, *args, **kwargs):
-        # Se quantity_delivered é uma F()-expression, não calcular status —
-        # o chamador deve actualizar o status após refresh_from_db.
-        if not isinstance(self.quantity_delivered, BaseExpression):
+        # If quantity_delivered is a database expression (e.g. F()),
+        # skip status computation — caller must refresh and call update_status.
+        if isinstance(self.quantity_delivered, BaseExpression):
+            super().save(*args, **kwargs)
+        else:
             self.status = self._compute_status()
-        super().save(*args, **kwargs)
+            super().save(*args, **kwargs)
 
     def update_status(self):
         """Actualiza o campo status com base nos valores actuais de quantity e quantity_delivered."""
@@ -87,10 +90,7 @@ class Outflow(SoftDeleteModel):
     def delete(self, using=None, keep_parents=False):
         with transaction.atomic():
             from accounts.models import CustomerAccountEntry
-            tenant_filter = {}
-            if self.tenant_id:
-                tenant_filter['tenant'] = self.tenant
-            CustomerAccountEntry.objects.filter(outflow=self, **tenant_filter).delete()
+            CustomerAccountEntry.objects.filter(outflow=self, tenant=self.tenant).delete()
 
             for delivery in self.deliveries.select_for_update().all():
                 delivery.delete()
@@ -98,7 +98,6 @@ class Outflow(SoftDeleteModel):
             self.quantity_delivered = 0
             self.save(update_fields=['quantity_delivered', 'status'])
 
-            from audit.signals import log_action
             log_action(self, 'DELETE')
             super().delete(using=using, keep_parents=keep_parents)
 
@@ -113,7 +112,7 @@ class Outflow(SoftDeleteModel):
 
 
 class Delivery(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='deliveries')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='deliveries')
     outflow = models.ForeignKey(Outflow, on_delete=models.PROTECT, related_name='deliveries')
     driver = models.ForeignKey(
         Driver, on_delete=models.PROTECT, related_name='deliveries',
@@ -207,7 +206,6 @@ class Delivery(SoftDeleteModel):
             Delivery.objects.select_for_update().filter(pk=self.pk)
             self._stock_handled = True
             self._adjust_stock_on_remove()
-            from audit.signals import log_action
             log_action(self, 'DELETE')
             now = timezone.now()
             type(self).all_objects.filter(pk=self.pk).update(

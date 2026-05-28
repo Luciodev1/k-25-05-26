@@ -3,10 +3,11 @@ from django.core.validators import MinValueValidator
 from categories.models import Category
 from brands.models import Brand
 from app.mixins import SoftDeleteModel
+from audit.signals import log_action
 
 
 class Product(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True, related_name='products')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='products')
     title = models.CharField(max_length=500, verbose_name='Título')
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', verbose_name='Categoria')
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', verbose_name='Marca')
@@ -41,6 +42,5 @@ class Product(SoftDeleteModel):
         return self.title
 
     def delete(self, using=None, keep_parents=False):
-        from audit.signals import log_action
         log_action(self, 'DELETE')
         super().delete(using=using, keep_parents=keep_parents)

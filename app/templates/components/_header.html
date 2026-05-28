@@ -20,8 +20,8 @@
                 {% if notifs.count > 0 %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">{{ notifs.count }}</span>{% endif %}
             </button>
             <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 mt-3 animate-up overflow-hidden" style="width: 350px; border-radius: 16px !important;">
-                <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
-                    <h6 class="fw-bold mb-0">Centro de Notificacoes</h6>
+                <div class="p-3 bg-body-tertiary border-bottom d-flex align-items-center justify-content-between">
+                    <h6 class="fw-bold mb-0 text-body">Centro de Notificacoes</h6>
                     {% if notifs.count > 0 %}<span class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">{{ notifs.count }}</span>{% endif %}
                 </div>
                 <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
@@ -30,7 +30,7 @@
                         <div class="d-flex gap-3">
                             <div class="bg-body-secondary p-2 rounded-3 d-flex align-items-center justify-content-center {{ n.color }}" style="width: 40px; height: 40px;"><i class="bi {{ n.icon }}"></i></div>
                             <div class="flex-grow-1">
-                                <div class="fw-bold small text-dark">{{ n.title }}</div>
+                                    <div class="fw-bold small text-body">{{ n.title }}</div>
                                 <div class="extra-small text-muted">{{ n.message }}</div>
                             </div>
                         </div>

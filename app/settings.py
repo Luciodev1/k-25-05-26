@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
-    raise ValueError("A variavel de ambiente DJANGO_SECRET_KEY nao esta definida.")
+    raise ValueError("The DJANGO_SECRET_KEY environment variable is not set.")
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
 # Always enable debug mode when running tests (pytest or manage.py test)
@@ -115,12 +115,33 @@ LOGOUT_REDIRECT_URL = 'login'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Use PostgreSQL in production; SQLite is for local development only.
+# Set DATABASE_URL=postgres://user:password@host:port/dbname to use PostgreSQL.
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    import re
+    match = re.match(r'postgres(?:ql)?://(.+):(.+)@(.+):(\d+)/(.+)', DATABASE_URL)
+    if match:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': match.group(5),
+                'USER': match.group(1),
+                'PASSWORD': match.group(2),
+                'HOST': match.group(3),
+                'PORT': match.group(4),
+                'OPTIONS': {'sslmode': os.environ.get('DB_SSLMODE', 'prefer')},
+            }
+        }
+    else:
+        raise ValueError('DATABASE_URL must be in format: postgres://user:password@host:port/dbname')
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Cache
@@ -227,8 +248,7 @@ if not DEBUG:
     X_FRAME_OPTIONS = 'DENY'
     SECURE_HSTS_SECONDS = 31536000  # 1 ano
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # HSTS preload é irreversível — só activar após meses de HSTS sem problemas
-    SECURE_HSTS_PRELOAD = False
+    SECURE_HSTS_PRELOAD = True
     SECURE_SSL_REDIRECT = True
     CSRF_COOKIE_HTTPONLY = True
     SESSION_COOKIE_HTTPONLY = True

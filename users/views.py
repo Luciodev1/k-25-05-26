@@ -8,10 +8,10 @@ from django.utils.decorators import method_decorator
 logger = logging.getLogger(__name__)
 
 
-@method_decorator(ratelimit(key='ip', rate='5/15m', method='POST', block=False), name='post')
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
 
+    @method_decorator(ratelimit(key='ip', rate='5/15m', method='POST', block=False))
     def dispatch(self, request, *args, **kwargs):
         ip = request.META.get('REMOTE_ADDR', '')
         if self._is_blocked(ip):

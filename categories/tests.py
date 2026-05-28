@@ -1,28 +1,34 @@
 from django.test import TestCase
 from .models import Category
+from tenants.models import Tenant
 
 
 class CategoryModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='CatsTest', slug='cats-test')
+
     def test_create_category(self):
-        cat = Category.objects.create(name='TestCat', description='Test description')
+        cat = Category.objects.create(name='TestCat', description='Test description', tenant=self.tenant)
         self.assertEqual(str(cat), 'TestCat')
         self.assertEqual(cat.description, 'Test description')
 
     def test_category_ordering(self):
-        Category.objects.create(name='Zebra')
-        Category.objects.create(name='Alpha')
+        Category.objects.create(name='Zebra', tenant=self.tenant)
+        Category.objects.create(name='Alpha', tenant=self.tenant)
         cats = list(Category.objects.values_list('name', flat=True))
         self.assertEqual(cats, ['Alpha', 'Zebra'])
 
     def test_category_optional_description(self):
-        cat = Category.objects.create(name='NoDesc')
+        cat = Category.objects.create(name='NoDesc', tenant=self.tenant)
         self.assertIn(cat.description, ('', None))
 
 
 class CategoryViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.category = Category.objects.create(name='TestCat')
+        cls.tenant = Tenant.objects.create(name='CatsTest', slug='cats-test')
+        cls.category = Category.objects.create(name='TestCat', tenant=cls.tenant)
 
     def test_list_requires_login(self):
         response = self.client.get('/categories/list/')

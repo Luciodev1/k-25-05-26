@@ -54,7 +54,7 @@ def notify_task_completion(user_email: str | None, task_name: str, result_path: 
             message=body,
             from_email=None,
             recipient_list=[user_email],
-            fail_silently=True,
+            fail_silently=False,
         )
     except Exception:
         logger.exception('Falha ao enviar email de notificação')

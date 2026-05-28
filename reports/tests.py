@@ -54,13 +54,15 @@ class ReportContentTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('testuser', 'test@test.com', 'testpass123')
-        cls.brand = Brand.objects.create(name='Brand')
-        cls.category = Category.objects.create(name='Cat')
-        cls.customer = Customer.objects.create(name='Customer')
-        cls.supplier = Supplier.objects.create(name='Supplier')
+        cls.tenant = Tenant.objects.create(name='RCT', slug='rct')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
+        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Customer', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='Product', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10.00'), selling_price=Decimal('15.00'), quantity=Decimal('100'),
+            cost_price=Decimal('10.00'), selling_price=Decimal('15.00'), quantity=Decimal('100'), tenant=cls.tenant,
         )
 
     def test_outflows_report_view(self):
@@ -68,6 +70,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/outflows-by-customer/')
         self.assertEqual(response.status_code, 200)
@@ -78,6 +81,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('5'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get(
             f'/reports/outflows-by-customer/?customer={self.customer.pk}'
@@ -97,8 +101,9 @@ class ReportContentTest(TestCase):
         outflow = Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
-        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'))
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
         response = self.client.get('/reports/deliveries/')
         self.assertEqual(response.status_code, 200)
 
@@ -107,8 +112,9 @@ class ReportContentTest(TestCase):
         outflow = Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
-        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'))
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
         response = self.client.get('/reports/deliveries/?status=pending')
         self.assertEqual(response.status_code, 200)
 
@@ -117,6 +123,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/customer-account/')
         self.assertEqual(response.status_code, 200)
@@ -133,6 +140,7 @@ class ReportContentTest(TestCase):
         Inflow.objects.create(
             supplier=self.supplier, product=self.product,
             quantity=Decimal('20'), price=Decimal('10.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/supplier-account/')
         self.assertEqual(response.status_code, 200)
@@ -164,6 +172,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/outflows-by-customer/?export=excel')
         self.assertEqual(response.status_code, 200)
@@ -177,6 +186,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/outflows-by-customer/?export=pdf')
         self.assertEqual(response.status_code, 200)
@@ -187,8 +197,9 @@ class ReportContentTest(TestCase):
         outflow = Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
-        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'))
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
         response = self.client.get('/reports/deliveries/?export=excel')
         self.assertEqual(response.status_code, 200)
 
@@ -197,8 +208,9 @@ class ReportContentTest(TestCase):
         outflow = Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
-        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'))
+        Delivery.objects.create(outflow=outflow, quantity=Decimal('5'), tenant=self.tenant)
         response = self.client.get('/reports/deliveries/?export=pdf')
         self.assertEqual(response.status_code, 200)
 
@@ -207,6 +219,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/customer-account/?export=excel')
         self.assertEqual(response.status_code, 200)
@@ -216,6 +229,7 @@ class ReportContentTest(TestCase):
         Outflow.objects.create(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'),
+            tenant=self.tenant,
         )
         response = self.client.get('/reports/customer-account/?export=pdf')
         self.assertEqual(response.status_code, 200)

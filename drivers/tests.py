@@ -1,20 +1,26 @@
 from django.test import TestCase
 from .models import Driver
+from tenants.models import Tenant
 
 
 class DriverModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='TestDriverModel', slug='test-driver-model')
+
     def test_create_driver(self):
         driver = Driver.objects.create(
             name='TestDriver',
             phone='+244912345678',
             truck_plate='LD-12-34-AB',
             cistern_plate='LD-56-78-CD',
+            tenant=self.tenant,
         )
         self.assertEqual(str(driver), 'TestDriver (LD-12-34-AB)')
 
     def test_driver_ordering(self):
-        Driver.objects.create(name='Zebra', phone='1', truck_plate='A', cistern_plate='B')
-        Driver.objects.create(name='Alpha', phone='2', truck_plate='C', cistern_plate='D')
+        Driver.objects.create(name='Zebra', phone='1', truck_plate='A', cistern_plate='B', tenant=self.tenant)
+        Driver.objects.create(name='Alpha', phone='2', truck_plate='C', cistern_plate='D', tenant=self.tenant)
         drivers = list(Driver.objects.values_list('name', flat=True))
         self.assertEqual(drivers, ['Alpha', 'Zebra'])
 
@@ -22,11 +28,13 @@ class DriverModelTest(TestCase):
 class DriverViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='TestDriverView', slug='test-driver-view')
         cls.driver = Driver.objects.create(
             name='TestDriver',
             phone='+244912345678',
             truck_plate='LD-12-34-AB',
             cistern_plate='LD-56-78-CD',
+            tenant=cls.tenant,
         )
 
     def test_list_requires_login(self):

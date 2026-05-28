@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Guia de Remessa #{{ delivery.shipping_guide_number|default:delivery.id }} - SGE</title>
-    <style>
+    <style nonce="{{ csp_nonce }}">
         :root {
             --primary-color: #000;
             --border-color: #333;

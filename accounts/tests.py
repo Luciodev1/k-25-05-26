@@ -10,28 +10,31 @@ from suppliers.models import Supplier
 from outflows.models import Outflow
 from inflows.models import Inflow
 from accounts.models import CustomerAccountEntry, SupplierAccountEntry
+from tenants.models import Tenant, TenantUser
 
 
 class AccountViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.brand = Brand.objects.create(name='Brand')
-        cls.category = Category.objects.create(name='Cat')
-        cls.customer = Customer.objects.create(name='Test Customer')
-        cls.supplier = Supplier.objects.create(name='Test Supplier')
+        cls.tenant = Tenant.objects.create(name='AcctVT', slug='acct-vt')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
+        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Test Customer', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Test Supplier', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='Product', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('100'),
+            quantity=Decimal('100'), tenant=cls.tenant,
         )
         cls.outflow = Outflow.objects.create(
             product=cls.product, customer=cls.customer,
-            quantity=Decimal('10'), price=Decimal('15.00'),
+            quantity=Decimal('10'), price=Decimal('15.00'), tenant=cls.tenant,
         )
         cls.inflow = Inflow.objects.create(
             product=cls.product, supplier=cls.supplier,
-            quantity=Decimal('20'), price=Decimal('10.00'),
+            quantity=Decimal('20'), price=Decimal('10.00'), tenant=cls.tenant,
         )
 
     def test_customer_account_view(self):
@@ -121,22 +124,24 @@ class AccountEntryUpdateDeleteTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.brand = Brand.objects.create(name='B')
-        cls.category = Category.objects.create(name='C')
-        cls.customer = Customer.objects.create(name='Cust')
-        cls.supplier = Supplier.objects.create(name='Supp')
+        cls.tenant = Tenant.objects.create(name='AcctEUDT', slug='acct-eudt')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='P', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('100'),
+            quantity=Decimal('100'), tenant=cls.tenant,
         )
         cls.customer_entry = CustomerAccountEntry.objects.create(
             customer=cls.customer, debit=Decimal('100'), credit=Decimal('0'),
-            description='Test debit', date='2026-01-01',
+            description='Test debit', date='2026-01-01', tenant=cls.tenant,
         )
         cls.supplier_entry = SupplierAccountEntry.objects.create(
             supplier=cls.supplier, debit=Decimal('0'), credit=Decimal('200'),
-            description='Test credit', date='2026-01-01',
+            description='Test credit', date='2026-01-01', tenant=cls.tenant,
         )
 
     def test_customer_entry_update_view_get(self):
@@ -196,27 +201,28 @@ class AccountEntryModelTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.brand = Brand.objects.create(name='B')
-        cls.category = Category.objects.create(name='C')
-        cls.customer = Customer.objects.create(name='Cust')
-        cls.supplier = Supplier.objects.create(name='Supp')
+        cls.tenant = Tenant.objects.create(name='AcctEMT', slug='acct-emt')
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='P', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('100'),
+            quantity=Decimal('100'), tenant=cls.tenant,
         )
 
     def test_customer_entry_str(self):
         entry = CustomerAccountEntry.objects.create(
             customer=self.customer, debit=Decimal('100'), credit=Decimal('0'),
-            date='2026-01-01',
+            date='2026-01-01', tenant=self.tenant,
         )
         self.assertIn('Cust', str(entry))
 
     def test_supplier_entry_str(self):
         entry = SupplierAccountEntry.objects.create(
             supplier=self.supplier, debit=Decimal('0'), credit=Decimal('100'),
-            date='2026-01-01',
+            date='2026-01-01', tenant=self.tenant,
         )
         self.assertIn('Supp', str(entry))
 
@@ -224,8 +230,9 @@ class AccountEntryModelTest(TestCase):
 class PaymentFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.customer = Customer.objects.create(name='FCust')
-        cls.supplier = Supplier.objects.create(name='FSupp')
+        cls.tenant = Tenant.objects.create(name='AcctPFT', slug='acct-pft')
+        cls.customer = Customer.objects.create(name='FCust', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='FSupp', tenant=cls.tenant)
 
     def test_customer_payment_form_valid(self):
         from accounts.forms import CustomerPaymentForm

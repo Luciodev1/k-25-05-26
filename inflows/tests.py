@@ -7,18 +7,20 @@ from categories.models import Category
 from products.models import Product
 from suppliers.models import Supplier
 from inflows.models import Inflow
+from tenants.models import Tenant, TenantUser
 
 
 class InflowSignalTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.brand = Brand.objects.create(name='Brand')
-        cls.category = Category.objects.create(name='Cat')
-        cls.supplier = Supplier.objects.create(name='Supplier')
+        cls.tenant = Tenant.objects.create(name='XTest', slug='x-test')
+        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='Product', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('100'),
+            quantity=Decimal('100'), tenant=cls.tenant,
         )
 
     def test_inflow_increases_stock(self):
@@ -26,6 +28,7 @@ class InflowSignalTest(TestCase):
         Inflow.objects.create(
             supplier=self.supplier, product=self.product,
             quantity=Decimal('50'), price=Decimal('10.00'),
+            tenant=self.tenant,
         )
         self.product.refresh_from_db()
         self.assertEqual(self.product.quantity, Decimal('150'))
@@ -34,6 +37,7 @@ class InflowSignalTest(TestCase):
         inflow = Inflow.objects.create(
             supplier=self.supplier, product=self.product,
             quantity=Decimal('30'), price=Decimal('10.00'),
+            tenant=self.tenant,
         )
         self.product.refresh_from_db()
         self.assertEqual(self.product.quantity, Decimal('130'))
@@ -45,10 +49,12 @@ class InflowSignalTest(TestCase):
         Inflow.objects.create(
             supplier=self.supplier, product=self.product,
             quantity=Decimal('10'), price=Decimal('10.00'),
+            tenant=self.tenant,
         )
         Inflow.objects.create(
             supplier=self.supplier, product=self.product,
             quantity=Decimal('20'), price=Decimal('10.00'),
+            tenant=self.tenant,
         )
         self.product.refresh_from_db()
         self.assertEqual(self.product.quantity, Decimal('130'))
@@ -57,18 +63,21 @@ class InflowSignalTest(TestCase):
 class InflowViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.tenant = Tenant.objects.create(name='XTest2', slug='x-test2')
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.brand = Brand.objects.create(name='Brand')
-        cls.category = Category.objects.create(name='Cat')
-        cls.supplier = Supplier.objects.create(name='Supplier')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
+        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
+        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='Product', category=cls.category, brand=cls.brand,
             cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('100'),
+            quantity=Decimal('100'), tenant=cls.tenant,
         )
         cls.inflow = Inflow.objects.create(
             product=cls.product, supplier=cls.supplier,
             quantity=Decimal('20'), price=Decimal('10.00'),
+            tenant=cls.tenant,
         )
 
     def test_inflow_list(self):
@@ -146,6 +155,7 @@ class InflowViewTest(TestCase):
         inflow = Inflow.objects.create(
             product=self.product, supplier=self.supplier,
             quantity=Decimal('5'), price=Decimal('10.00'),
+            tenant=self.tenant,
         )
         inflow.delete()
         response = self.client.post(f'/inflows/{inflow.pk}/hard-delete/')
@@ -159,13 +169,14 @@ class InflowFormTest(TestCase):
         from brands.models import Brand
         from categories.models import Category
         from suppliers.models import Supplier
-        cls.brand = Brand.objects.create(name='B')
-        cls.cat = Category.objects.create(name='C')
-        cls.supplier = Supplier.objects.create(name='S')
+        cls.tenant = Tenant.objects.create(name='XTest3', slug='x-test3')
+        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
+        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
+        cls.supplier = Supplier.objects.create(name='S', tenant=cls.tenant)
         cls.product = Product.objects.create(
             title='P', category=cls.cat, brand=cls.brand,
             cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('0'),
+            quantity=Decimal('0'), tenant=cls.tenant,
         )
 
     def test_inflow_form_valid(self):
@@ -187,7 +198,6 @@ class InflowFormTest(TestCase):
 
     def test_inflow_form_tenant_filtering(self):
         from inflows.forms import InflowForm
-        from tenants.models import Tenant
         tenant = Tenant.objects.create(name='T', slug='t')
         tenant_product = Product.objects.create(
             title='TP', category=self.cat, brand=self.brand,
