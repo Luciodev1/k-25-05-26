@@ -1,14 +1,13 @@
 from django.db import models
 from django.db.models import Q
-from django.db.models.base import Model
+
 from customers.models import Customer
 from suppliers.models import Supplier
 from outflows.models import Outflow
 from inflows.models import Inflow
 
 
-class BaseAccountEntry(Model):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE)
+class BaseAccountEntry(models.Model):
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     description = models.CharField(max_length=500)
     debit = models.DecimalField(max_digits=20, decimal_places=2, default=0)

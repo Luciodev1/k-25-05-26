@@ -35,6 +35,9 @@ class Payment(SoftDeleteModel):
         verbose_name = 'Pagamento'
         verbose_name_plural = 'Pagamentos'
         ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['tenant', 'is_deleted']),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=(

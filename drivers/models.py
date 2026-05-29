@@ -16,14 +16,17 @@ class Driver(SoftDeleteModel):
         verbose_name = 'Motorista'
         verbose_name_plural = 'Motoristas'
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['tenant', 'is_deleted']),
+        ]
         constraints = [
             models.UniqueConstraint(
-                fields=['truck_plate'],
+                fields=['tenant', 'truck_plate'],
                 condition=models.Q(is_deleted=False),
                 name='driver_truck_plate_unique',
             ),
             models.UniqueConstraint(
-                fields=['cistern_plate'],
+                fields=['tenant', 'cistern_plate'],
                 condition=models.Q(is_deleted=False),
                 name='driver_cistern_plate_unique',
             ),

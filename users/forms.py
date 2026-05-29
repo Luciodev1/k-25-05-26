@@ -64,11 +64,18 @@ class UserCreateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.tenant = kwargs.pop('tenant', None)
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         if self.tenant:
             from tenants.models import TenantUser
             self.fields['tenant_role'].choices = TenantUser.ROLE_CHOICES
             self.fields['tenant_role'].initial = 'operator'
+            if self.request:
+                current_tu = TenantUser.objects.filter(user=self.request.user, tenant=self.tenant).first()
+                if not current_tu or current_tu.role != 'admin':
+                    self.fields['tenant_role'].choices = [
+                        c for c in TenantUser.ROLE_CHOICES if c[0] != 'admin'
+                    ]
         else:
             self.fields['tenant_role'].widget = forms.HiddenInput()
 

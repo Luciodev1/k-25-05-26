@@ -23,6 +23,7 @@ class Category(SoftDeleteModel):
         ]
         indexes = [
             models.Index(fields=['tenant', 'name']),
+            models.Index(fields=['tenant', 'is_deleted']),
         ]
 
     def __str__(self):

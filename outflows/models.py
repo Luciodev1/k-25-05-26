@@ -50,6 +50,7 @@ class Outflow(SoftDeleteModel):
         indexes = [
             models.Index(fields=['customer', 'created_at']),
             models.Index(fields=['product', 'created_at']),
+            models.Index(fields=['tenant', 'is_deleted']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -151,6 +152,7 @@ class Delivery(SoftDeleteModel):
         indexes = [
             models.Index(fields=['outflow', 'delivered_at']),
             models.Index(fields=['driver', 'delivered_at']),
+            models.Index(fields=['tenant', 'is_deleted']),
         ]
         constraints = [
             models.CheckConstraint(

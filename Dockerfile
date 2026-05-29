@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS base
+FROM python:3.13-slim AS build
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 COPY . .
 
@@ -19,15 +19,22 @@ RUN mkdir -p /app/logs /app/backups /app/staticfiles /app/media
 
 EXPOSE 8000
 
-FROM base AS dev
+FROM build AS dev
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
-FROM base AS prod
+FROM build AS prod
+RUN addgroup --system django && adduser --system --ingroup django django
+RUN chown -R django:django /app/logs /app/backups /app/staticfiles /app/media
+USER django
 RUN python manage.py collectstatic --noinput
-CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python manage.py health_check || exit 1
+CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "--graceful-timeout", "30", "--max-requests", "1000", "--max-requests-jitter", "100", "--access-logfile", "-", "--error-logfile", "-"]
 
-FROM base AS worker
-CMD ["celery", "-A", "app", "worker", "-l", "info"]
+FROM build AS worker
+USER django
+CMD ["celery", "-A", "app", "worker", "-l", "info", "--concurrency=2", "--max-tasks-per-child=1000"]
 
-FROM base AS beat
+FROM build AS beat
+USER django
 CMD ["celery", "-A", "app", "beat", "-l", "info"]

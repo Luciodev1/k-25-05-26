@@ -29,6 +29,7 @@ class Customer(SoftDeleteModel):
             models.Index(fields=['tenant', 'name']),
             models.Index(fields=['tenant', 'nif']),
             models.Index(fields=['tenant', 'email']),
+            models.Index(fields=['tenant', 'is_deleted']),
         ]
 
     def __str__(self):

@@ -4,7 +4,7 @@ from django.db.models import F
 from .models import Inflow
 
 
-@receiver(pre_save, sender=Inflow)
+@receiver(pre_save, sender=Inflow, dispatch_uid='inflow_capture_old_state')
 def capture_old_inflow_state(sender, instance, **kwargs):
     """
     Guarda a quantidade e o estado is_deleted antes do save,
@@ -23,7 +23,7 @@ def capture_old_inflow_state(sender, instance, **kwargs):
         instance._was_deleted = False
 
 
-@receiver(post_save, sender=Inflow)
+@receiver(post_save, sender=Inflow, dispatch_uid='inflow_update_stock_save')
 def update_stock_on_inflow_save(sender, instance, created, **kwargs):
     """
     Gere todas as transições de stock num único ponto:
@@ -60,7 +60,7 @@ def update_stock_on_inflow_save(sender, instance, created, **kwargs):
             product.save(update_fields=['quantity'])
 
 
-@receiver(post_delete, sender=Inflow)
+@receiver(post_delete, sender=Inflow, dispatch_uid='inflow_update_stock_hard_delete')
 def update_stock_on_inflow_hard_delete(sender, instance, **kwargs):
     """
     Dispara apenas no hard-delete (eliminação física da base de dados).

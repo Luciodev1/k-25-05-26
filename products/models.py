@@ -26,6 +26,9 @@ class Product(SoftDeleteModel):
         verbose_name = 'Produto'
         verbose_name_plural = 'Produtos'
         ordering = ['title']
+        indexes = [
+            models.Index(fields=['tenant', 'is_deleted']),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(quantity__gte=0),

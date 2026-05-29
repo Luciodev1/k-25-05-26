@@ -11,7 +11,7 @@ from .models import CustomerAccountEntry, SupplierAccountEntry
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=Outflow)
+@receiver(post_save, sender=Outflow, dispatch_uid='accounts_sync_customer_entry')
 def sync_customer_account_entry(sender, instance, created, **kwargs):
     """
     Sincroniza o lançamento de conta do cliente com o estado actual da Saída.
@@ -43,14 +43,14 @@ def sync_customer_account_entry(sender, instance, created, **kwargs):
     )
 
 
-@receiver(pre_delete, sender=Outflow)
+@receiver(pre_delete, sender=Outflow, dispatch_uid='accounts_delete_customer_entries')
 def delete_customer_entries_on_outflow_delete(sender, instance, **kwargs):
     """Limpeza ao fazer hard-delete de uma Saída."""
     with transaction.atomic():
         CustomerAccountEntry.objects.filter(outflow=instance).delete()
 
 
-@receiver(post_save, sender=Inflow)
+@receiver(post_save, sender=Inflow, dispatch_uid='accounts_sync_supplier_entry')
 def sync_supplier_account_entry(sender, instance, created, **kwargs):
     """
     Sincroniza o lançamento de conta do fornecedor com o estado actual da Entrada.
@@ -82,7 +82,7 @@ def sync_supplier_account_entry(sender, instance, created, **kwargs):
     )
 
 
-@receiver(pre_delete, sender=Inflow)
+@receiver(pre_delete, sender=Inflow, dispatch_uid='accounts_delete_supplier_entries')
 def delete_supplier_entries_on_inflow_delete(sender, instance, **kwargs):
     """Limpeza ao fazer hard-delete de uma Entrada."""
     with transaction.atomic():

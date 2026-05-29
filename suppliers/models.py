@@ -19,6 +19,7 @@ class Supplier(SoftDeleteModel):
         ordering = ['name']
         indexes = [
             models.Index(fields=['tenant', 'name']),
+            models.Index(fields=['tenant', 'is_deleted']),
         ]
         constraints = [
             models.UniqueConstraint(

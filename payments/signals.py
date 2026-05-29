@@ -4,7 +4,7 @@ from .models import Payment
 from accounts.models import CustomerAccountEntry, SupplierAccountEntry
 
 
-@receiver(post_save, sender=Payment)
+@receiver(post_save, sender=Payment, dispatch_uid='payments_sync_account_entry')
 def sync_account_entry_on_payment(sender, instance, created, **kwargs):
     """
     Sincroniza o lançamento de conta com o estado actual do Pagamento.
@@ -50,7 +50,7 @@ def sync_account_entry_on_payment(sender, instance, created, **kwargs):
         )
 
 
-@receiver(pre_delete, sender=Payment)
+@receiver(pre_delete, sender=Payment, dispatch_uid='payments_delete_account_entry')
 def delete_account_entry_on_payment_delete(sender, instance, **kwargs):
     """Limpeza ao fazer hard-delete de um Pagamento."""
     if instance.type == 'RECEIPT':

@@ -3,9 +3,10 @@ from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.db.models import F
 from .models import Delivery, Outflow
+from products.models import Product
 
 
-@receiver(pre_save, sender=Delivery)
+@receiver(pre_save, sender=Delivery, dispatch_uid='delivery_capture_old_qty')
 def capture_old_delivery_quantity(sender, instance, **kwargs):
     """Guarda a final_quantity antiga antes do save para calcular o delta."""
     if instance.pk and not instance._state.adding:
@@ -18,15 +19,13 @@ def capture_old_delivery_quantity(sender, instance, **kwargs):
         instance._old_final_quantity = 0
 
 
-@receiver(post_save, sender=Delivery)
+@receiver(post_save, sender=Delivery, dispatch_uid='delivery_update_stock_save')
 def update_stock_on_delivery_save(sender, instance, created, **kwargs):
     if created:
         qty = instance.final_quantity
-        outflow = instance.outflow
-        product = outflow.product
+        outflow = Outflow.objects.select_for_update().get(pk=instance.outflow_id)
+        product = Product.objects.select_for_update().get(pk=outflow.product_id)
 
-        # Validar stock suficiente (defesa em profundidade; a view já
-        # verifica dentro de um lock select_for_update).
         pending = outflow.quantity - outflow.quantity_delivered
         if qty > pending:
             raise ValidationError(
@@ -50,8 +49,8 @@ def update_stock_on_delivery_save(sender, instance, created, **kwargs):
         delta = new_qty - old_qty
 
         if delta != 0:
-            outflow = instance.outflow
-            product = outflow.product
+            outflow = Outflow.objects.select_for_update().get(pk=instance.outflow_id)
+            product = Product.objects.select_for_update().get(pk=outflow.product_id)
 
             outflow.quantity_delivered = F('quantity_delivered') + delta
             outflow.save(update_fields=['quantity_delivered'])
@@ -62,7 +61,7 @@ def update_stock_on_delivery_save(sender, instance, created, **kwargs):
             product.save()
 
 
-@receiver(post_delete, sender=Delivery)
+@receiver(post_delete, sender=Delivery, dispatch_uid='delivery_update_stock_hard_delete')
 def update_stock_on_delivery_hard_delete(sender, instance, **kwargs):
     """Apenas para hard-delete sem passar por Delivery.delete() (stock já tratado no modelo)."""
     if getattr(instance, '_stock_handled', False) or instance.is_deleted:

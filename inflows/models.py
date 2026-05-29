@@ -27,6 +27,7 @@ class Inflow(SoftDeleteModel):
         indexes = [
             models.Index(fields=['supplier', 'created_at']),
             models.Index(fields=['product', 'created_at']),
+            models.Index(fields=['tenant', 'is_deleted']),
         ]
         constraints = [
             models.CheckConstraint(

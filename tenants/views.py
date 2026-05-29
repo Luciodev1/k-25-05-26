@@ -5,6 +5,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
+from django.core.exceptions import PermissionDenied
 from django.views.generic import ListView, CreateView, DetailView, View
 from .models import Tenant, TenantUser, TenantSettings
 from .forms import TenantCreateForm, TenantUserAddForm
@@ -73,6 +74,13 @@ class TenantDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     context_object_name = 'tenant'
     permission_required = 'tenants.view_tenant'
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        tenantusers = TenantUser.objects.filter(user=self.request.user)
+        return qs.filter(
+            pk__in=tenantusers.values('tenant_id')
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['tenant_users'] = TenantUser.objects.filter(
@@ -84,8 +92,18 @@ class TenantDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
 class TenantUserAddView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'tenants.add_tenantuser'
 
+    def _get_current_tu(self, request, tenant):
+        return TenantUser.objects.filter(user=request.user, tenant=tenant).first()
+
+    def _check_membership(self, request, tenant):
+        tu = self._get_current_tu(request, tenant)
+        if not tu:
+            raise PermissionDenied('Não pertence a esta empresa.')
+        return tu
+
     def get(self, request, pk):
         tenant = get_object_or_404(Tenant, pk=pk)
+        self._check_membership(request, tenant)
         form = TenantUserAddForm(tenant=tenant)
         return render(request, 'tenants/tenant_user_add.html', {
             'tenant': tenant,
@@ -94,10 +112,13 @@ class TenantUserAddView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
     def post(self, request, pk):
         tenant = get_object_or_404(Tenant, pk=pk)
+        current_tu = self._check_membership(request, tenant)
         form = TenantUserAddForm(tenant=tenant, data=request.POST)
         if form.is_valid():
             user = form.cleaned_data['user']
             role = form.cleaned_data['role']
+            if role == 'admin' and current_tu.role != 'admin':
+                raise PermissionDenied('Apenas administradores podem atribuir função de admin.')
             TenantUser.objects.create(
                 user=user,
                 tenant=tenant,
@@ -121,6 +142,9 @@ class TenantUserRemoveView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
     def post(self, request, pk, user_pk):
         tenant = get_object_or_404(Tenant, pk=pk)
+        current_tu = TenantUser.objects.filter(user=request.user, tenant=tenant).first()
+        if not current_tu or current_tu.role != 'admin':
+            raise PermissionDenied('Apenas administradores podem remover utilizadores.')
         tu = get_object_or_404(TenantUser, tenant=tenant, user_id=user_pk)
         if tu.is_primary:
             messages.error(request, 'Não é possível remover o administrador principal.')

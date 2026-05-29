@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password, check_password
 from app.mixins import SoftDeleteModel
 import uuid
 
@@ -123,7 +124,15 @@ class TenantSettings(SoftDeleteModel):
     
     # Integration settings
     enable_api_access = models.BooleanField(default=False)
-    api_key = models.CharField(max_length=255, blank=True)
+    api_key = models.CharField(max_length=255, blank=True, help_text='Guardado como hash — não recuperável.')
+
+    def set_api_key(self, raw_key):
+        self.api_key = make_password(raw_key)
+
+    def check_api_key(self, raw_key):
+        if not self.api_key:
+            return False
+        return check_password(raw_key, self.api_key)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

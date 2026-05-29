@@ -130,7 +130,7 @@ if DATABASE_URL:
                 'PASSWORD': match.group(2),
                 'HOST': match.group(3),
                 'PORT': match.group(4),
-                'OPTIONS': {'sslmode': os.environ.get('DB_SSLMODE', 'prefer')},
+                'OPTIONS': {'sslmode': os.environ.get('DB_SSLMODE', 'require')},
             }
         }
     else:
@@ -155,10 +155,24 @@ if REDIS_URL:
             'LOCATION': REDIS_URL,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+                'CONNECTION_POOL_CLASS_KWARGS': {
+                    'max_connections': 50,
+                    'timeout': 20,
+                },
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'SOCKET_TIMEOUT': 5,
             }
         }
     }
 else:
+    import warnings as _warnings
+    _warnings.warn(
+        'REDIS_URL não configurado. Usando LocMemCache — '
+        'rate limiting NÃO funciona corretamente em multi-worker. '
+        'Configure REDIS_URL para produção.',
+        RuntimeWarning,
+    )
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -250,7 +264,6 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_SSL_REDIRECT = True
-    CSRF_COOKIE_HTTPONLY = True
     SESSION_COOKIE_HTTPONLY = True
 
 # Application version (Sentry releases, health checks)

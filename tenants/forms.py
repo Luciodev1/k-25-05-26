@@ -16,13 +16,19 @@ class TenantUserAddForm(forms.Form):
         initial='operator',
     )
 
-    def __init__(self, tenant=None, *args, **kwargs):
+    def __init__(self, tenant=None, current_user=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if tenant:
             existing_ids = TenantUser.objects.filter(tenant=tenant).values_list('user_id', flat=True)
             self.fields['user'].queryset = User.objects.filter(
                 is_active=True,
             ).exclude(id__in=existing_ids).order_by('username')
+            if current_user:
+                current_tu = TenantUser.objects.filter(user=current_user, tenant=tenant).first()
+                if not current_tu or current_tu.role != 'admin':
+                    self.fields['role'].choices = [
+                        c for c in TenantUser.ROLE_CHOICES if c[0] != 'admin'
+                    ]
 
 
 class TenantCreateForm(forms.ModelForm):

@@ -70,7 +70,7 @@ def _connect_signals():
 
 
 def _attach_signals(model):
-    @receiver(post_save, sender=model, weak=False)
+    @receiver(post_save, sender=model, weak=False, dispatch_uid=f'audit_post_save_{model.__name__}')
     def on_save(sender, instance, created, **kwargs):
         try:
             if created:
@@ -82,7 +82,7 @@ def _attach_signals(model):
         except Exception as exc:
             logger.warning('Erro no signal audit post_save: %s', exc, exc_info=True)
 
-    @receiver(pre_save, sender=model, weak=False)
+    @receiver(pre_save, sender=model, weak=False, dispatch_uid=f'audit_pre_save_{model.__name__}')
     def on_pre_save(sender, instance, **kwargs):
         try:
             if instance.pk and not instance._state.adding:
@@ -101,7 +101,7 @@ def _attach_signals(model):
         except Exception as exc:
             logger.warning('Erro no signal audit pre_save: %s', exc, exc_info=True)
 
-    @receiver(pre_delete, sender=model, weak=False)
+    @receiver(pre_delete, sender=model, weak=False, dispatch_uid=f'audit_pre_delete_{model.__name__}')
     def on_delete(sender, instance, **kwargs):
         try:
             create_audit_log(instance, 'DELETE')
