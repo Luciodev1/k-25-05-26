@@ -159,13 +159,11 @@ def build_account_excel(filename, queryset, account_type):
         balance_impact = (entry.credit - entry.debit) * cfg['balance_sign']
         current_balance += balance_impact
 
-        related = getattr(entry, cfg['related_attr'], None)
-        if related:
-            desc = f"{cfg['related_label']} #{related.id} | {related.product.title} (Qtd: {related.quantity})"
-            if entry.description:
-                desc += f" - {entry.description}"
-        else:
-            desc = entry.description or ''
+        desc = entry.description or ''
+        if not desc:
+            related = getattr(entry, cfg['related_attr'], None)
+            if related:
+                desc = f"{cfg['related_label']} #{related.id} | {related.product.title} (Qtd: {related.quantity})"
 
         entity_name = entry
         for attr in cfg['entity_name_attr'].split('.'):
@@ -236,13 +234,11 @@ def build_account_pdf(filename, title, queryset, account_type):
         balance_impact = (entry.credit - entry.debit) * cfg['balance_sign']
         current_balance += balance_impact
 
-        related = getattr(entry, cfg['related_attr'], None)
-        if related:
-            desc = f"{cfg['related_label']} #{related.id} | {related.product.title} (Qtd: {related.quantity})"
-            if entry.description:
-                desc += f" - {entry.description}"
-        else:
-            desc = entry.description or ''
+        desc = entry.description or ''
+        if not desc:
+            related = getattr(entry, cfg['related_attr'], None)
+            if related:
+                desc = f"{cfg['related_label']} #{related.id} | {related.product.title} (Qtd: {related.quantity})"
 
         entity_name = entry
         for attr in cfg['entity_name_attr'].split('.'):
@@ -251,7 +247,7 @@ def build_account_pdf(filename, title, queryset, account_type):
         rows.append([
             entry.date.strftime('%d/%m/%Y'),
             entity_name[:20],
-            desc[:50],
+            desc or '',
             formats.number_format(entry.debit, 2, True) if entry.debit else '0,00',
             formats.number_format(entry.credit, 2, True) if entry.credit else '0,00',
             formats.number_format(current_balance, 2, True),

@@ -6,7 +6,7 @@
     {% for e in entries %}<tr>
       <td class="text-muted small">{{ e.date|date:"d/m/Y H:i" }}</td>
       <td class="fw-semibold">{{ e.customer.name }}</td>
-      <td class="small">{% if e.outflow %}Venda #{{ e.outflow.id }} | {{ e.outflow.product.title }} (Qtd: {{ e.outflow.quantity }}){% if e.description %} - {{ e.description }}{% endif %}{% else %}{{ e.description }}{% endif %}</td>
+      <td class="small">{{ e.description|default_if_none:"" }}</td>
       <td class="text-end text-danger fw-semibold">{% if e.debit > 0 %}{{ e.debit|floatformat:"2g" }}{% else %}—{% endif %}</td>
       <td class="text-end text-success fw-semibold">{% if e.credit > 0 %}{{ e.credit|floatformat:"2g" }}{% else %}—{% endif %}</td>
       <td class="text-end fw-bold {% if e.entry_balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ e.entry_balance|floatformat:"2g" }}</td>
