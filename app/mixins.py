@@ -233,9 +233,9 @@ class BaseRestoreView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterM
     redirect_url: str | None = None
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
-        obj = self.model.all_objects.get(pk=pk)
+        obj = self.model.all_objects.select_for_update().get(pk=pk)
         tenant = getattr(request, 'tenant', None)
-        if tenant and hasattr(obj, self.tenant_field) and getattr(obj, self.tenant_field) != tenant:
+        if tenant and hasattr(obj, self.tenant_field) and getattr(obj, f'{self.tenant_field}_id') != tenant.pk:
             messages.error(request, 'Registo não pertence a esta empresa.')
             return redirect(self.redirect_url)
         obj.restore()
@@ -252,9 +252,9 @@ class BaseHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilt
     @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True))
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         try:
-            obj = self.model.all_objects.get(pk=pk)
+            obj = self.model.all_objects.select_for_update().get(pk=pk)
             tenant = getattr(request, 'tenant', None)
-            if tenant and hasattr(obj, self.tenant_field) and getattr(obj, self.tenant_field) != tenant:
+            if tenant and hasattr(obj, self.tenant_field) and getattr(obj, f'{self.tenant_field}_id') != tenant.pk:
                 messages.error(request, 'Registo não pertence a esta empresa.')
                 return redirect(self.redirect_url)
             obj.hard_delete()

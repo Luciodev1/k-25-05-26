@@ -15,7 +15,9 @@ class ContentSecurityPolicyMiddlewareTest(TestCase):
         self.assertIn('Content-Security-Policy', response)
         csp = response['Content-Security-Policy']
         self.assertIn("default-src 'self'", csp)
-        self.assertNotIn("style-src 'unsafe-inline'", csp)
+        self.assertIn("style-src 'self' 'unsafe-inline'", csp)
+        self.assertIn("font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net", csp)
+        self.assertIn("connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com", csp)
 
     def test_csp_nonce_set_on_request(self):
         request = self.factory.get('/')

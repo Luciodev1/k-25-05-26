@@ -113,7 +113,7 @@ def dashboard(request):
     recent_deliveries = list(base_delivery.select_related('outflow__product', 'outflow__customer').order_by('-delivered_at')[:5])
 
     top_customers = list(
-        base_outflow.values('customer__name')
+        base_outflow.values('customer__id', 'customer__name')
         .annotate(total=Sum(F('quantity') * F('price'), output_field=DecimalField(max_digits=30, decimal_places=2)))
         .order_by('-total')[:5]
     )
@@ -134,7 +134,7 @@ def dashboard(request):
     )
     total_cost = price_agg['total_cost']
     total_sell = price_agg['total_sell']
-    margin_pct = ((total_sell - total_cost) / total_cost * 100) if total_cost else Decimal('0')
+    margin_pct = ((total_sell - total_cost) / total_sell * 100) if total_sell else Decimal('0')
 
     six_months_ago = first_of_month - timezone.timedelta(days=150)
     
