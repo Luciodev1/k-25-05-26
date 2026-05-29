@@ -207,3 +207,13 @@ def dashboard(request):
     cache.set(cache_key, context, 300)
 
     return render(request, 'home.html', context)
+
+
+@login_required
+def pending_deliveries_stat(request):
+    tenant = getattr(request, 'tenant', None)
+    qs = Outflow.objects.filter(quantity_delivered__lt=F('quantity'))
+    if tenant:
+        qs = qs.filter(tenant=tenant)
+    count = qs.count()
+    return render(request, '_pending_deliveries_stat.html', {'count': count})

@@ -10,6 +10,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', views.health_check, name='health'),
     path('', views.dashboard, name='dashboard'),
+    path('pending-deliveries-stat/', views.pending_deliveries_stat, name='pending_deliveries_stat'),
     path('', include('brands.urls')),
     path('', include('categories.urls')),
     path('', include('suppliers.urls')),
