@@ -16,7 +16,7 @@
             {% for payment in payments %}
             <tr>
                 <td><span class="badge bg-primary-subtle text-primary">{{ payment.get_type_display }}</span></td>
-                <td>{{ payment.customer.name|default:payment.supplier.name }}</td>
+                <td>{% if payment.customer %}{{ payment.customer.name }}{% elif payment.supplier %}{{ payment.supplier.name }}{% endif %}</td>
                 <td class="fw-semibold">{{ payment.amount }}</td>
                 <td>{{ payment.get_payment_method_display }}</td>
                 <td>{{ payment.date|date:"d/m/Y" }}</td>

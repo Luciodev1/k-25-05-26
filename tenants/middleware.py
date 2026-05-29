@@ -14,10 +14,11 @@ class TenantMiddleware:
         if request.user.is_authenticated:
             from .models import TenantUser
 
-            allowed_paths = (
-                reverse('tenants:tenant_select'),
-                reverse('logout'),
+            allowed_prefixes = (
+                '/selecionar/',
+                '/accounts/',
                 '/perfil/',
+                reverse('logout'),
             )
 
             if tenant_id:
@@ -37,14 +38,14 @@ class TenantMiddleware:
                 total = len(tenant_users)
                 if total == 0:
                     if not request.user.is_superuser:
-                        if request.path not in allowed_paths and not request.path.startswith('/accounts/'):
+                        if not any(request.path == p or request.path.startswith(p) for p in allowed_prefixes):
                             return render(request, 'tenants/no_access.html', status=403)
                 elif total == 1:
                     request.tenant = tenant_users[0].tenant
                     request.tenant_user = tenant_users[0]
                     request.session['tenant_id'] = str(request.tenant.id)
                 elif total > 1:
-                    if request.path not in allowed_paths and not request.path.startswith('/accounts/'):
+                    if not any(request.path == p or request.path.startswith(p) for p in allowed_prefixes):
                         return redirect('tenants:tenant_select')
 
         response = self.get_response(request)

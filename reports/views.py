@@ -1,6 +1,7 @@
 import io
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.urls import reverse
 from django.core.paginator import Paginator
 from django.db.models import Sum, F, Q
 from openpyxl import Workbook
@@ -16,6 +17,31 @@ from reports.export_utils import (
     build_account_excel, build_account_pdf,
     apply_header_style, apply_cell_style, auto_width,
 )
+
+ASYNC_EXPORT_THRESHOLD = 1000
+
+
+def _get_user_email(request):
+    return getattr(request.user, 'email', None)
+
+
+def _dispatch_async_if_large(queryset, request, async_task, export_format, filters, task_kwargs=None):
+    count = queryset.count()
+    if count <= ASYNC_EXPORT_THRESHOLD:
+        return None
+    tenant_id = str(getattr(request, 'tenant', None) or '')
+    task = async_task.delay(
+        _get_user_email(request),
+        tenant_id,
+        filters,
+        export_format,
+        **(task_kwargs or {}),
+    )
+    return render(request, 'report_processing.html', {
+        'task_id': task.id,
+        'export_format': export_format.upper(),
+        'record_count': count,
+    })
 
 
 def _get_filters(request):
@@ -69,6 +95,15 @@ def outflows_by_customer_report(request):
         queryset = queryset.filter(product_id=filters['product_id'])
 
     export = request.GET.get('export')
+
+    if export in ('excel', 'pdf'):
+        from reports.export_tasks import async_outflows_by_customer_report
+        async_response = _dispatch_async_if_large(
+            queryset, request, async_outflows_by_customer_report,
+            export, filters,
+        )
+        if async_response:
+            return async_response
 
     if export == 'excel':
         headers = ['Data', 'Cliente', 'Produto', 'Quantidade', 'Qtd Entregue', 'Qtd Pendente', 'Estado']
@@ -138,6 +173,15 @@ def deliveries_report(request):
 
     export = request.GET.get('export')
 
+    if export in ('excel', 'pdf'):
+        from reports.export_tasks import async_deliveries_report
+        async_response = _dispatch_async_if_large(
+            queryset, request, async_deliveries_report,
+            export, filters,
+        )
+        if async_response:
+            return async_response
+
     if export == 'excel':
         headers = ['Data Entrega', 'Cliente', 'Produto', 'Qtd Entregue', 'Descrição']
         rows = [[d.delivered_at.strftime('%d/%m/%Y'), d.outflow.customer.name,
@@ -203,6 +247,15 @@ def customer_account_report(request):
 
     export = request.GET.get('export')
 
+    if export in ('excel', 'pdf'):
+        from reports.export_tasks import async_customer_account_report
+        async_response = _dispatch_async_if_large(
+            queryset, request, async_customer_account_report,
+            export, filters,
+        )
+        if async_response:
+            return async_response
+
     if export == 'excel':
         return build_account_excel('extrato_clientes.xlsx', queryset, 'customer')
 
@@ -248,6 +301,15 @@ def supplier_account_report(request):
         queryset = queryset.filter(supplier_id=filters['supplier_id'])
 
     export = request.GET.get('export')
+
+    if export in ('excel', 'pdf'):
+        from reports.export_tasks import async_supplier_account_report
+        async_response = _dispatch_async_if_large(
+            queryset, request, async_supplier_account_report,
+            export, filters,
+        )
+        if async_response:
+            return async_response
 
     if export == 'excel':
         return build_account_excel('extrato_fornecedores.xlsx', queryset, 'supplier')
@@ -309,6 +371,24 @@ def balances_report(request):
 
     export = request.GET.get('export')
     section = request.GET.get('section', 'all')
+
+    if export in ('excel', 'pdf'):
+        from reports.export_tasks import async_balances_report
+        count = (customer_balances.count() if section in ('all', 'customers') else 0) + \
+                (supplier_balances.count() if section in ('all', 'suppliers') else 0)
+        if count > ASYNC_EXPORT_THRESHOLD:
+            task = async_balances_report.delay(
+                _get_user_email(request),
+                str(getattr(request, 'tenant', None) or ''),
+                filters,
+                export,
+                section,
+            )
+            return render(request, 'report_processing.html', {
+                'task_id': task.id,
+                'export_format': export.upper(),
+                'record_count': count,
+            })
 
     if export == 'excel':
         wb = Workbook()
@@ -435,7 +515,6 @@ def balances_report(request):
 
 @login_required
 def task_status(request, task_id):
-    """Estado de tarefa Celery de exportação."""
     from tenants.models import TenantUser
     tenant = getattr(request, 'tenant', None)
     if tenant:
@@ -445,10 +524,48 @@ def task_status(request, task_id):
             request.user.has_perm('accounts.view_customeraccountentry') or
             request.user.has_perm('accounts.view_supplieraccountentry')):
         raise PermissionDenied
+    from celery.result import AsyncResult
     from django.http import JsonResponse
+    result = AsyncResult(task_id)
+    ready = result.ready()
+    payload = {'task_id': task_id, 'status': result.status}
+    download_url = None
+    if ready and result.result and isinstance(result.result, dict) and result.result.get('status') == 'ok':
+        path = result.result.get('path', '')
+        if path:
+            download_url = reverse('reports:report_download', kwargs={'task_id': task_id})
+            payload['result'] = result.result
+            payload['download_url'] = download_url
+    if request.headers.get('HX-Request'):
+        if ready:
+            if download_url:
+                return render(request, 'report_download_ready.html', {
+                    'download_url': download_url,
+                    'task_id': task_id,
+                })
+            return HttpResponse('<span class="text-danger">Falha na exportação.</span>')
+        return HttpResponse(
+            '<div hx-get="{}" hx-trigger="load delay:2s" hx-swap="outerHTML">'
+            '<span class="text-muted">A processar...</span></div>'.format(
+                reverse('reports:report_task_status', kwargs={'task_id': task_id})
+            )
+        )
+    payload['download_url'] = download_url
+    return JsonResponse(payload)
+
+
+@login_required
+def report_download(request, task_id):
+    from django.http import FileResponse, Http404
+    from django.core.files.storage import default_storage
     from celery.result import AsyncResult
     result = AsyncResult(task_id)
-    payload = {'task_id': task_id, 'status': result.status}
-    if result.ready():
-        payload['result'] = result.result
-    return JsonResponse(payload)
+    if not result.ready() or not result.result:
+        raise Http404('Exportação não encontrada ou ainda em processamento.')
+    path = result.result.get('path', '') if isinstance(result.result, dict) else ''
+    if not path or not default_storage.exists(path):
+        raise Http404('Ficheiro não encontrado ou expirado.')
+    from pathlib import Path
+    filename = Path(path).name
+    response = FileResponse(default_storage.open(path, 'rb'), as_attachment=True, filename=filename)
+    return response

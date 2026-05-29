@@ -126,6 +126,15 @@ class TenantSelectViewTest(TestCase):
         response = self.client.post(
             reverse('tenants:tenant_select'), {'tenant_id': self.tenant1.pk},
         )
+        self.assertRedirects(
+            response,
+            reverse('tenants:tenant_confirm_switch', args=[self.tenant1.pk]),
+        )
+        # Follow redirect and confirm with password
+        response = self.client.post(
+            reverse('tenants:tenant_confirm_switch', args=[self.tenant1.pk]),
+            {'password': 'pass'},
+        )
         self.assertRedirects(response, reverse('dashboard'))
         self.assertEqual(self.client.session['tenant_id'], str(self.tenant1.pk))
 

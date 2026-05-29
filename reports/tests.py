@@ -280,14 +280,15 @@ class ReportPermissionTest(TestCase):
     def test_task_status_with_result(self, mock_async):
         mock_async.return_value.status = 'SUCCESS'
         mock_async.return_value.ready.return_value = True
-        mock_async.return_value.result = {'path': 'exports/test.pdf'}
+        mock_async.return_value.result = {'status': 'ok', 'path': 'exports/test.pdf'}
         self.client.force_login(self.user)
         perm = Permission.objects.get(codename='view_outflow')
         self.user.user_permissions.add(perm)
         response = self.client.get(reverse('reports:report_task_status', kwargs={'task_id': 'abc123'}))
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['result'], {'path': 'exports/test.pdf'})
+        self.assertEqual(data['result']['path'], 'exports/test.pdf')
+        self.assertIn('download_url', data)
 
 
 class ReportDetailedFilterTest(TestCase):
@@ -673,6 +674,137 @@ class ReportExportMixinTest(TestCase):
         response = mixin.export_csv_streaming(Outflow.objects.none(), 'empty.csv')
         self.assertIsInstance(response, HttpResponse)
         self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+
+
+class AsyncExportTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantFactory(slug='ae')
+        cls.user = User.objects.create_superuser('aeuser', 'ae@t.com', 'pass')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
+
+    def setUp(self):
+        self.client.force_login(self.user)
+        session = self.client.session
+        session['tenant_id'] = str(self.tenant.id)
+        session.save()
+
+    def test_outflows_export_sync_when_small(self):
+        with patch('reports.views._dispatch_async_if_large', return_value=None) as mock_dispatch:
+            response = self.client.get(
+                reverse('reports:report_outflows_by_customer') + '?export=excel'
+            )
+        mock_dispatch.assert_called_once()
+        self.assertNotEqual(response.get('Content-Disposition'), None)
+
+    def test_task_status_returns_json(self):
+        task_id = '00000000-0000-0000-0000-000000000000'
+        mock_result = MagicMock()
+        mock_result.ready.return_value = False
+        mock_result.status = 'PENDING'
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_task_status', kwargs={'task_id': task_id})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+    def test_task_status_pending(self):
+        task_id = '11111111-1111-1111-1111-111111111111'
+        mock_result = MagicMock()
+        mock_result.ready.return_value = False
+        mock_result.status = 'PENDING'
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_task_status', kwargs={'task_id': task_id})
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'PENDING')
+
+    def test_task_status_ready_with_download(self):
+        task_id = '22222222-2222-2222-2222-222222222222'
+        mock_result = MagicMock()
+        mock_result.status = 'SUCCESS'
+        mock_result.ready.return_value = True
+        mock_result.result = {'status': 'ok', 'path': f'exports/{task_id}_test.xlsx'}
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_task_status', kwargs={'task_id': task_id})
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'SUCCESS')
+        self.assertIn('download_url', data)
+
+    def test_task_status_htmx_pending(self):
+        task_id = '33333333-3333-3333-3333-333333333333'
+        mock_result = MagicMock()
+        mock_result.ready.return_value = False
+        mock_result.status = 'PENDING'
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_task_status', kwargs={'task_id': task_id}),
+                HTTP_HX_REQUEST='true',
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('A processar', response.content.decode())
+
+    def test_task_status_htmx_ready(self):
+        task_id = '44444444-4444-4444-4444-444444444444'
+        mock_result = MagicMock()
+        mock_result.status = 'SUCCESS'
+        mock_result.ready.return_value = True
+        mock_result.result = {'status': 'ok', 'path': f'exports/{task_id}_test.xlsx'}
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_task_status', kwargs={'task_id': task_id}),
+                HTTP_HX_REQUEST='true',
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Exportação Concluída', response.content.decode())
+
+    def test_download_missing_task_returns_404(self):
+        task_id = 'nonexistent'
+        mock_result = MagicMock()
+        mock_result.ready.return_value = False
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_download', kwargs={'task_id': task_id})
+            )
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_pending_task_returns_404(self):
+        task_id = '55555555-5555-5555-5555-555555555555'
+        mock_result = MagicMock()
+        mock_result.ready.return_value = True
+        mock_result.result = None
+        with patch('celery.result.AsyncResult', return_value=mock_result):
+            response = self.client.get(
+                reverse('reports:report_download', kwargs={'task_id': task_id})
+            )
+        self.assertEqual(response.status_code, 404)
+
+    def test_async_export_tasks_export_outflows(self):
+        from reports.export_tasks import async_outflows_by_customer_report
+        with patch('reports.export_tasks.default_storage') as mock_storage:
+            result = async_outflows_by_customer_report(
+                None, str(self.tenant.id), {}, 'excel'
+            )
+        self.assertEqual(result['status'], 'ok')
+        self.assertIn('exports/', result['path'])
+        self.assertTrue(result['path'].endswith('.xlsx'))
+        mock_storage.save.assert_called_once()
+
+    def test_async_export_tasks_export_deliveries(self):
+        from reports.export_tasks import async_deliveries_report
+        with patch('reports.export_tasks.default_storage') as mock_storage:
+            result = async_deliveries_report(
+                None, str(self.tenant.id), {}, 'excel'
+            )
+        self.assertEqual(result['status'], 'ok')
+        self.assertIn('.xlsx', result['path'])
+        mock_storage.save.assert_called_once()
 
 
 class DashboardQueryCountTest(TestCase):

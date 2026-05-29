@@ -11,4 +11,5 @@ urlpatterns = [
     path('reports/supplier-account/', views.supplier_account_report, name='report_supplier_account'),
     path('reports/balances/', views.balances_report, name='report_balances'),
     path('reports/task-status/<str:task_id>/', views.task_status, name='report_task_status'),
+    path('reports/download/<str:task_id>/', views.report_download, name='report_download'),
 ]
