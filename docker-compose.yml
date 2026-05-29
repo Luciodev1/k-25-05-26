@@ -3,6 +3,13 @@ services:
     image: postgres:16-alpine
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-sge}
       POSTGRES_USER: ${POSTGRES_USER:-sge}
@@ -22,6 +29,13 @@ services:
     image: redis:7-alpine
     ports:
       - "127.0.0.1:6379:6379"
+    networks:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -58,6 +72,13 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       BACKUP_DIR: /app/backups
+    networks:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     volumes:
       - staticfiles:/app/staticfiles
       - media:/app/media
@@ -81,6 +102,13 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       BACKUP_DIR: /app/backups
+    networks:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -104,6 +132,13 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       BACKUP_DIR: /app/backups
+    networks:
+      - backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -128,8 +163,21 @@ services:
         limits:
           cpus: '0.5'
           memory: 256M
+    networks:
+      - frontend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       - web
+
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
 
 volumes:
   pgdata:

@@ -1,34 +1,38 @@
 {% if categories %}
 <div class="table-responsive">
-    <table class="table table-hover">
+    <table class="table table-hover align-middle">
         <thead>
             <tr>
                 <th>Nome</th>
                 <th>Descricao</th>
                 <th>Eliminado em</th>
-                <th>Accoes</th>
+                <th class="text-end pe-3">Accoes</th>
             </tr>
         </thead>
         <tbody>
             {% for category in categories %}
             <tr>
-                <td>{{ category.name }}</td>
-                <td>{{ category.description|default:"-" }}</td>
-                <td>{{ category.deleted_at|date:"d/m/Y H:i" }}</td>
                 <td>
-                    <form method="post" action="{% url 'categories:category_restore' category.pk %}" style="display:inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-success" title="Restaurar" aria-label="Restaurar">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </button>
-                    </form>
-                    <form method="post" action="{% url 'categories:category_hard_delete' category.pk %}" style="display:inline"
-                          data-confirm="Eliminar permanentemente? Esta acção não pode ser desfeita.">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
+                    <div class="fw-bold text-dark">{{ category.name }}</div>
+                </td>
+                <td>{{ category.description|default:"-" }}</td>
+                <td><small class="text-muted">{{ category.deleted_at|date:"d/m/Y H:i" }}</small></td>
+                <td class="text-end pe-3">
+                    <div class="d-flex justify-content-end gap-2">
+                        <form method="post" action="{% url 'categories:category_restore' category.pk %}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-action text-success" title="Restaurar" aria-label="Restaurar">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'categories:category_hard_delete' category.pk %}" style="display:inline"
+                              data-confirm="Eliminar permanentemente? Esta acção não pode ser desfeita.">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-action text-danger" title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -39,7 +43,7 @@
 {% include 'components/_pagination.html' %}
 {% else %}
 <div class="text-center py-5">
-    <i class="bi bi-trash" style="font-size: 3rem; color: #ccc;"></i>
-    <p class="text-muted mt-3">A lixeira esta vazia.</p>
+    <i class="bi bi-trash3 text-muted display-4 d-block mb-3"></i>
+    <p class="text-muted">A lixeira esta vazia.</p>
 </div>
 {% endif %}

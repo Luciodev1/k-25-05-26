@@ -88,7 +88,7 @@ class ExportMixin:
             cell.alignment = header_alignment
             cell.border = thin_border
 
-        for row_idx, obj in enumerate(queryset, 2):
+        for row_idx, obj in enumerate(queryset.iterator(), 2):
             for col_idx, (_, field) in enumerate(self.export_columns, 1):
                 value = obj
                 for attr in field.split('.'):
@@ -125,7 +125,7 @@ class ExportMixin:
 
         headers = [h for h, _ in self.export_columns]
         data = [headers]
-        for obj in queryset:
+        for obj in queryset.iterator():
             row: list[str] = []
             for _, field in self.export_columns:
                 value = obj

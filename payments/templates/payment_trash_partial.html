@@ -1,6 +1,6 @@
 {% if payments %}
 <div class="table-responsive">
-    <table class="table table-hover">
+    <table class="table table-hover align-middle">
         <thead>
             <tr>
                 <th>Tipo</th>
@@ -9,32 +9,34 @@
                 <th>Metodo</th>
                 <th>Data</th>
                 <th>Eliminado em</th>
-                <th>Accoes</th>
+                <th class="text-end pe-3">Accoes</th>
             </tr>
         </thead>
         <tbody>
             {% for payment in payments %}
             <tr>
-                <td>{{ payment.get_type_display }}</td>
-                <td>{% if payment.type == 'RECEIPT' %}{{ payment.customer.name }}{% else %}{{ payment.supplier.name }}{% endif %}</td>
-                <td>{{ payment.amount }}</td>
+                <td><span class="badge bg-primary-subtle text-primary">{{ payment.get_type_display }}</span></td>
+                <td>{{ payment.customer.name|default:payment.supplier.name }}</td>
+                <td class="fw-semibold">{{ payment.amount }}</td>
                 <td>{{ payment.get_payment_method_display }}</td>
                 <td>{{ payment.date|date:"d/m/Y" }}</td>
-                <td>{{ payment.deleted_at|date:"d/m/Y H:i" }}</td>
-                <td>
-                    <form method="post" action="{% url 'payments:payment_restore' payment.pk %}" style="display:inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-success" title="Restaurar" aria-label="Restaurar">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </button>
-                    </form>
-                    <form method="post" action="{% url 'payments:payment_hard_delete' payment.pk %}" style="display:inline"
-                          data-confirm="Eliminar permanentemente? Esta acção não pode ser desfeita.">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </form>
+                <td><small class="text-muted">{{ payment.deleted_at|date:"d/m/Y H:i" }}</small></td>
+                <td class="text-end pe-3">
+                    <div class="d-flex justify-content-end gap-2">
+                        <form method="post" action="{% url 'payments:payment_restore' payment.pk %}" style="display:inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-action text-success" title="Restaurar" aria-label="Restaurar">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'payments:payment_hard_delete' payment.pk %}" style="display:inline"
+                              data-confirm="Eliminar permanentemente? Esta acção não pode ser desfeita.">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-action text-danger" title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -45,7 +47,7 @@
 {% include 'components/_pagination.html' %}
 {% else %}
 <div class="text-center py-5">
-    <i class="bi bi-trash" style="font-size: 3rem; color: #ccc;"></i>
-    <p class="text-muted mt-3">A lixeira esta vazia.</p>
+    <i class="bi bi-trash3 text-muted display-4 d-block mb-3"></i>
+    <p class="text-muted">A lixeira esta vazia.</p>
 </div>
 {% endif %}
