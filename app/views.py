@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def health_check(request):
+    from django.conf import settings
     from django.db import connection
     db_ok = False
     try:
@@ -38,7 +39,7 @@ def health_check(request):
         'status': 'healthy' if db_ok else 'unhealthy',
         'database': db_ok,
         'cache': cache_ok,
-        'version': '1.0.0',
+        'version': getattr(settings, 'APP_VERSION', '1.0.0'),
     })
 
 

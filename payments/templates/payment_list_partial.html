@@ -13,7 +13,7 @@
     <td class="text-muted small">{{ p.description|default:"—" }}</td>
     <td class="text-end"><div class="d-flex justify-content-end gap-2">
       {% if perms.payments.change_payment %}<a href="{% url 'payments:payment_update' p.pk %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>{% endif %}
-      {% if perms.payments.delete_payment %}<button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'payments:payment_delete' p.pk %}" data-delete-message="Tem certeza que deseja eliminar este pagamento?"><i class="bi bi-trash3"></i></button>{% endif %}
+      {% if perms.payments.delete_payment %}<button type="button" class="btn btn-action text-danger" title="Eliminar" aria-label="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'payments:payment_delete' p.pk %}" data-delete-message="Tem certeza que deseja eliminar este pagamento?"><i class="bi bi-trash3"></i></button>{% endif %}
     </div></td>
   </tr>{% empty %}<tr><td colspan="7"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-cash-stack"></i></div><div class="text-muted small">Nenhum pagamento registado.</div></div></td></tr>{% endfor %}
 </tbody></table></div>

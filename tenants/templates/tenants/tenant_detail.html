@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header mb-4">
   <div class="page-header-title">
-    <a href="{% url 'tenants:tenant_list' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+    <a href="{% url 'tenants:tenant_list' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
     <div class="page-header-icon" style="background:rgba(16, 185, 129, 0.1);color:var(--primary-dark);">
       <i class="bi bi-building"></i>
     </div>
@@ -105,7 +105,7 @@
                     {% if not tu.is_primary %}
                       <form method="post" action="{% url 'tenants:tenant_user_remove' pk=tenant.pk user_pk=tu.user.pk %}" class="d-inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remover {{ tu.user.username|escapejs }} da empresa?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Remover utilizador" onclick="return confirm('Remover {{ tu.user.username|escapejs }} da empresa?')">
                           <i class="bi bi-person-x"></i>
                         </button>
                       </form>

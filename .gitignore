@@ -1,6 +1,7 @@
 logs/
 backups/
 db.sqlite3
+*.db
 *.pyc
 __pycache__/
 .env
@@ -16,3 +17,9 @@ htmlcov/
 .pytest_cache/
 staticfiles/
 test_backups/
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+*~

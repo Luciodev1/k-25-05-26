@@ -4,12 +4,12 @@
 {% block content %}
 <div class="page-header">
     <div class="page-header-title">
-        <a href="{% url 'products:product_list' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+        <a href="{% url 'products:product_list' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
         <div><h1 class="fw-bold mb-0 fs-5">{{ product.title }}</h1><span class="text-muted small">Visualização detalhada do produto e níveis de stock</span></div>
     </div>
     <div class="d-flex gap-2">
         <a href="{% url 'products:product_update' product.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
-        <a href="{% url 'products:product_delete' product.id %}" class="btn btn-outline-danger"><i class="bi bi-trash3"></i></a>
+        <a href="{% url 'products:product_delete' product.id %}" class="btn btn-outline-danger" title="Eliminar"><i class="bi bi-trash3"></i></a>
     </div>
 </div>
 

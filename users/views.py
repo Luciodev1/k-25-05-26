@@ -1,6 +1,6 @@
 import logging
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, FormView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.views import LoginView
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator

@@ -1,6 +1,5 @@
 from django.db import models, transaction
 from django.core.validators import MinValueValidator
-from django.db.models import F
 from suppliers.models import Supplier
 from products.models import Product
 from app.mixins import SoftDeleteModel

@@ -1,0 +1,16 @@
+[tool.pyright]
+include = ["app", "inflows", "outflows", "payments", "products", "reports", "suppliers", "customers", "users", "brands", "categories", "drivers", "tenants", "audit"]
+exclude = ["**/migrations", "**/node_modules", "**/staticfiles", "**/venv"]
+typeCheckingMode = "standard"
+pythonVersion = "3.11"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+django_strict_settings = true
+plugins = "mypy_django_plugin.plugin"
+
+[tool.django-stubs]
+django_settings_module = "settings"

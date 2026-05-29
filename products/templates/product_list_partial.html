@@ -61,7 +61,7 @@
                         <div class="d-flex justify-content-end gap-2">
                             <a href="{% url 'products:product_detail' product.id %}" class="btn btn-action" title="Ver Detalhes"><i class="bi bi-eye"></i></a>
                             <a href="{% url 'products:product_update' product.id %}" class="btn btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
-                            <button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'products:product_delete' product.id %}" data-delete-message="Tem certeza que deseja eliminar o produto '{{ product.title }}'?"><i class="bi bi-trash3"></i></button>
+                            <button type="button" class="btn btn-action text-danger" title="Eliminar" aria-label="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'products:product_delete' product.id %}" data-delete-message="Tem certeza que deseja eliminar o produto '{{ product.title }}'?"><i class="bi bi-trash3"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -85,7 +85,7 @@
     <div class="modal-content border-0 shadow">
       <div class="modal-header border-0 bg-danger-subtle">
         <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Eliminar Selecionados</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
       <div class="modal-body py-4">
         <p>Tem certeza que deseja eliminar <strong id="bulk-count">0</strong> produto(s)? Esta acao nao pode ser desfeita.</p>

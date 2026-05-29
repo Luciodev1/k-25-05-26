@@ -1,7 +1,7 @@
 {% load notification_tags %}
 {% get_notifications as notifs %}
 <li class="nav-item dropdown">
-    <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
         <i class="bi bi-bell"></i>
         {% if notifs.count > 0 %}<span class="badge bg-danger rounded-pill">{{ notifs.count }}</span>{% endif %}
     </a>

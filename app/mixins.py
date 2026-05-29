@@ -2,10 +2,9 @@ from typing import Any
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.db.models import ProtectedError, Q, QuerySet
+from django.db.models import ProtectedError, QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
-from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, CreateView, UpdateView, DetailView, DeleteView

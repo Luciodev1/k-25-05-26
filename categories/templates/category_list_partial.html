@@ -5,7 +5,7 @@
     <td class="text-end"><div class="d-flex justify-content-end gap-2">
       <a href="{% url 'categories:category_detail' category.id %}" class="btn-action" title="Ver"><i class="bi bi-eye"></i></a>
       <a href="{% url 'categories:category_update' category.id %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
-      <button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'categories:category_delete' category.id %}" data-delete-message="Tem certeza que deseja eliminar a categoria '{{ category.name }}'?"><i class="bi bi-trash3"></i></button>
+      <button type="button" class="btn btn-action text-danger" title="Eliminar" aria-label="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'categories:category_delete' category.id %}" data-delete-message="Tem certeza que deseja eliminar a categoria '{{ category.name }}'?"><i class="bi bi-trash3"></i></button>
     </div></td>
   </tr>{% empty %}<tr><td colspan="3"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-tags"></i></div><div class="text-muted small">Nenhuma categoria encontrada.</div></div></td></tr>{% endfor %}
 </tbody></table></div>

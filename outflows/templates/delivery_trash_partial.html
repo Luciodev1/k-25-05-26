@@ -20,14 +20,14 @@
                 <td>
                     <form method="post" action="{% url 'outflows:delivery_restore' delivery.pk %}" style="display:inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-success" title="Restaurar">
+                        <button type="submit" class="btn btn-sm btn-success" title="Restaurar" aria-label="Restaurar">
                             <i class="bi bi-arrow-counterclockwise"></i>
                         </button>
                     </form>
                     <form method="post" action="{% url 'outflows:delivery_hard_delete' delivery.pk %}" style="display:inline"
                           data-confirm="Eliminar permanentemente?">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
                             <i class="bi bi-trash"></i>
                         </button>
                     </form>

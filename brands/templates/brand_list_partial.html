@@ -10,7 +10,7 @@
           <div class="d-flex justify-content-end gap-2">
             <a href="{% url 'brands:brand_detail' brand.id %}" class="btn-action" title="Ver"><i class="bi bi-eye"></i></a>
             <a href="{% url 'brands:brand_update' brand.id %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
-            <button type="button" class="btn btn-action text-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'brands:brand_delete' brand.id %}" data-delete-message="Tem certeza que deseja eliminar a marca '{{ brand.name }}'?"><i class="bi bi-trash3"></i></button>
+            <button type="button" class="btn btn-action text-danger" title="Eliminar" aria-label="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'brands:brand_delete' brand.id %}" data-delete-message="Tem certeza que deseja eliminar a marca '{{ brand.name }}'?"><i class="bi bi-trash3"></i></button>
           </div>
         </td>
       </tr>

@@ -20,14 +20,14 @@
                 <td>
                     <form method="post" action="{% url 'customers:customer_restore' customer.pk %}" style="display:inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-success" title="Restaurar">
+                        <button type="submit" class="btn btn-sm btn-success" title="Restaurar" aria-label="Restaurar">
                             <i class="bi bi-arrow-counterclockwise"></i>
                         </button>
                     </form>
                     <form method="post" action="{% url 'customers:customer_hard_delete' customer.pk %}" style="display:inline"
                           data-confirm="Eliminar permanentemente? Esta acção não pode ser desfeita.">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar permanentemente" aria-label="Eliminar permanentemente">
                             <i class="bi bi-trash"></i>
                         </button>
                     </form>
