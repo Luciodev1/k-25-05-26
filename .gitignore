@@ -1,3 +1,4 @@
+*.log
 logs/
 backups/
 db.sqlite3

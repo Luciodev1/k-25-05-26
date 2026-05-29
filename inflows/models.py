@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models, transaction
 from django.core.validators import MinValueValidator
 from suppliers.models import Supplier
@@ -7,14 +8,14 @@ from audit.signals import log_action
 
 
 class Inflow(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='inflows')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='inflows', null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='inflows', verbose_name='Fornecedor')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='inflows', verbose_name='Produto')
     quantity = models.DecimalField(
         max_digits=20, decimal_places=4,
         validators=[MinValueValidator(0.0001)], verbose_name='Quantidade',
     )
-    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], verbose_name='Preço de Custo')
+    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, default=Decimal('0.00'), validators=[MinValueValidator(0)], verbose_name='Preço de Custo')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)

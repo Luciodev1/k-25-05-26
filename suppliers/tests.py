@@ -92,6 +92,24 @@ class SupplierViewTest(TestCase):
         self.assertFalse(Supplier.all_objects.filter(pk=self.supplier.pk).exists())
 
 
+class SupplierExportTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from django.contrib.auth.models import User
+        cls.tenant = TenantFactory(slug='test-supplier-export')
+        cls.supplier = SupplierFactory(name='ExportTest', tenant=cls.tenant)
+        cls.user = User.objects.create_superuser('exportuser', 'e@t.com', 'pass')
+        TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
+
+    def test_export_excel_content_type(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('suppliers:supplier_list') + '?export=excel')
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+
 class SupplierFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):

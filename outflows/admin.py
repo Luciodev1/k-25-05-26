@@ -14,6 +14,7 @@ class OutflowAdmin(admin.ModelAdmin):
     search_fields = ('product__title', 'customer__name')
     inlines = [DeliveryInline]
     readonly_fields = ('quantity_delivered',)
+    list_select_related = ('product', 'customer')
 
 
 admin.site.register(models.Outflow, OutflowAdmin)

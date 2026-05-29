@@ -26,7 +26,7 @@ class Outflow(SoftDeleteModel):
         ('delivered', 'Entregue'),
     ]
 
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='outflows')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='outflows', null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='outflows', verbose_name='Produto')
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='outflows', verbose_name='Cliente')
     quantity = models.DecimalField(
@@ -117,7 +117,7 @@ class Outflow(SoftDeleteModel):
 
 
 class Delivery(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='deliveries')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='deliveries', null=True, blank=True)
     outflow = models.ForeignKey(Outflow, on_delete=models.PROTECT, related_name='deliveries')
     driver = models.ForeignKey(
         Driver, on_delete=models.PROTECT, related_name='deliveries',
@@ -147,7 +147,8 @@ class Delivery(SoftDeleteModel):
     destination = models.CharField(max_length=200, verbose_name='Local da Entrega', null=True, blank=True)
     receiver_name = models.CharField(max_length=200, verbose_name='Nome do Receptor', null=True, blank=True)
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
-    delivered_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    delivered_at = models.DateTimeField(default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Entrega'

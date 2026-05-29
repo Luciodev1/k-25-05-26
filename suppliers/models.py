@@ -5,7 +5,7 @@ from audit.signals import log_action
 
 
 class Supplier(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='suppliers')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='suppliers', null=True, blank=True)
     name = models.CharField(max_length=500, db_index=True, verbose_name='Nome')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True, verbose_name='NIF')

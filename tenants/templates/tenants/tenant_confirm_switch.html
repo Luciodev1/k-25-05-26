@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Troca — SGE{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="padding: 4rem 1rem;">
+  <div style="max-width: 440px; width: 100%;">
+    <div class="text-center mb-4">
+      <div class="d-inline-flex align-items-center justify-content-center mb-3">
+        <div class="logo-box-lg">K</div>
+      </div>
+      <h1 class="fw-bold fs-4 mb-1 text-main">Confirmar Troca de Empresa</h1>
+      <p class="text-muted small">Confirme a sua palavra-passe para trocar para <strong>{{ tenant.name }}</strong></p>
+    </div>
+
+    <form method="post" action="{% url 'tenants:tenant_confirm_switch' tenant.id %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="password" class="form-label">Palavra-passe</label>
+        <input type="password" name="password" id="password" class="form-control" required autocomplete="current-password" autofocus>
+      </div>
+      {% if error %}
+        <div class="alert alert-danger py-2 small">{{ error }}</div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary w-100">Confirmar Troca</button>
+      <a href="{% url 'tenants:tenant_select' %}" class="btn btn-outline-secondary w-100 mt-2">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

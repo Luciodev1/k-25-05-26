@@ -11,7 +11,7 @@
 <div class="card"><div class="card-body">
   <div class="table-responsive">
     <table class="table table-hover align-middle">
-      <thead><tr><th>Nome</th><th>Permissoes</th><th>Membros</th><th class="text-end">Acoes</th></tr></thead>
+      <thead><tr><th scope="col">Nome</th><th scope="col">Permissoes</th><th scope="col">Membros</th><th scope="col" class="text-end">Acoes</th></tr></thead>
       <tbody>
         {% for g in groups %}<tr>
           <td class="fw-semibold">{{ g.name }}</td>

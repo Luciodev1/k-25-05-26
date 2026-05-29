@@ -8,7 +8,7 @@
     <div class="dropdown-menu dropdown-menu-end" style="width:350px;max-height:400px;overflow-y:auto;">
         <h6 class="dropdown-header">Notificacoes</h6>
         {% for n in notifs.items %}
-        <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="{{ n.url }}">
+        <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="{{ n.url|escape }}">
             <i class="bi {{ n.icon }} {{ n.color }} mt-1"></i>
             <div>
                 <div class="small fw-semibold">{{ n.title }}</div>

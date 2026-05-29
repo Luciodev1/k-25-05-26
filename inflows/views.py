@@ -91,6 +91,27 @@ class InflowUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessa
             qs = qs.filter(tenant=tenant)
         return qs
 
+    def form_valid(self, form):
+        try:
+            with transaction.atomic():
+                qs = Product.objects
+                tenant = getattr(self.request, 'tenant', None)
+                if tenant:
+                    qs = qs.filter(tenant=tenant)
+                product = qs.select_for_update().get(
+                    pk=form.cleaned_data['product'].pk
+                )
+                inflow = form.save(commit=False)
+                if tenant:
+                    inflow.tenant = tenant
+                if not inflow.price:
+                    inflow.price = product.cost_price
+                inflow.save()
+        except Product.DoesNotExist:
+            form.add_error('product', 'O produto selecionado já não existe.')
+            return self.form_invalid(form)
+        return super().form_valid(form)
+
 
 class InflowDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     model = models.Inflow

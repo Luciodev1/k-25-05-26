@@ -64,3 +64,11 @@ jobs:
           DJANGO_SECRET_KEY: ci-test-secret-key
           DJANGO_DEBUG: 'True'
           REDIS_URL: redis://localhost:6379/0
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build . --file Dockerfile --tag sge:ci

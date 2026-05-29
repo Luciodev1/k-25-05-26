@@ -4,7 +4,7 @@ from audit.signals import log_action
 
 
 class Driver(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='drivers')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='drivers', null=True, blank=True)
     name = models.CharField(max_length=200, verbose_name='Nome', db_index=True)
     phone = models.CharField(max_length=20, verbose_name='Telefone')
     truck_plate = models.CharField(max_length=50, verbose_name='Matrícula do Caminhão', db_index=True)

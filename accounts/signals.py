@@ -1,7 +1,7 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.db import transaction
 from outflows.models import Outflow
@@ -31,16 +31,19 @@ def sync_customer_account_entry(sender, instance, created, **kwargs):
             instance.pk, price,
         )
     total = (instance.quantity * price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    CustomerAccountEntry.objects.update_or_create(
-        outflow=instance,
-        defaults={
-            'customer': instance.customer,
-            'tenant': instance.tenant,
-            'description': f'Venda - {instance.product.title}(Qtd:{str(instance.quantity.quantize(Decimal("0.01"))).replace(".", ",")})',
-            'debit': total,
-            'credit': 0,
-        },
-    )
+    try:
+        CustomerAccountEntry.objects.update_or_create(
+            outflow=instance,
+            defaults={
+                'customer': instance.customer,
+                'tenant': instance.tenant,
+                'description': f'Venda - {instance.product.title}(Qtd:{str(instance.quantity.quantize(Decimal("0.01"))).replace(".", ",")})',
+                'debit': total,
+                'credit': 0,
+            },
+        )
+    except Exception as e:
+        logger.error('Erro ao sincronizar lançamento de conta do cliente: %s', e)
 
 
 @receiver(pre_delete, sender=Outflow, dispatch_uid='accounts_delete_customer_entries')
@@ -70,16 +73,19 @@ def sync_supplier_account_entry(sender, instance, created, **kwargs):
             instance.pk, price,
         )
     total = (instance.quantity * price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    SupplierAccountEntry.objects.update_or_create(
-        inflow=instance,
-        defaults={
-            'supplier': instance.supplier,
-            'tenant': instance.tenant,
-            'description': f'Compra - {instance.product.title} (Qtd: {instance.quantity})',
-            'debit': 0,
-            'credit': total,
-        },
-    )
+    try:
+        SupplierAccountEntry.objects.update_or_create(
+            inflow=instance,
+            defaults={
+                'supplier': instance.supplier,
+                'tenant': instance.tenant,
+                'description': f'Compra - {instance.product.title} (Qtd: {instance.quantity})',
+                'debit': 0,
+                'credit': total,
+            },
+        )
+    except Exception as e:
+        logger.error('Erro ao sincronizar lançamento de conta do fornecedor: %s', e)
 
 
 @receiver(pre_delete, sender=Inflow, dispatch_uid='accounts_delete_supplier_entries')

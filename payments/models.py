@@ -21,7 +21,7 @@ class Payment(SoftDeleteModel):
         ('DEPOSIT', 'Depósito'),
     ]
 
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='payments')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='payments', null=True, blank=True)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, verbose_name='Tipo')
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, null=True, blank=True, related_name='payments', verbose_name='Cliente')
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, null=True, blank=True, related_name='payments', verbose_name='Fornecedor')

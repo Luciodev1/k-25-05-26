@@ -29,7 +29,7 @@ USER django
 RUN python manage.py collectstatic --noinput
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python manage.py health_check || exit 1
-CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "--graceful-timeout", "30", "--max-requests", "1000", "--max-requests-jitter", "100", "--access-logfile", "-", "--error-logfile", "-"]
+CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "--graceful-timeout", "30", "--max-requests", "1000", "--max-requests-jitter", "100", "--access-logfile", "-", "--access-logformat", "%({X-Forwarded-For}i)s %l %u %t \"%r\" %s %b \"%{Referer}i\" \"%{User-Agent}i\"", "--error-logfile", "-"]
 
 FROM build AS worker
 USER django

@@ -1,4 +1,5 @@
 import re
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 
@@ -19,7 +20,7 @@ ALLOWED_UPLOAD_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
 def validate_angolan_nif(value):
     """Valida NIF angolano: exactamente 9 dígitos."""
     if not value:
-        return
+        raise ValidationError('O NIF não pode estar em branco.')
     if not ANGOLAN_NIF_PATTERN.match(str(value).strip()):
         raise ValidationError('O NIF deve ter exactamente 9 dígitos numéricos.')
 
@@ -42,6 +43,5 @@ def validate_file_content(file_obj):
 
 def validate_payment_date(value):
     """Datas de pagamento não podem estar no futuro."""
-    from django.utils import timezone
     if value and value > timezone.localdate():
         raise ValidationError('A data de pagamento não pode ser no futuro.')

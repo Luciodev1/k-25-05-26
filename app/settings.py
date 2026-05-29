@@ -120,14 +120,15 @@ LOGOUT_REDIRECT_URL = 'login'
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     import re
+    from urllib.parse import unquote
     match = re.match(r'postgres(?:ql)?://(.+):(.+)@(.+):(\d+)/(.+)', DATABASE_URL)
     if match:
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',
                 'NAME': match.group(5),
-                'USER': match.group(1),
-                'PASSWORD': match.group(2),
+                'USER': unquote(match.group(1)),
+                'PASSWORD': unquote(match.group(2)),
                 'HOST': match.group(3),
                 'PORT': match.group(4),
                 'OPTIONS': {'sslmode': os.environ.get('DB_SSLMODE', 'require')},
@@ -246,7 +247,7 @@ AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
 AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False
+AWS_QUERYSTRING_AUTH = os.environ.get('AWS_QUERYSTRING_AUTH', 'True').lower() in ('true', '1', 'yes')
 AWS_S3_FILE_OVERWRITE = False
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
@@ -263,7 +264,10 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 ano
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = True
+    # SECURE_SSL_REDIRECT is behind nginx which already handles SSL redirect.
+    # Setting to True behind a reverse proxy that terminates SSL can cause
+    # a redirect loop. Leave it off unless deploying without a proxy.
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() in ('true', '1', 'yes')
     SESSION_COOKIE_HTTPONLY = True
 
 # Application version (Sentry releases, health checks)
@@ -271,7 +275,7 @@ APP_VERSION = os.environ.get('APP_VERSION', '1.0.0')
 
 # Backup directory
 BACKUP_DIR = Path(os.environ.get('BACKUP_DIR', str(BASE_DIR / 'backups')))
-BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+BACKUP_DIR.mkdir(parents=True, exist_ok=True, mode=0o750)
 
 # Celery
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', REDIS_URL or 'redis://127.0.0.1:6379/0')
@@ -283,6 +287,8 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_RESULT_EXPIRES = 86400
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # Rate limiting (django-ratelimit)
 RATELIMIT_ENABLE = os.environ.get('RATELIMIT_ENABLE', 'True').lower() in ('true', '1', 'yes')

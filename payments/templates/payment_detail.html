@@ -27,7 +27,7 @@
             {% endif %}
           </dd>
           <dt class="col-sm-4 text-muted">Valor</dt>
-          <dd class="col-sm-8 fw-bold fs-5">{{ payment.amount }}</dd>
+          <dd class="col-sm-8 fw-bold fs-5">{{ payment.amount|floatformat:"2g" }}</dd>
           <dt class="col-sm-4 text-muted">Metodo</dt>
           <dd class="col-sm-8">{{ payment.get_payment_method_display }}</dd>
           <dt class="col-sm-4 text-muted">Data</dt>

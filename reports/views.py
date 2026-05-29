@@ -436,6 +436,11 @@ def balances_report(request):
 @login_required
 def task_status(request, task_id):
     """Estado de tarefa Celery de exportação."""
+    from tenants.models import TenantUser
+    tenant = getattr(request, 'tenant', None)
+    if tenant:
+        if not TenantUser.objects.filter(user=request.user, tenant=tenant).exists():
+            raise PermissionDenied
     if not (request.user.has_perm('outflows.view_outflow') or
             request.user.has_perm('accounts.view_customeraccountentry') or
             request.user.has_perm('accounts.view_supplieraccountentry')):

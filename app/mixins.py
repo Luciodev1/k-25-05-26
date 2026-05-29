@@ -51,11 +51,14 @@ class HtmxMixin:
 
 class ExportMixin:
     export_columns: list[tuple[str, str]] = []
+    export_select_related: list[str] | None = None
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         export = request.GET.get('export')
         if export in ('excel', 'pdf'):
             queryset = self.filterset.qs if hasattr(self, 'filterset') else self.get_queryset()
+            if self.export_select_related:
+                queryset = queryset.select_related(*self.export_select_related)
             if export == 'excel':
                 return self._export_excel(queryset)
             else:
@@ -167,7 +170,7 @@ class TenantFilterMixin:
         tenant = getattr(self.request, 'tenant', None)
         if tenant:
             tenant_id_attr = f'{self.tenant_field}_id'
-            if hasattr(form.instance, self.tenant_field):
+            if hasattr(self.model, self.tenant_field):
                 setattr(form.instance, self.tenant_field, tenant)
             elif hasattr(form.instance, tenant_id_attr):
                 setattr(form.instance, tenant_id_attr, tenant.pk)
@@ -252,7 +255,6 @@ class BaseHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilt
     model = None
     redirect_url: str | None = None
     protected_error_message: str = 'Nao e possivel eliminar permanentemente este registo.'
-    rate_limit = '10/m'
 
     @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True))
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:

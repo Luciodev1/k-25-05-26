@@ -1,0 +1,12 @@
+[run]
+source = .
+omit =
+    */migrations/*
+    */tests/*
+    */.venv/*
+    */venv/*
+    */site-packages/*
+    C:/Users/*/AppData/*
+    __pycache__/*
+    manage.py
+    */management/commands/*

@@ -27,7 +27,7 @@ def health_check(request):
             db_ok = cursor.fetchone() is not None
     except Exception as e:
         logger.exception('Health check DB failed')
-        return JsonResponse({'status': 'unhealthy', 'database': str(e)}, status=503)
+        return JsonResponse({'status': 'unhealthy', 'database': 'error'}, status=503)
     cache_ok = None
     try:
         from django.core.cache import cache
@@ -44,12 +44,12 @@ def health_check(request):
 
 
 def custom_404(request, exception):
-    logger.warning(f"404: {request.path} - {exception}")
+    logger.warning("404: %s - %s", request.path, exception)
     return render(request, '404.html', status=404)
 
 
 def custom_500(request):
-    logger.error(f"500: {request.path}", exc_info=True)
+    logger.error("500: %s", request.path, exc_info=True)
     return render(request, '500.html', status=500)
 
 
@@ -145,7 +145,8 @@ def dashboard(request):
     total_sell = price_agg['total_sell']
     margin_pct = ((total_sell - total_cost) / total_sell * 100) if total_sell else Decimal('0')
 
-    six_months_ago = first_of_month - timezone.timedelta(days=150)
+    from dateutil.relativedelta import relativedelta
+    six_months_ago = first_of_month - relativedelta(months=6)
     
     inflows_data = base_inflow.filter(created_at__gte=six_months_ago) \
         .annotate(month=TruncMonth('created_at')) \

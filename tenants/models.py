@@ -73,6 +73,9 @@ class TenantUser(SoftDeleteModel):
         verbose_name_plural = 'Utilizadores da Empresa'
         unique_together = ['user', 'tenant']
         ordering = ['-joined_at']
+        indexes = [
+            models.Index(fields=['tenant', 'role']),
+        ]
     
     def __str__(self):
         return f"{self.user.username} - {self.tenant.name} ({self.role})"

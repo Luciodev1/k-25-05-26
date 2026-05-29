@@ -1,4 +1,4 @@
-<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th class="text-center">Quantidade</th><th class="text-end">Preço</th><th class="text-end">Ações</th></tr></thead><tbody>
+<div id="inflow-list" hx-indicator="#inflow-loading" class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th scope="col">Data</th><th scope="col">Produto</th><th scope="col">Fornecedor</th><th scope="col" class="text-center">Quantidade</th><th scope="col" class="text-end">Preço</th><th scope="col" class="text-end">Ações</th></tr></thead><tbody>
   {% for inflow in inflows %}<tr>
     <td class="text-muted small">{{ inflow.created_at|date:"d/m/Y" }}</td>
     <td class="fw-semibold">{{ inflow.product.title }}</td>
@@ -12,4 +12,7 @@
     </div></td>
   </tr>{% empty %}<tr><td colspan="6"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-arrow-down-left-square"></i></div><div class="text-muted small">Nenhuma entrada encontrada.</div></div></td></tr>{% endfor %}
 </tbody></table></div>
+<div id="inflow-loading" class="htmx-indicator text-center py-3">
+  <div class="spinner-border text-success" role="status"><span class="visually-hidden">A carregar...</span></div>
+</div>
 {% include 'components/_pagination.html' %}

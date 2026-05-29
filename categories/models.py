@@ -4,7 +4,7 @@ from audit.signals import log_action
 
 
 class Category(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='categories')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
     name = models.CharField(max_length=200, db_index=True, verbose_name='Nome')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     created_at = models.DateTimeField(auto_now_add=True)

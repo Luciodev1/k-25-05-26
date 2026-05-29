@@ -11,7 +11,7 @@ def capture_old_delivery_quantity(sender, instance, **kwargs):
     """Guarda a final_quantity antiga antes do save para calcular o delta."""
     if instance.pk and not instance._state.adding:
         try:
-            old = sender.objects.get(pk=instance.pk)
+            old = sender.objects.select_for_update().get(pk=instance.pk)
             instance._old_final_quantity = old.final_quantity
         except sender.DoesNotExist:
             instance._old_final_quantity = 0

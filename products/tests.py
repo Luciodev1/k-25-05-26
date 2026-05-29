@@ -140,6 +140,7 @@ class ProductFormTest(TestCase):
         cls.tenant = TenantFactory(slug='prods-test')
         cls.brand = BrandFactory(name='B', tenant=cls.tenant)
         cls.cat = CategoryFactory(name='C', tenant=cls.tenant)
+        cls.user = User.objects.create_superuser('admin2', 'a2@t.com', 'pass')
 
     def test_product_form_valid(self):
         from products.forms import ProductForm
@@ -157,6 +158,14 @@ class ProductFormTest(TestCase):
                 'cost_price': '10.00', 'selling_price': '15.00', 'quantity': qty,
             })
             self.assertFalse(form.is_valid())
+
+    def test_export_excel_content_type(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('products:product_list') + '?export=excel')
+        self.assertEqual(
+            response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
 
     def test_product_form_tenant_filtering(self):
         from products.forms import ProductForm

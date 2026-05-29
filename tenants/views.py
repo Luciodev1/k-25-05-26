@@ -25,9 +25,7 @@ def tenant_select(request):
         tenant_id = request.POST.get('tenant_id')
         try:
             tu = tenants_users.get(tenant_id=tenant_id)
-            request.session['tenant_id'] = str(tu.tenant.id)
-            logger.info('Tenant selecionado: user=%s tenant=%s', request.user.username, tu.tenant.name)
-            return redirect('dashboard')
+            return redirect('tenants:tenant_confirm_switch', tenant_id=tu.tenant.id)
         except TenantUser.DoesNotExist:
             messages.error(request, 'Seleção inválida.')
 
@@ -35,6 +33,29 @@ def tenant_select(request):
         'tenants_users': tenants_users,
     }
     return render(request, 'tenants/tenant_select.html', context)
+
+
+@login_required
+def tenant_confirm_switch(request, tenant_id):
+    from django.contrib.auth import authenticate
+    tu = get_object_or_404(TenantUser, user=request.user, tenant_id=tenant_id)
+
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        user = authenticate(request, username=request.user.username, password=password)
+        if user is not None:
+            request.session['tenant_id'] = str(tu.tenant.id)
+            logger.info('Tenant selecionado (confirmado): user=%s tenant=%s', request.user.username, tu.tenant.name)
+            messages.success(request, f'Empresa alterada para "{tu.tenant.name}".')
+            return redirect('dashboard')
+        return render(request, 'tenants/tenant_confirm_switch.html', {
+            'tenant': tu.tenant,
+            'error': 'Palavra-passe incorreta.',
+        })
+
+    return render(request, 'tenants/tenant_confirm_switch.html', {
+        'tenant': tu.tenant,
+    })
 
 
 class TenantListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):

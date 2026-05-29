@@ -1,4 +1,4 @@
-<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr>
+<div id="outflow-list" hx-indicator="#outflow-loading" class="table-responsive"><table class="table table-hover align-middle"><thead><tr>
   <th>Produto</th><th>Cliente</th><th class="text-center">Qtd. Pedida</th><th class="text-center">Qtd. Entregue</th><th class="text-center">Estado</th><th class="text-end">Ações</th>
 </tr></thead><tbody>
   {% for outflow in outflows %}<tr>
@@ -18,4 +18,7 @@
     </div></td>
   </tr>{% empty %}<tr><td colspan="6"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-arrow-up-right-square"></i></div><div class="text-muted small">Nenhuma saída registada.</div></div></td></tr>{% endfor %}
 </tbody></table></div>
+<div id="outflow-loading" class="htmx-indicator text-center py-3">
+  <div class="spinner-border text-success" role="status"><span class="visually-hidden">A carregar...</span></div>
+</div>
 {% include 'components/_pagination.html' %}

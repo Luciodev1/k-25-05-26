@@ -163,7 +163,7 @@
       <div class="profile-avatar-container">
         <div class="profile-avatar">
           {% if profile.avatar %}
-            <img src="{{ profile.avatar.url }}" alt="{{ request.user.username }}">
+            <img src="{{ profile.avatar.url }}" alt="{{ request.user.username }}" loading="lazy">
           {% else %}
             {{ request.user.username|slice:":1"|upper }}
           {% endif %}

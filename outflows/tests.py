@@ -483,6 +483,47 @@ class DeliveryEdgeCaseTest(TestCase):
         )
         self.assertRedirects(response, reverse('outflows:delivery_trash'))
 
+class DeliverySignalTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantFactory(slug='ds-test')
+        cls.brand = BrandFactory(name='Brand', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='Cat', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Customer', tenant=cls.tenant)
+        cls.driver = DriverFactory(name='Driver', phone='123456789', tenant=cls.tenant)
+        cls.product = ProductFactory(
+            title='Product', category=cls.category, brand=cls.brand,
+            quantity=Decimal('100'), tenant=cls.tenant,
+        )
+        cls.outflow = OutflowFactory(
+            product=cls.product, customer=cls.customer,
+            quantity=Decimal('20'), price=Decimal('15.00'),
+            tenant=cls.tenant,
+        )
+
+    def test_delivery_creation_decreases_stock(self):
+        initial_stock = self.product.quantity
+        DeliveryFactory(
+            outflow=self.outflow, quantity=Decimal('10'),
+            driver=self.driver, tenant=self.tenant,
+        )
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, initial_stock - Decimal('10'))
+
+    def test_multiple_deliveries_accumulate_stock_decrease(self):
+        initial_stock = self.product.quantity
+        DeliveryFactory(
+            outflow=self.outflow, quantity=Decimal('5'),
+            driver=self.driver, tenant=self.tenant,
+        )
+        DeliveryFactory(
+            outflow=self.outflow, quantity=Decimal('3'),
+            driver=self.driver, tenant=self.tenant,
+        )
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.quantity, initial_stock - Decimal('8'))
+
+
 class OutflowFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):

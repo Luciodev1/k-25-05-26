@@ -8,8 +8,8 @@
         <div><h1 class="fw-bold mb-0 fs-5">Produtos</h1><span class="text-muted small">Gerencie seu inventário e precificação de forma centralizada</span></div>
     </div>
     <div class="d-flex gap-2">
-        <a href="?export=excel{% if request.GET.title %}&title={{ request.GET.title }}{% endif %}" class="btn btn-outline-success btn-sm" title="Exportar Excel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
-        <a href="?export=pdf{% if request.GET.title %}&title={{ request.GET.title }}{% endif %}" class="btn btn-outline-danger btn-sm" title="Exportar PDF"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+        <a href="?export=excel{% if request.GET.title %}&title={{ request.GET.title|urlencode }}{% endif %}" class="btn btn-outline-success btn-sm" title="Exportar Excel"><i class="bi bi-file-earmark-excel me-1"></i>Excel</a>
+        <a href="?export=pdf{% if request.GET.title %}&title={{ request.GET.title|urlencode }}{% endif %}" class="btn btn-outline-danger btn-sm" title="Exportar PDF"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
         <a href="{% url 'products:product_create' %}" class="btn btn-primary shadow-sm">
             <i class="bi bi-plus-lg"></i> Novo Produto
         </a>

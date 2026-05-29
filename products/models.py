@@ -7,7 +7,7 @@ from audit.signals import log_action
 
 
 class Product(SoftDeleteModel):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='products')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     title = models.CharField(max_length=500, verbose_name='Título')
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products', verbose_name='Categoria')
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', verbose_name='Marca')
@@ -39,7 +39,7 @@ class Product(SoftDeleteModel):
                 name='product_quantity_non_negative',
             ),
             models.UniqueConstraint(
-                fields=['serial_number'],
+                fields=['tenant', 'serial_number'],
                 condition=models.Q(serial_number__isnull=False) & ~models.Q(serial_number=''),
                 name='product_serial_number_unique',
             ),

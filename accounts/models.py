@@ -18,7 +18,7 @@ class BaseAccountEntry(models.Model):
 
 
 class CustomerAccountEntry(BaseAccountEntry):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='customer_account_entries')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='customer_account_entries', null=True, blank=True)
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='account_entries', verbose_name='Cliente')
     outflow = models.ForeignKey(Outflow, on_delete=models.SET_NULL, null=True, blank=True, related_name='account_entries', verbose_name='Saída')
     payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='customer_account_entries', verbose_name='Pagamento')
@@ -47,7 +47,7 @@ class CustomerAccountEntry(BaseAccountEntry):
 
 
 class SupplierAccountEntry(BaseAccountEntry):
-    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='supplier_account_entries')
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='supplier_account_entries', null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='account_entries', verbose_name='Fornecedor')
     inflow = models.ForeignKey(Inflow, on_delete=models.SET_NULL, null=True, blank=True, related_name='account_entries', verbose_name='Entrada')
     payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='supplier_account_entries', verbose_name='Pagamento')

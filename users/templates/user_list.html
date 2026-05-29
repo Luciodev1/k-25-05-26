@@ -9,7 +9,7 @@
   <a href="{% url 'users:user_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Utilizador</a>
 </div>
 <div class="card"><div class="card-body">
-  <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Utilizador</th><th>Nome Completo</th><th>E-mail</th><th>Grupos</th><th class="text-center">Estado</th><th class="text-end">Ações</th></tr></thead><tbody>
+  <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th scope="col">Utilizador</th><th scope="col">Nome Completo</th><th scope="col">E-mail</th><th scope="col">Grupos</th><th scope="col" class="text-center">Estado</th><th scope="col" class="text-end">Ações</th></tr></thead><tbody>
     {% for u in users %}
     <tr>
       <td>

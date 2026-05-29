@@ -4,7 +4,7 @@
     <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none"><i class="bi bi-house-door"></i></a></li>
     {% for crumb in breadcrumbs %}
       {% if crumb.url %}
-        <li class="breadcrumb-item"><a href="{{ crumb.url }}" class="text-decoration-none">{{ crumb.label }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ crumb.url|escape }}" class="text-decoration-none">{{ crumb.label|escape }}</a></li>
       {% else %}
         <li class="breadcrumb-item active" aria-current="page">{{ crumb.label }}</li>
       {% endif %}

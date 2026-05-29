@@ -31,6 +31,7 @@ class OutflowListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, Ex
         ('Preco', 'price'),
         ('Data', 'created_at'),
     ]
+    export_select_related = ['product', 'customer']
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('product', 'customer')
@@ -119,10 +120,10 @@ class OutflowUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMess
                         f'Aumento de quantidade excede o estoque disponível ({product.quantity}).',
                     )
                     return self.form_invalid(form)
+                return super().form_valid(form)
         except (Product.DoesNotExist, models.Outflow.DoesNotExist):
             form.add_error('product', 'O produto ou a saída selecionada já não existe.')
             return self.form_invalid(form)
-        return super().form_valid(form)
 
 
 class OutflowDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):

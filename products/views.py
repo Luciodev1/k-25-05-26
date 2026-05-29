@@ -31,6 +31,7 @@ class ProductListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, Ex
         ('Preco Venda', 'selling_price'),
         ('Quantidade', 'quantity'),
     ]
+    export_select_related = ['category', 'brand']
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('category', 'brand')
