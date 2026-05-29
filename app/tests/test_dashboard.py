@@ -2,44 +2,42 @@
 from decimal import Decimal
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
-from brands.models import Brand
-from categories.models import Category
 from products.models import Product
 from customers.models import Customer
 from suppliers.models import Supplier
 from inflows.models import Inflow
 from outflows.models import Outflow
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
+from tests.factories import TenantFactory, BrandFactory, CategoryFactory, CustomerFactory, SupplierFactory, ProductFactory, InflowFactory, OutflowFactory
+
 
 
 class DashboardViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='DashTest', slug='dash-test')
+        cls.tenant = TenantFactory(slug='dash-test')
         cls.user = User.objects.create_superuser('admin', 'admin@test.com', 'adminpass')
-        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
-        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='Customer', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
-        cls.product = Product.objects.create(
+        cls.brand = BrandFactory(name='Brand', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='Cat', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Customer', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='Supplier', tenant=cls.tenant)
+        cls.product = ProductFactory(
             title='Product', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('50'), tenant=cls.tenant,
+            tenant=cls.tenant,
         )
-        Product.objects.create(
+        ProductFactory(
             title='LowStock', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('5.00'), selling_price=Decimal('8.00'),
             quantity=Decimal('3'), tenant=cls.tenant,
         )
-        Inflow.objects.create(
+        InflowFactory(
             product=cls.product, supplier=cls.supplier,
             quantity=Decimal('20'), price=Decimal('10.00'), tenant=cls.tenant,
         )
-        Outflow.objects.create(
+        OutflowFactory(
             product=cls.product, customer=cls.customer,
             quantity=Decimal('5'), price=Decimal('15.00'), tenant=cls.tenant,
         )
-        Outflow.objects.create(
+        OutflowFactory(
             product=cls.product, customer=cls.customer,
             quantity=Decimal('10'), price=Decimal('15.00'), tenant=cls.tenant,
         )
@@ -73,6 +71,8 @@ class DashboardViewTest(TestCase):
         self.assertEqual(len(ctx['outflows_pending']), 2)
 
     def test_dashboard_no_data(self):
+        from django.core.cache import cache
+        cache.clear()
         Inflow.objects.all().delete()
         Outflow.objects.all().delete()
         Product.objects.all().delete()
@@ -105,23 +105,22 @@ class ErrorHandlerTest(TestCase):
 class DashboardTenantScopedTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.tenant = TenantFactory(slug='t')
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
-        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
-        cls.cat = Category.objects.create(name='C', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
-        cls.product = Product.objects.create(
+        cls.brand = BrandFactory(name='B', tenant=cls.tenant)
+        cls.cat = CategoryFactory(name='C', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Cust', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='Supp', tenant=cls.tenant)
+        cls.product = ProductFactory(
             title='P', category=cls.cat, brand=cls.brand,
-            cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('50'), tenant=cls.tenant,
+            tenant=cls.tenant,
         )
-        Inflow.objects.create(
+        InflowFactory(
             product=cls.product, supplier=cls.supplier,
             quantity=Decimal('20'), price=Decimal('10'), tenant=cls.tenant,
         )
-        Outflow.objects.create(
+        OutflowFactory(
             product=cls.product, customer=cls.customer,
             quantity=Decimal('5'), price=Decimal('15'), tenant=cls.tenant,
         )

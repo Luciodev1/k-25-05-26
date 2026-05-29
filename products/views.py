@@ -65,6 +65,7 @@ class ProductListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, Ex
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class ProductCreateView(GestorRequiredMixin, SuccessMessageMixin, CreateView):
     model = models.Product
     template_name = 'product_create.html'
@@ -84,6 +85,7 @@ class ProductCreateView(GestorRequiredMixin, SuccessMessageMixin, CreateView):
         return super().form_valid(form)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class ProductUpdateView(GestorRequiredMixin, SuccessMessageMixin, UpdateView):
     model = models.Product
     template_name = 'product_update.html'
@@ -118,6 +120,7 @@ class ProductDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView)
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class ProductDeleteView(GestorRequiredMixin, DeleteView):
     model = models.Product
     template_name = 'product_delete.html'
@@ -190,6 +193,7 @@ class ProductTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixi
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class ProductRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'products.delete_product'
 

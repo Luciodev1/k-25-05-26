@@ -1,10 +1,12 @@
 from decimal import Decimal
 from unittest.mock import patch, MagicMock
 from django.test import TestCase, RequestFactory
+from django.urls import reverse
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
+from tests.factories import TenantFactory
 
 
 class UserModelTest(TestCase):
@@ -32,23 +34,23 @@ class UserViewTest(TestCase):
         cls.user = User.objects.create_user('testuser', password='testpass123')
 
     def test_list_requires_login(self):
-        response = self.client.get('/users/')
+        response = self.client.get(reverse('users:user_list'))
         self.assertEqual(response.status_code, 302)
 
     def test_list_requires_permission(self):
         self.client.force_login(self.user)
-        response = self.client.get('/users/')
+        response = self.client.get(reverse('users:user_list'))
         self.assertEqual(response.status_code, 403)
 
     def test_list_view_with_permission(self):
         self.client.force_login(self.admin)
-        response = self.client.get('/users/')
+        response = self.client.get(reverse('users:user_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'testuser')
 
     def test_create_user_view(self):
         self.client.force_login(self.admin)
-        response = self.client.post('/users/create/', {
+        response = self.client.post(reverse('users:user_create'), {
             'username': 'newuser',
             'email': 'new@email.com',
             'password': 'StrongPass123!',
@@ -65,18 +67,18 @@ class GroupViewTest(TestCase):
         cls.group = Group.objects.create(name='TestGroup')
 
     def test_list_requires_login(self):
-        response = self.client.get('/grupos/')
+        response = self.client.get(reverse('users:group_list'))
         self.assertEqual(response.status_code, 302)
 
     def test_list_view(self):
         self.client.force_login(self.admin)
-        response = self.client.get('/grupos/')
+        response = self.client.get(reverse('users:group_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestGroup')
 
     def test_create_group(self):
         self.client.force_login(self.admin)
-        response = self.client.post('/grupos/novo/', {'name': 'NewGroup', 'permissions': []})
+        response = self.client.post(reverse('users:group_create'), {'name': 'NewGroup', 'permissions': []})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Group.objects.filter(name='NewGroup').exists())
 
@@ -91,12 +93,12 @@ class UserProfileAndAccessSecurityTest(TestCase):
         cls.manager_user.groups.add(cls.manager_group)
 
     def test_profile_requires_login(self):
-        response = self.client.get('/perfil/')
+        response = self.client.get(reverse('users:user_profile'))
         self.assertEqual(response.status_code, 302)
 
     def test_profile_view_for_superuser(self):
         self.client.force_login(self.superuser)
-        response = self.client.get('/perfil/')
+        response = self.client.get(reverse('users:user_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Meu Perfil')
         self.assertContains(response, 'Administrador')
@@ -104,14 +106,14 @@ class UserProfileAndAccessSecurityTest(TestCase):
 
     def test_profile_view_for_manager_group(self):
         self.client.force_login(self.manager_user)
-        response = self.client.get('/perfil/')
+        response = self.client.get(reverse('users:user_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Gerente')
         self.assertContains(response, 'manageruser')
 
     def test_profile_view_for_operator_fallback(self):
         self.client.force_login(self.basic_user)
-        response = self.client.get('/perfil/')
+        response = self.client.get(reverse('users:user_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Operador')
         self.assertContains(response, 'regularuser')
@@ -119,7 +121,7 @@ class UserProfileAndAccessSecurityTest(TestCase):
     def test_reports_index_requires_permissions(self):
         # Sem nenhuma permissão relevante
         self.client.force_login(self.basic_user)
-        response = self.client.get('/reports/')
+        response = self.client.get(reverse('reports:report_index'))
         self.assertEqual(response.status_code, 403)
 
         # Com permissão relacionada (mas sem tenant, continua bloqueado)
@@ -128,30 +130,25 @@ class UserProfileAndAccessSecurityTest(TestCase):
         
         user_with_perm = User.objects.get(id=self.basic_user.id)
         self.client.force_login(user_with_perm)
-        response = self.client.get('/reports/')
+        response = self.client.get(reverse('reports:report_index'))
         self.assertEqual(response.status_code, 403)
 
     def test_specific_reports_restricted(self):
         self.client.force_login(self.basic_user)
         
-        # Outflows Report
-        response = self.client.get('/reports/outflows-by-customer/')
+        response = self.client.get(reverse('reports:report_outflows_by_customer'))
         self.assertEqual(response.status_code, 403)
         
-        # Deliveries Report
-        response = self.client.get('/reports/deliveries/')
+        response = self.client.get(reverse('reports:report_deliveries'))
         self.assertEqual(response.status_code, 403)
 
-        # Customer Account Report
-        response = self.client.get('/reports/customer-account/')
+        response = self.client.get(reverse('reports:report_customer_account'))
         self.assertEqual(response.status_code, 403)
 
-        # Supplier Account Report
-        response = self.client.get('/reports/supplier-account/')
+        response = self.client.get(reverse('reports:report_supplier_account'))
         self.assertEqual(response.status_code, 403)
 
-        # Balances Report
-        response = self.client.get('/reports/balances/')
+        response = self.client.get(reverse('reports:report_balances'))
         self.assertEqual(response.status_code, 403)
 
     def test_specific_reports_accessible_with_perms(self):
@@ -161,28 +158,28 @@ class UserProfileAndAccessSecurityTest(TestCase):
         self.client.force_login(user_with_perm)
 
         # Utilizador sem tenant associado — acesso negado mesmo com permissão
-        response = self.client.get('/reports/outflows-by-customer/')
+        response = self.client.get(reverse('reports:report_outflows_by_customer'))
         self.assertEqual(response.status_code, 403)
         
-        response = self.client.get('/reports/deliveries/')
+        response = self.client.get(reverse('reports:report_deliveries'))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_logs_restricted_to_authorized_only(self):
         self.client.force_login(self.basic_user)
         
-        response = self.client.get('/auditoria/')
+        response = self.client.get(reverse('audit:audit_list'))
         self.assertEqual(response.status_code, 403)
         
-        response = self.client.get('/atividade/')
+        response = self.client.get(reverse('audit:activity_feed'))
         self.assertEqual(response.status_code, 403)
 
     def test_audit_logs_accessible_for_superuser(self):
         self.client.force_login(self.superuser)
         
-        response = self.client.get('/auditoria/')
+        response = self.client.get(reverse('audit:audit_list'))
         self.assertEqual(response.status_code, 200)
         
-        response = self.client.get('/atividade/')
+        response = self.client.get(reverse('audit:activity_feed'))
         self.assertEqual(response.status_code, 200)
 
 
@@ -192,28 +189,36 @@ class CustomLoginViewTest(TestCase):
         cls.user = User.objects.create_user('logintest', password='pass123')
 
     def test_login_form_invalid_shows_form(self):
-        response = self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'wrong'})
+        response = self.client.post(reverse('login'), {'username': 'logintest', 'password': 'wrong'})
         self.assertEqual(response.status_code, 200)
 
     def test_login_form_valid_redirects(self):
-        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant = TenantFactory(slug='t')
         TenantUser.objects.create(user=self.user, tenant=tenant)
-        response = self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'pass123'})
+        response = self.client.post(reverse('login'), {'username': 'logintest', 'password': 'pass123'})
         self.assertEqual(response.status_code, 302)
 
     def test_login_sets_single_tenant_in_session(self):
-        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant = TenantFactory(slug='t')
         TenantUser.objects.create(user=self.user, tenant=tenant)
-        self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'pass123'})
+        self.client.post(reverse('login'), {'username': 'logintest', 'password': 'pass123'})
         self.assertIn('tenant_id', self.client.session)
 
     def test_no_tenant_does_not_set_session(self):
-        self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'pass123'})
+        self.client.post(reverse('login'), {'username': 'logintest', 'password': 'pass123'})
         self.assertNotIn('tenant_id', self.client.session)
 
     def test_login_multi_tenant_does_not_set_session(self):
-        tenant_a = Tenant.objects.create(name='A', slug='a')
-        tenant_b = Tenant.objects.create(name='B', slug='b')
+        tenant_a = TenantFactory(slug='a')
+        tenant_b = TenantFactory(slug='b')
+        TenantUser.objects.create(user=self.user, tenant=tenant_a)
+        TenantUser.objects.create(user=self.user, tenant=tenant_b)
+        self.client.post(reverse('login'), {'username': 'logintest', 'password': 'pass123'})
+        self.assertNotIn('tenant_id', self.client.session)
+
+    def test_login_multi_tenant_does_not_set_session(self):
+        tenant_a = TenantFactory(slug='a')
+        tenant_b = TenantFactory(slug='b')
         TenantUser.objects.create(user=self.user, tenant=tenant_a)
         TenantUser.objects.create(user=self.user, tenant=tenant_b)
         self.client.post('/accounts/login/', {'username': 'logintest', 'password': 'pass123'})
@@ -223,7 +228,7 @@ class CustomLoginViewTest(TestCase):
         from users.views import CustomLoginView
         from django.test import RequestFactory
         factory = RequestFactory()
-        request = factory.post('/accounts/login/')
+        request = factory.post(reverse('login'))
         request.limited = True
         request.META['REMOTE_ADDR'] = '127.0.0.1'
         request.POST = {'username': 'test'}
@@ -237,8 +242,8 @@ class CustomLoginViewTest(TestCase):
 class UserCRUDTenantTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant_a = Tenant.objects.create(name='A', slug='a')
-        cls.tenant_b = Tenant.objects.create(name='B', slug='b')
+        cls.tenant_a = TenantFactory(slug='a')
+        cls.tenant_b = TenantFactory(slug='b')
         cls.tenant_a_user = User.objects.create_user('tenant_a_user', password='pass')
         cls.tenant_b_user = User.objects.create_user('tenant_b_user', password='pass')
         TenantUser.objects.create(user=cls.tenant_a_user, tenant=cls.tenant_a)
@@ -250,18 +255,18 @@ class UserCRUDTenantTest(TestCase):
         self.client.force_login(self.admin)
 
     def test_user_list_filters_by_tenant(self):
-        response = self.client.get('/users/')
+        response = self.client.get(reverse('users:user_list'))
         self.assertContains(response, 'tenant_a_user')
         self.assertNotContains(response, 'tenant_b_user')
 
     def test_user_create_context_has_creating_tenant(self):
-        response = self.client.get('/users/create/')
+        response = self.client.get(reverse('users:user_create'))
         self.assertEqual(response.status_code, 200)
         self.assertIn('creating_tenant', response.context)
         self.assertEqual(response.context['creating_tenant'], self.tenant_a)
 
     def test_user_create_with_tenant_creates_tenantuser(self):
-        response = self.client.post('/users/create/', {
+        response = self.client.post(reverse('users:user_create'), {
             'username': 'new_tenant_user',
             'password': 'StrongPass123!',
             'is_active': 'on',
@@ -272,15 +277,15 @@ class UserCRUDTenantTest(TestCase):
         self.assertTrue(TenantUser.objects.filter(user=new_user, tenant=self.tenant_a).exists())
 
     def test_user_update_other_tenant_returns_404(self):
-        response = self.client.get(f'/users/{self.tenant_b_user.pk}/update/')
+        response = self.client.get(reverse('users:user_update', kwargs={'pk': self.tenant_b_user.pk}))
         self.assertEqual(response.status_code, 404)
 
     def test_user_delete_other_tenant_returns_404(self):
-        response = self.client.post(f'/users/{self.tenant_b_user.pk}/delete/')
+        response = self.client.post(reverse('users:user_delete', kwargs={'pk': self.tenant_b_user.pk}))
         self.assertEqual(response.status_code, 404)
 
     def test_user_delete_shows_success_message(self):
-        response = self.client.post(f'/users/{self.tenant_a_user.pk}/delete/', follow=True)
+        response = self.client.post(reverse('users:user_delete', kwargs={'pk': self.tenant_a_user.pk}), follow=True)
         self.assertContains(response, 'exclu')
 
 
@@ -309,8 +314,8 @@ class GroupedPermissionsTest(TestCase):
 class GroupCRUDTenantTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant_a = Tenant.objects.create(name='A', slug='a')
-        cls.tenant_b = Tenant.objects.create(name='B', slug='b')
+        cls.tenant_a = TenantFactory(slug='a')
+        cls.tenant_b = TenantFactory(slug='b')
         cls.admin = User.objects.create_superuser('admin', 'a@a.com', 'pass')
         TenantUser.objects.create(user=cls.admin, tenant=cls.tenant_a)
         cls.user_a = User.objects.create_user('user_a', password='pass')
@@ -326,37 +331,37 @@ class GroupCRUDTenantTest(TestCase):
         self.client.force_login(self.admin)
 
     def test_group_list_filters_by_tenant(self):
-        response = self.client.get('/grupos/')
+        response = self.client.get(reverse('users:group_list'))
         self.assertContains(response, 'GroupA')
         self.assertNotContains(response, 'GroupB')
 
     def test_group_create_context(self):
-        response = self.client.get('/grupos/novo/')
+        response = self.client.get(reverse('users:group_create'))
         self.assertEqual(response.status_code, 200)
         self.assertIn('grouped_permissions', response.context)
 
     def test_group_update_context(self):
-        response = self.client.get(f'/grupos/{self.group_a.pk}/editar/')
+        response = self.client.get(reverse('users:group_update', kwargs={'pk': self.group_a.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertIn('grouped_permissions', response.context)
 
     def test_group_update_other_tenant_returns_404(self):
-        response = self.client.get(f'/grupos/{self.group_b.pk}/editar/')
+        response = self.client.get(reverse('users:group_update', kwargs={'pk': self.group_b.pk}))
         self.assertEqual(response.status_code, 404)
 
     def test_group_delete_shows_message(self):
-        response = self.client.post(f'/grupos/{self.group_a.pk}/eliminar/', follow=True)
+        response = self.client.post(reverse('users:group_delete', kwargs={'pk': self.group_a.pk}), follow=True)
         self.assertContains(response, 'eliminado')
 
     def test_group_delete_other_tenant_returns_404(self):
-        response = self.client.post(f'/grupos/{self.group_b.pk}/eliminar/')
+        response = self.client.post(reverse('users:group_delete', kwargs={'pk': self.group_b.pk}))
         self.assertEqual(response.status_code, 404)
 
 
 class ProfileEditTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='T', slug='t')
+        cls.tenant = TenantFactory(slug='t')
         cls.user = User.objects.create_user('profileuser', 'p@test.com', 'pass')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
 
@@ -364,12 +369,12 @@ class ProfileEditTest(TestCase):
         self.client.force_login(self.user)
 
     def test_profile_edit_get_renders_form(self):
-        response = self.client.get('/perfil/editar/')
+        response = self.client.get(reverse('users:profile_edit'))
         self.assertEqual(response.status_code, 200)
         self.assertIn('user_form', response.context)
 
     def test_profile_edit_post_valid_redirects(self):
-        response = self.client.post('/perfil/editar/', {
+        response = self.client.post(reverse('users:profile_edit'), {
             'first_name': 'Updated',
             'last_name': 'User',
             'email': 'p@test.com',
@@ -381,7 +386,7 @@ class ProfileEditTest(TestCase):
         self.assertEqual(self.user.first_name, 'Updated')
 
     def test_profile_edit_post_invalid_shows_error(self):
-        response = self.client.post('/perfil/editar/', {
+        response = self.client.post(reverse('users:profile_edit'), {
             'first_name': 'Updated',
             'email': 'not-an-email',
         })

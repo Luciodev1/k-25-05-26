@@ -54,6 +54,7 @@ class PaymentDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView)
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class PaymentCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = Payment
     form_class = PaymentForm
@@ -74,6 +75,7 @@ class PaymentCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMess
         return super().form_valid(form)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class PaymentUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Payment
     form_class = PaymentForm
@@ -95,6 +97,7 @@ class PaymentUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMess
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class PaymentDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Payment
     template_name = 'payment_delete.html'
@@ -136,6 +139,7 @@ class PaymentTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixi
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class PaymentRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'payments.delete_payment'
 

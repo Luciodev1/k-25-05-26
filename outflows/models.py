@@ -38,7 +38,7 @@ class Outflow(SoftDeleteModel):
         max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True,
         verbose_name='Estado',
     )
-    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, verbose_name='Preço de Saída')
+    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], verbose_name='Preço de Saída')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -51,6 +51,10 @@ class Outflow(SoftDeleteModel):
             models.Index(fields=['customer', 'created_at']),
             models.Index(fields=['product', 'created_at']),
             models.Index(fields=['tenant', 'is_deleted']),
+            models.Index(fields=['tenant', 'created_at']),
+            models.Index(fields=['tenant', 'customer']),
+            models.Index(fields=['tenant', 'product']),
+            models.Index(fields=['tenant', 'status']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -125,7 +129,7 @@ class Delivery(SoftDeleteModel):
     )
     actual_quantity = models.DecimalField(
         max_digits=20, decimal_places=4, verbose_name='Quantidade Real (Balança)',
-        null=True, blank=True,
+        null=True, blank=True, validators=[MinValueValidator(0)],
     )
     is_confirmed = models.BooleanField(default=False, verbose_name='Confirmado na Balança')
     delivery_date = models.DateField(verbose_name='Data de Entrega', null=True, blank=True)
@@ -153,6 +157,9 @@ class Delivery(SoftDeleteModel):
             models.Index(fields=['outflow', 'delivered_at']),
             models.Index(fields=['driver', 'delivered_at']),
             models.Index(fields=['tenant', 'is_deleted']),
+            models.Index(fields=['tenant', 'delivered_at']),
+            models.Index(fields=['tenant', 'driver']),
+            models.Index(fields=['tenant', 'outflow']),
         ]
         constraints = [
             models.CheckConstraint(

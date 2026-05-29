@@ -2,21 +2,22 @@ from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 from django.urls import reverse
 from .models import Tenant, TenantUser, TenantSettings
+from tests.factories import TenantFactory
 
 
 class TenantModelTest(TestCase):
     def test_create_tenant(self):
-        tenant = Tenant.objects.create(name='TestEmpresa', slug='test-empresa')
+        tenant = TenantFactory(name='TestEmpresa', slug='test-empresa')
         self.assertEqual(str(tenant), 'TestEmpresa')
         self.assertTrue(tenant.is_active)
         self.assertEqual(tenant.currency, 'AOA')
 
     def test_tenant_str(self):
-        tenant = Tenant.objects.create(name='K Gestão', slug='k-gestao')
+        tenant = TenantFactory(name='K Gestão', slug='k-gestao')
         self.assertEqual(str(tenant), 'K Gestão')
 
     def test_tenant_created_at_defaults(self):
-        tenant = Tenant.objects.create(name='Test', slug='test')
+        tenant = TenantFactory(slug='test')
         self.assertIsNotNone(tenant.created_at)
         self.assertIsNotNone(tenant.updated_at)
 
@@ -25,7 +26,7 @@ class TenantUserModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user('testuser', 't@t.com', 'pass')
-        cls.tenant = Tenant.objects.create(name='Tenant', slug='tenant')
+        cls.tenant = TenantFactory(name='Tenant', slug='tenant')
 
     def test_create_tenant_user(self):
         tu = TenantUser.objects.create(user=self.user, tenant=self.tenant, role='admin')
@@ -67,7 +68,7 @@ class TenantUserModelTest(TestCase):
 class TenantSettingsModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='Tenant', slug='tenant')
+        cls.tenant = TenantFactory(name='Tenant', slug='tenant-settings')
 
     def test_create_settings(self):
         ts = TenantSettings.objects.create(tenant=self.tenant)
@@ -79,8 +80,8 @@ class TenantSettingsModelTest(TestCase):
 class TenantMiddlewareTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant1 = Tenant.objects.create(name='T1', slug='t1')
-        cls.tenant2 = Tenant.objects.create(name='T2', slug='t2')
+        cls.tenant1 = TenantFactory(slug='t1')
+        cls.tenant2 = TenantFactory(slug='t2')
 
     def test_stale_session_clears_tenant(self):
         user = User.objects.create_user('regular', 'r@t.com', 'pass')
@@ -106,8 +107,8 @@ class TenantMiddlewareTest(TestCase):
 class TenantSelectViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant1 = Tenant.objects.create(name='Alpha', slug='alpha')
-        cls.tenant2 = Tenant.objects.create(name='Beta', slug='beta')
+        cls.tenant1 = TenantFactory(name='Alpha', slug='alpha')
+        cls.tenant2 = TenantFactory(name='Beta', slug='beta')
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant1)
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant2)
@@ -167,11 +168,12 @@ class TenantCreateViewTest(TestCase):
 class TenantDetailViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='DetCo', slug='detco')
+        cls.tenant = TenantFactory(slug='detco')
         cls.admin = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         cls.u1 = User.objects.create_user('u1', 'u1@t.com', 'pass')
         cls.u2 = User.objects.create_user('u2', 'u2@t.com', 'pass')
-        TenantUser.objects.create(user=cls.u1, tenant=cls.tenant, role='admin', is_primary=True)
+        TenantUser.objects.create(user=cls.admin, tenant=cls.tenant, role='admin', is_primary=True)
+        TenantUser.objects.create(user=cls.u1, tenant=cls.tenant, role='admin', is_primary=False)
         TenantUser.objects.create(user=cls.u2, tenant=cls.tenant, role='operator')
 
     def test_tenant_detail_context_has_users(self):
@@ -182,13 +184,13 @@ class TenantDetailViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'u1')
         self.assertContains(response, 'u2')
-        self.assertEqual(len(response.context['tenant_users']), 2)
+        self.assertEqual(len(response.context['tenant_users']), 3)
 
 
 class TenantUserAddViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='AddCo', slug='addco')
+        cls.tenant = TenantFactory(slug='addco')
         cls.admin = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         TenantUser.objects.create(user=cls.admin, tenant=cls.tenant, role='admin')
         cls.new_user = User.objects.create_user('newguy', 'n@t.com', 'pass')
@@ -238,7 +240,7 @@ class TenantUserAddViewTest(TestCase):
 class TenantUserRemoveViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='RemCo', slug='remco')
+        cls.tenant = TenantFactory(slug='remco')
         cls.admin = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         cls.primary_tu = TenantUser.objects.create(
             user=cls.admin, tenant=cls.tenant, role='admin', is_primary=True,

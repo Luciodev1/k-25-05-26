@@ -30,6 +30,8 @@ class CustomerAccountEntry(BaseAccountEntry):
         indexes = [
             models.Index(fields=['customer', 'date']),
             models.Index(fields=['customer', 'outflow']),
+            models.Index(fields=['tenant', 'customer']),
+            models.Index(fields=['tenant', 'date']),
         ]
         constraints = [
             models.CheckConstraint(condition=Q(debit__gte=0), name='customer_entry_debit_non_negative'),
@@ -57,6 +59,8 @@ class SupplierAccountEntry(BaseAccountEntry):
         indexes = [
             models.Index(fields=['supplier', 'date']),
             models.Index(fields=['supplier', 'inflow']),
+            models.Index(fields=['tenant', 'supplier']),
+            models.Index(fields=['tenant', 'date']),
         ]
         constraints = [
             models.CheckConstraint(condition=Q(debit__gte=0), name='supplier_entry_debit_non_negative'),

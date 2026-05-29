@@ -7,40 +7,38 @@ from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest
 
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
 from brands.models import Brand
-from categories.models import Category
 from products.models import Product
 from customers.models import Customer
 from suppliers.models import Supplier
-from inflows.models import Inflow
 from outflows.models import Outflow
+from tests.factories import TenantFactory, BrandFactory, CategoryFactory, CustomerFactory, SupplierFactory, ProductFactory
+
 
 
 class TenantIsolationBase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant_a = Tenant.objects.create(name='Tenant A', slug='tenant-a')
-        cls.tenant_b = Tenant.objects.create(name='Tenant B', slug='tenant-b')
+        cls.tenant_a = TenantFactory(slug='tenant-a')
+        cls.tenant_b = TenantFactory(slug='tenant-b')
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant_a)
-        cls.brand_a = Brand.objects.create(name='Brand A', tenant=cls.tenant_a)
-        cls.brand_b = Brand.objects.create(name='Brand B', tenant=cls.tenant_b)
-        cls.cat_a = Category.objects.create(name='Cat A', tenant=cls.tenant_a)
-        cls.cat_b = Category.objects.create(name='Cat B', tenant=cls.tenant_b)
-        cls.customer_a = Customer.objects.create(name='Cust A', tenant=cls.tenant_a)
-        cls.customer_b = Customer.objects.create(name='Cust B', tenant=cls.tenant_b)
-        cls.supplier_a = Supplier.objects.create(name='Supp A', tenant=cls.tenant_a)
-        cls.supplier_b = Supplier.objects.create(name='Supp B', tenant=cls.tenant_b)
-        cls.product_a = Product.objects.create(
+        cls.brand_a = BrandFactory(name='Brand A', tenant=cls.tenant_a)
+        cls.brand_b = BrandFactory(name='Brand B', tenant=cls.tenant_b)
+        cls.cat_a = CategoryFactory(name='Cat A', tenant=cls.tenant_a)
+        cls.cat_b = CategoryFactory(name='Cat B', tenant=cls.tenant_b)
+        cls.customer_a = CustomerFactory(name='Cust A', tenant=cls.tenant_a)
+        cls.customer_b = CustomerFactory(name='Cust B', tenant=cls.tenant_b)
+        cls.supplier_a = SupplierFactory(name='Supp A', tenant=cls.tenant_a)
+        cls.supplier_b = SupplierFactory(name='Supp B', tenant=cls.tenant_b)
+        cls.product_a = ProductFactory(
             title='Prod A', category=cls.cat_a, brand=cls.brand_a,
-            cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('50'), tenant=cls.tenant_a,
+            tenant=cls.tenant_a,
         )
-        cls.product_b = Product.objects.create(
+        cls.product_b = ProductFactory(
             title='Prod B', category=cls.cat_b, brand=cls.brand_b,
-            cost_price=Decimal('20'), selling_price=Decimal('30'),
-            quantity=Decimal('100'), tenant=cls.tenant_b,
+            tenant=cls.tenant_b,
         )
 
     def _mock_request_with_tenant(self, tenant):
@@ -62,7 +60,7 @@ class BrandTenantIsolationTest(TenantIsolationBase):
         self.assertNotIn(self.brand_b, own_qs)
 
     def test_tenant_cannot_create_brand_for_other_tenant(self):
-        brand = Brand.objects.create(name='Cross Tenancy', tenant=self.tenant_a)
+        brand = BrandFactory(name='Cross Tenancy', tenant=self.tenant_a)
         self.assertEqual(brand.tenant, self.tenant_a)
         count_b = Brand.objects.filter(tenant=self.tenant_b).count()
         self.assertEqual(count_b, 1)

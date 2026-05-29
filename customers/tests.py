@@ -1,21 +1,22 @@
 from django.test import TestCase
+from django.urls import reverse
 from .models import Customer
 from .forms import CustomerForm
-from tenants.models import Tenant
+from tests.factories import TenantFactory, CustomerFactory
 
 
 class CustomerModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='TestCustomerModel', slug='test-customer-model')
+        cls.tenant = TenantFactory(slug='test-customer-model')
 
     def test_create_customer(self):
-        customer = Customer.objects.create(name='TestCustomer', phone='+244912345678', nif='123456789', tenant=self.tenant)
+        customer = CustomerFactory(name='TestCustomer', phone='+244912345678', nif='123456789', tenant=self.tenant)
         self.assertEqual(str(customer), 'TestCustomer')
 
     def test_customer_ordering(self):
-        Customer.objects.create(name='Zebra', tenant=self.tenant)
-        Customer.objects.create(name='Alpha', tenant=self.tenant)
+        CustomerFactory(name='Zebra', tenant=self.tenant)
+        CustomerFactory(name='Alpha', tenant=self.tenant)
         customers = list(Customer.objects.values_list('name', flat=True))
         self.assertEqual(customers, ['Alpha', 'Zebra'])
 
@@ -47,22 +48,22 @@ class CustomerFormTest(TestCase):
 class CustomerViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='TestCustomerView', slug='test-customer-view')
-        cls.customer = Customer.objects.create(name='TestCustomer', tenant=cls.tenant)
+        cls.tenant = TenantFactory(slug='test-customer-view')
+        cls.customer = CustomerFactory(name='TestCustomer', tenant=cls.tenant)
 
     def test_list_requires_login(self):
-        response = self.client.get('/customers/list/')
+        response = self.client.get(reverse('customers:customer_list'))
         self.assertEqual(response.status_code, 302)
 
     def test_list_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.get('/customers/list/')
+        response = self.client.get(reverse('customers:customer_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestCustomer')
 
     def test_create_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.post('/customers/create/', {
+        response = self.client.post(reverse('customers:customer_create'), {
             'name': 'NewCustomer', 'phone': '', 'nif': '', 'address': '', 'email': '',
         })
         self.assertEqual(response.status_code, 302)
@@ -70,7 +71,7 @@ class CustomerViewTest(TestCase):
 
     def test_update_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.post(f'/customers/{self.customer.pk}/update/', {
+        response = self.client.post(reverse('customers:customer_update', kwargs={'pk': self.customer.pk}), {
             'name': 'Updated', 'phone': '', 'nif': '', 'address': '', 'email': '',
         })
         self.assertEqual(response.status_code, 302)
@@ -79,13 +80,13 @@ class CustomerViewTest(TestCase):
 
     def test_detail_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.get(f'/customers/{self.customer.pk}/detail/')
+        response = self.client.get(reverse('customers:customer_detail', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestCustomer')
 
     def test_delete_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.post(f'/customers/{self.customer.pk}/delete/')
+        response = self.client.post(reverse('customers:customer_delete', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 302)
         self.customer.refresh_from_db()
         self.assertTrue(self.customer.is_deleted)
@@ -93,14 +94,14 @@ class CustomerViewTest(TestCase):
     def test_trash_view(self):
         self.client.force_login(self._create_user())
         self.customer.delete()
-        response = self.client.get('/customers/trash/')
+        response = self.client.get(reverse('customers:customer_trash'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestCustomer')
 
     def test_restore_view(self):
         self.client.force_login(self._create_user())
         self.customer.delete()
-        response = self.client.post(f'/customers/{self.customer.pk}/restore/')
+        response = self.client.post(reverse('customers:customer_restore', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 302)
         self.customer.refresh_from_db()
         self.assertFalse(self.customer.is_deleted)
@@ -108,7 +109,7 @@ class CustomerViewTest(TestCase):
     def test_hard_delete_view(self):
         self.client.force_login(self._create_user())
         self.customer.delete()
-        response = self.client.post(f'/customers/{self.customer.pk}/hard-delete/')
+        response = self.client.post(reverse('customers:customer_hard_delete', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Customer.all_objects.filter(pk=self.customer.pk).exists())
 

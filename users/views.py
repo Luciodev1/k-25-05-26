@@ -90,6 +90,7 @@ class UserListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class UserCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = User
     template_name = 'user_create.html'
@@ -123,6 +124,7 @@ class UserCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessage
         return response
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class UserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     model = User
     template_name = 'user_update.html'
@@ -139,6 +141,7 @@ class UserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessage
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class UserDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = User
     template_name = 'user_delete.html'
@@ -227,6 +230,7 @@ class GroupListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class GroupCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = Group
     form_class = GroupForm
@@ -241,6 +245,7 @@ class GroupCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessag
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class GroupUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Group
     form_class = GroupForm
@@ -262,6 +267,7 @@ class GroupUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessag
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class GroupDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = Group
     template_name = 'group_delete.html'

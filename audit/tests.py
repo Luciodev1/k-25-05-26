@@ -2,18 +2,17 @@ from decimal import Decimal
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 from django.urls import reverse
-from brands.models import Brand
-from categories.models import Category
 from products.models import Product
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
 from .models import AuditLog
+from tests.factories import TenantFactory, BrandFactory, CategoryFactory, ProductFactory
 from .templatetags.notification_tags import get_notifications, NotificationCollection, NotificationItem
 
 
 class AuditLogModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='AuditLogTest', slug='audit-log-test')
+        cls.tenant = TenantFactory(slug='audit-log-test')
 
     def test_create_audit_log(self):
         log = AuditLog.objects.create(
@@ -40,18 +39,16 @@ class AuditSignalTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='AuditSignal', slug='audit-signal')
+        cls.tenant = TenantFactory(slug='audit-signal')
 
     def test_create_product_logged(self):
         """Criar um produto deve gerar um log de auditoria."""
-        brand = Brand.objects.create(name='Brand', tenant=self.tenant)
-        category = Category.objects.create(name='Cat', tenant=self.tenant)
-        Product.objects.create(
+        brand = BrandFactory(name='Brand', tenant=self.tenant)
+        category = CategoryFactory(name='Cat', tenant=self.tenant)
+        ProductFactory(
             title='Test Product',
             category=category,
             brand=brand,
-            cost_price=Decimal('10.00'),
-            selling_price=Decimal('15.00'),
             tenant=self.tenant,
         )
         log = AuditLog.objects.filter(model_name='Product', action='CREATE').first()
@@ -60,14 +57,12 @@ class AuditSignalTest(TestCase):
 
     def test_delete_product_logged(self):
         """Eliminar um produto deve gerar um log de auditoria."""
-        brand = Brand.objects.create(name='Brand', tenant=self.tenant)
-        category = Category.objects.create(name='Cat', tenant=self.tenant)
-        product = Product.objects.create(
+        brand = BrandFactory(name='Brand', tenant=self.tenant)
+        category = CategoryFactory(name='Cat', tenant=self.tenant)
+        product = ProductFactory(
             title='ToDelete',
             category=category,
             brand=brand,
-            cost_price=Decimal('10.00'),
-            selling_price=Decimal('15.00'),
             tenant=self.tenant,
         )
         product.delete()
@@ -76,14 +71,12 @@ class AuditSignalTest(TestCase):
 
     def test_update_product_logged(self):
         """Actualizar um produto deve gerar um log de UPDATE."""
-        brand = Brand.objects.create(name='Brand', tenant=self.tenant)
-        category = Category.objects.create(name='Cat', tenant=self.tenant)
-        product = Product.objects.create(
+        brand = BrandFactory(name='Brand', tenant=self.tenant)
+        category = CategoryFactory(name='Cat', tenant=self.tenant)
+        product = ProductFactory(
             title='Original',
             category=category,
             brand=brand,
-            cost_price=Decimal('10.00'),
-            selling_price=Decimal('15.00'),
             tenant=self.tenant,
         )
         AuditLog.objects.filter(action='CREATE').delete()
@@ -109,7 +102,7 @@ class AuditSignalTest(TestCase):
 class AuditViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='AuditView', slug='audit-view')
+        cls.tenant = TenantFactory(slug='audit-view')
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
         for i in range(5):
@@ -157,8 +150,8 @@ class AuditViewTest(TestCase):
         self.assertEqual(len(response.context['recent_activities']), 5)
 
     def test_activity_feed_with_tenant(self):
-        from tenants.models import Tenant, TenantUser
-        tenant = Tenant.objects.create(name='T', slug='t')
+        from tenants.models import TenantUser
+        tenant = TenantFactory(slug='t')
         TenantUser.objects.create(user=self.user, tenant=tenant)
         AuditLog.objects.create(
             action='DELETE', model_name='Brand',
@@ -193,12 +186,11 @@ class NotificationTagTest(TestCase):
         self.assertEqual(nc.count, 2)
 
     def test_get_notifications_low_stock(self):
-        _tenant = Tenant.objects.create(name='NotifTest', slug='notif-test')
-        brand = Brand.objects.create(name='B', tenant=_tenant)
-        cat = Category.objects.create(name='C', tenant=_tenant)
-        Product.objects.create(
+        _tenant = TenantFactory(slug='notif-test')
+        brand = BrandFactory(name='B', tenant=_tenant)
+        cat = CategoryFactory(name='C', tenant=_tenant)
+        ProductFactory(
             title='LowStock', category=cat, brand=brand,
-            cost_price=Decimal('10'), selling_price=Decimal('15'),
             quantity=Decimal('3'), tenant=_tenant,
         )
         user = User.objects.create_superuser('admin', 'a@t.com', 'pass')

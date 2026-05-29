@@ -2,46 +2,46 @@
 from decimal import Decimal
 from datetime import date
 from django.test import TestCase
+from django.urls import reverse
 from django.contrib.auth.models import User, Permission
-from customers.models import Customer
-from suppliers.models import Supplier
 from payments.models import Payment
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
+from tests.factories import TenantFactory, CustomerFactory, SupplierFactory, PaymentFactory
 
 
 class PaymentViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.tenant = Tenant.objects.create(name='PayVT', slug='pay-vt')
+        cls.tenant = TenantFactory(slug='pay-vt')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
-        cls.customer = Customer.objects.create(name='Customer', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='Supplier', tenant=cls.tenant)
-        cls.payment = Payment.objects.create(
-            type='RECEIPT', customer=cls.customer,
-            amount=Decimal('500.00'), payment_method='CASH',
+        cls.customer = CustomerFactory(name='Customer', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='Supplier', tenant=cls.tenant)
+        cls.payment = PaymentFactory(
+            customer=cls.customer,
+            amount=Decimal('500.00'),
             date=date.today(), tenant=cls.tenant,
         )
 
     def test_payment_list(self):
         self.client.force_login(self.user)
-        response = self.client.get('/pagamentos/')
+        response = self.client.get(reverse('payments:payment_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '500,00')
 
     def test_payment_detail(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/pagamentos/{self.payment.pk}/detalhe/')
+        response = self.client.get(reverse('payments:payment_detail', kwargs={'pk': self.payment.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_payment_create_get(self):
         self.client.force_login(self.user)
-        response = self.client.get('/pagamentos/novo/')
+        response = self.client.get(reverse('payments:payment_create'))
         self.assertEqual(response.status_code, 200)
 
     def test_payment_create_post_receipt(self):
         self.client.force_login(self.user)
-        response = self.client.post('/pagamentos/novo/', {
+        response = self.client.post(reverse('payments:payment_create'), {
             'type': 'RECEIPT',
             'customer': self.customer.pk,
             'amount': '300.00',
@@ -53,7 +53,7 @@ class PaymentViewTest(TestCase):
 
     def test_payment_create_post_payment_to_supplier(self):
         self.client.force_login(self.user)
-        response = self.client.post('/pagamentos/novo/', {
+        response = self.client.post(reverse('payments:payment_create'), {
             'type': 'PAYMENT',
             'supplier': self.supplier.pk,
             'amount': '200.00',
@@ -65,12 +65,12 @@ class PaymentViewTest(TestCase):
 
     def test_payment_update_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/pagamentos/{self.payment.pk}/editar/')
+        response = self.client.get(reverse('payments:payment_update', kwargs={'pk': self.payment.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_payment_update_post(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/pagamentos/{self.payment.pk}/editar/', {
+        response = self.client.post(reverse('payments:payment_update', kwargs={'pk': self.payment.pk}), {
             'type': 'RECEIPT',
             'customer': self.customer.pk,
             'amount': '750.00',
@@ -83,12 +83,12 @@ class PaymentViewTest(TestCase):
 
     def test_payment_delete_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/pagamentos/{self.payment.pk}/eliminar/')
+        response = self.client.get(reverse('payments:payment_delete', kwargs={'pk': self.payment.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_payment_soft_delete_post(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/pagamentos/{self.payment.pk}/eliminar/')
+        response = self.client.post(reverse('payments:payment_delete', kwargs={'pk': self.payment.pk}))
         self.assertEqual(response.status_code, 302)
         self.payment.refresh_from_db()
         self.assertTrue(self.payment.is_deleted)
@@ -96,26 +96,26 @@ class PaymentViewTest(TestCase):
     def test_payment_trash_list(self):
         self.client.force_login(self.user)
         self.payment.delete()
-        response = self.client.get('/pagamentos/lixeira/')
+        response = self.client.get(reverse('payments:payment_trash'))
         self.assertEqual(response.status_code, 200)
 
     def test_payment_restore(self):
         self.client.force_login(self.user)
         self.payment.delete()
-        response = self.client.post(f'/pagamentos/{self.payment.pk}/restaurar/')
+        response = self.client.post(reverse('payments:payment_restore', kwargs={'pk': self.payment.pk}))
         self.assertEqual(response.status_code, 302)
         self.payment.refresh_from_db()
         self.assertFalse(self.payment.is_deleted)
 
     def test_payment_hard_delete(self):
         self.client.force_login(self.user)
-        payment = Payment.objects.create(
-            type='RECEIPT', customer=self.customer,
-            amount=Decimal('50.00'), payment_method='CASH',
+        payment = PaymentFactory(
+            customer=self.customer,
+            amount=Decimal('50.00'),
             date=date.today(), tenant=self.tenant,
         )
         payment.delete()
-        response = self.client.post(f'/pagamentos/{payment.pk}/eliminar-permanente/')
+        response = self.client.post(reverse('payments:payment_hard_delete', kwargs={'pk': payment.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Payment.all_objects.filter(pk=payment.pk).exists())
 
@@ -123,9 +123,9 @@ class PaymentViewTest(TestCase):
 class PaymentFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='PayFT', slug='pay-ft')
-        cls.customer = Customer.objects.create(name='C', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='S', tenant=cls.tenant)
+        cls.tenant = TenantFactory(slug='pay-ft')
+        cls.customer = CustomerFactory(name='C', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='S', tenant=cls.tenant)
 
     def test_payment_form_valid_receipt(self):
         from payments.forms import PaymentForm
@@ -167,11 +167,11 @@ class PaymentFormTest(TestCase):
 
     def test_payment_form_tenant_filtering(self):
         from payments.forms import PaymentForm
-        tenant = Tenant.objects.create(name='T', slug='t')
-        tenant_cust = Customer.objects.create(name='TC', tenant=tenant)
-        tenant_supp = Supplier.objects.create(name='TS', tenant=tenant)
-        other_cust = Customer.objects.create(name='Other')
-        other_supp = Supplier.objects.create(name='Other')
+        tenant = TenantFactory(slug='t')
+        tenant_cust = CustomerFactory(name='TC', tenant=tenant)
+        tenant_supp = SupplierFactory(name='TS', tenant=tenant)
+        other_cust = CustomerFactory(name='Other')
+        other_supp = SupplierFactory(name='Other')
         form = PaymentForm(tenant=tenant)
         self.assertIn(tenant_cust, form.fields['customer'].queryset)
         self.assertIn(tenant_supp, form.fields['supplier'].queryset)

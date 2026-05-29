@@ -86,7 +86,10 @@
                 </select>
             </div>
             <div style="height: 350px;">
-                <canvas id="movementsChart" data-labels='{{ month_labels|safe }}' data-inflows='{{ inflows_monthly|safe }}' data-outflows='{{ outflows_monthly|safe }}'></canvas>
+                {{ month_labels|json_script:"chart-labels" }}
+                {{ inflows_monthly|json_script:"chart-inflows" }}
+                {{ outflows_monthly|json_script:"chart-outflows" }}
+                <canvas id="movementsChart"></canvas>
             </div>
         </div>
     </div>

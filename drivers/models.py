@@ -18,6 +18,10 @@ class Driver(SoftDeleteModel):
         ordering = ['name']
         indexes = [
             models.Index(fields=['tenant', 'is_deleted']),
+            models.Index(fields=['tenant', 'name']),
+            models.Index(fields=['tenant', 'truck_plate']),
+            models.Index(fields=['tenant', 'cistern_plate']),
+            models.Index(fields=['tenant', 'created_at']),
         ]
         constraints = [
             models.UniqueConstraint(

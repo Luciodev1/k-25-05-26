@@ -31,6 +31,8 @@ class AuditLog(models.Model):
         indexes = [
             models.Index(fields=['model_name', 'object_id']),
             models.Index(fields=['user', 'timestamp']),
+            models.Index(fields=['tenant', 'timestamp']),
+            models.Index(fields=['tenant', 'action']),
         ]
 
     def __str__(self):

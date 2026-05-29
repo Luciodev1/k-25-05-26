@@ -5,6 +5,8 @@ from django.db.models import Sum, F
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import ProtectedError
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from app.mixins import FinanceiroRequiredMixin, TenantFilterMixin
 from payments.models import Payment
 from . import models, forms
@@ -47,6 +49,7 @@ class CustomerAccountListView(LoginRequiredMixin, PermissionRequiredMixin, ListV
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class CustomerPaymentCreateView(FinanceiroRequiredMixin, CreateView):
     model = Payment
     template_name = 'customer_payment.html'
@@ -119,6 +122,7 @@ class SupplierAccountListView(LoginRequiredMixin, PermissionRequiredMixin, ListV
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class SupplierPaymentCreateView(FinanceiroRequiredMixin, CreateView):
     model = Payment
     template_name = 'supplier_payment.html'
@@ -156,6 +160,7 @@ class SupplierPaymentCreateView(FinanceiroRequiredMixin, CreateView):
 
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class CustomerAccountEntryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, UpdateView):
     model = models.CustomerAccountEntry
     template_name = 'customer_accountentry_update.html'
@@ -171,6 +176,7 @@ class CustomerAccountEntryUpdateView(LoginRequiredMixin, PermissionRequiredMixin
         return super().form_valid(form)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class CustomerAccountEntryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DeleteView):
     model = models.CustomerAccountEntry
     template_name = 'customer_accountentry_delete.html'
@@ -191,6 +197,7 @@ class CustomerAccountEntryDeleteView(LoginRequiredMixin, PermissionRequiredMixin
             return redirect(self.get_success_url())
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class SupplierAccountEntryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, UpdateView):
     model = models.SupplierAccountEntry
     template_name = 'supplier_accountentry_update.html'
@@ -206,6 +213,7 @@ class SupplierAccountEntryUpdateView(LoginRequiredMixin, PermissionRequiredMixin
         return super().form_valid(form)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class SupplierAccountEntryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DeleteView):
     model = models.SupplierAccountEntry
     template_name = 'supplier_accountentry_delete.html'

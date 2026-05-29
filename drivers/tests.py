@@ -1,15 +1,16 @@
 from django.test import TestCase
+from django.urls import reverse
 from .models import Driver
-from tenants.models import Tenant
+from tests.factories import TenantFactory, DriverFactory
 
 
 class DriverModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='TestDriverModel', slug='test-driver-model')
+        cls.tenant = TenantFactory(slug='test-driver-model')
 
     def test_create_driver(self):
-        driver = Driver.objects.create(
+        driver = DriverFactory(
             name='TestDriver',
             phone='+244912345678',
             truck_plate='LD-12-34-AB',
@@ -19,8 +20,8 @@ class DriverModelTest(TestCase):
         self.assertEqual(str(driver), 'TestDriver (LD-12-34-AB)')
 
     def test_driver_ordering(self):
-        Driver.objects.create(name='Zebra', phone='1', truck_plate='A', cistern_plate='B', tenant=self.tenant)
-        Driver.objects.create(name='Alpha', phone='2', truck_plate='C', cistern_plate='D', tenant=self.tenant)
+        DriverFactory(name='Zebra', phone='1', truck_plate='A', cistern_plate='B', tenant=self.tenant)
+        DriverFactory(name='Alpha', phone='2', truck_plate='C', cistern_plate='D', tenant=self.tenant)
         drivers = list(Driver.objects.values_list('name', flat=True))
         self.assertEqual(drivers, ['Alpha', 'Zebra'])
 
@@ -28,8 +29,8 @@ class DriverModelTest(TestCase):
 class DriverViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='TestDriverView', slug='test-driver-view')
-        cls.driver = Driver.objects.create(
+        cls.tenant = TenantFactory(slug='test-driver-view')
+        cls.driver = DriverFactory(
             name='TestDriver',
             phone='+244912345678',
             truck_plate='LD-12-34-AB',
@@ -38,18 +39,18 @@ class DriverViewTest(TestCase):
         )
 
     def test_list_requires_login(self):
-        response = self.client.get('/drivers/list/')
+        response = self.client.get(reverse('drivers:driver_list'))
         self.assertEqual(response.status_code, 302)
 
     def test_list_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.get('/drivers/list/')
+        response = self.client.get(reverse('drivers:driver_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestDriver')
 
     def test_create_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.post('/drivers/create/', {
+        response = self.client.post(reverse('drivers:driver_create'), {
             'name': 'NewDriver',
             'phone': '+244911111111',
             'truck_plate': 'AA-00-AA-00',
@@ -60,13 +61,13 @@ class DriverViewTest(TestCase):
 
     def test_detail_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.get(f'/drivers/{self.driver.pk}/detail/')
+        response = self.client.get(reverse('drivers:driver_detail', kwargs={'pk': self.driver.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestDriver')
 
     def test_update_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.post(f'/drivers/{self.driver.pk}/update/', {
+        response = self.client.post(reverse('drivers:driver_update', kwargs={'pk': self.driver.pk}), {
             'name': 'Updated', 'phone': '+244911111111',
             'truck_plate': 'AA-00-AA-00', 'cistern_plate': 'BB-00-BB-00',
         })
@@ -76,7 +77,7 @@ class DriverViewTest(TestCase):
 
     def test_delete_view(self):
         self.client.force_login(self._create_user())
-        response = self.client.post(f'/drivers/{self.driver.pk}/delete/')
+        response = self.client.post(reverse('drivers:driver_delete', kwargs={'pk': self.driver.pk}))
         self.assertEqual(response.status_code, 302)
         self.driver.refresh_from_db()
         self.assertTrue(self.driver.is_deleted)
@@ -84,14 +85,14 @@ class DriverViewTest(TestCase):
     def test_trash_view(self):
         self.client.force_login(self._create_user())
         self.driver.delete()
-        response = self.client.get('/drivers/trash/')
+        response = self.client.get(reverse('drivers:driver_trash'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestDriver')
 
     def test_restore_view(self):
         self.client.force_login(self._create_user())
         self.driver.delete()
-        response = self.client.post(f'/drivers/{self.driver.pk}/restore/')
+        response = self.client.post(reverse('drivers:driver_restore', kwargs={'pk': self.driver.pk}))
         self.assertEqual(response.status_code, 302)
         self.driver.refresh_from_db()
         self.assertFalse(self.driver.is_deleted)
@@ -99,7 +100,7 @@ class DriverViewTest(TestCase):
     def test_hard_delete_view(self):
         self.client.force_login(self._create_user())
         self.driver.delete()
-        response = self.client.post(f'/drivers/{self.driver.pk}/hard-delete/')
+        response = self.client.post(reverse('drivers:driver_hard_delete', kwargs={'pk': self.driver.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Driver.all_objects.filter(pk=self.driver.pk).exists())
 

@@ -7,6 +7,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.core.exceptions import PermissionDenied
 from django.views.generic import ListView, CreateView, DetailView, View
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from .models import Tenant, TenantUser, TenantSettings
 from .forms import TenantCreateForm, TenantUserAddForm
 
@@ -43,6 +45,7 @@ class TenantListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     paginate_by = 10
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class TenantCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = Tenant
     form_class = TenantCreateForm
@@ -89,6 +92,7 @@ class TenantDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class TenantUserAddView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'tenants.add_tenantuser'
 
@@ -137,6 +141,7 @@ class TenantUserAddView(LoginRequiredMixin, PermissionRequiredMixin, View):
         })
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class TenantUserRemoveView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'tenants.delete_tenantuser'
 

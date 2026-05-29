@@ -41,6 +41,7 @@ class OutflowListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, Ex
         return self.filterset.qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class OutflowCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = models.Outflow
     template_name = 'outflow_create.html'
@@ -78,6 +79,7 @@ class OutflowCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMess
         return super().form_valid(form)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class OutflowUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     model = models.Outflow
     template_name = 'outflow_update.html'
@@ -146,6 +148,7 @@ class OutflowDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView)
         return context
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class OutflowDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = models.Outflow
     template_name = 'outflow_delete.html'
@@ -186,6 +189,7 @@ class OutflowTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixi
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class OutflowRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_outflow'
 
@@ -219,6 +223,7 @@ class OutflowHardDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
         return redirect('outflows:outflow_trash')
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class DeliveryCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = models.Delivery
     template_name = 'delivery_create.html'
@@ -273,6 +278,7 @@ class DeliveryCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMes
         return reverse_lazy('outflows:outflow_detail', kwargs={'pk': self.kwargs['pk']})
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class DeliveryConfirmWeightView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     model = models.Delivery
     template_name = 'delivery_confirm_weight.html'
@@ -324,6 +330,7 @@ class DeliveryShippingGuideView(LoginRequiredMixin, PermissionRequiredMixin, Det
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class DeliveryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_delivery'
 
@@ -361,6 +368,7 @@ class DeliveryTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMix
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class DeliveryRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'outflows.delete_delivery'
 

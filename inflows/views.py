@@ -33,6 +33,7 @@ class InflowListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, Fil
         return self.filterset.qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class InflowCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = models.Inflow
     template_name = 'inflow_create.html'
@@ -69,6 +70,7 @@ class InflowCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessa
         return super().form_valid(form)
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True), name='dispatch')
 class InflowUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     model = models.Inflow
     template_name = 'inflow_update.html'
@@ -104,6 +106,7 @@ class InflowDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True), name='post')
 class InflowDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model = models.Inflow
     template_name = 'inflow_delete.html'
@@ -145,6 +148,7 @@ class InflowTrashListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin
         return qs
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True), name='post')
 class InflowRestoreView(LoginRequiredMixin, PermissionRequiredMixin, View):
     permission_required = 'inflows.delete_inflow'
 

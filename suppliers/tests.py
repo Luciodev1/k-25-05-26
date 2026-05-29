@@ -1,21 +1,23 @@
 from django import forms
 from django.test import TestCase
+from django.urls import reverse
 from .models import Supplier
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
+from tests.factories import TenantFactory, SupplierFactory
 
 
 class SupplierModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='TestSupplierModel', slug='test-supplier-model')
+        cls.tenant = TenantFactory(slug='test-supplier-model')
 
     def test_create_supplier(self):
-        supplier = Supplier.objects.create(name='TestSupplier', description='Desc', tenant=self.tenant)
+        supplier = SupplierFactory(name='TestSupplier', description='Desc', tenant=self.tenant)
         self.assertEqual(str(supplier), 'TestSupplier')
 
     def test_supplier_ordering(self):
-        Supplier.objects.create(name='Zebra', tenant=self.tenant)
-        Supplier.objects.create(name='Alpha', tenant=self.tenant)
+        SupplierFactory(name='Zebra', tenant=self.tenant)
+        SupplierFactory(name='Alpha', tenant=self.tenant)
         suppliers = list(Supplier.objects.values_list('name', flat=True))
         self.assertEqual(suppliers, ['Alpha', 'Zebra'])
 
@@ -24,30 +26,30 @@ class SupplierViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         from django.contrib.auth.models import User
-        cls.tenant = Tenant.objects.create(name='TestSupplierView', slug='test-supplier-view')
-        cls.supplier = Supplier.objects.create(name='TestSupplier', tenant=cls.tenant)
+        cls.tenant = TenantFactory(slug='test-supplier-view')
+        cls.supplier = SupplierFactory(name='TestSupplier', tenant=cls.tenant)
         cls.user = User.objects.create_superuser('testuser', 'test@test.com', 'testpass123')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant)
 
     def test_list_requires_login(self):
-        response = self.client.get('/suppliers/list/')
+        response = self.client.get(reverse('suppliers:supplier_list'))
         self.assertEqual(response.status_code, 302)
 
     def test_list_view(self):
         self.client.force_login(self.user)
-        response = self.client.get('/suppliers/list/')
+        response = self.client.get(reverse('suppliers:supplier_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestSupplier')
 
     def test_create_view(self):
         self.client.force_login(self.user)
-        response = self.client.post('/suppliers/create/', {'name': 'NewSupplier', 'description': ''})
+        response = self.client.post(reverse('suppliers:supplier_create'), {'name': 'NewSupplier', 'description': ''})
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Supplier.objects.filter(name='NewSupplier').exists())
 
     def test_update_view(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/suppliers/{self.supplier.pk}/update/', {
+        response = self.client.post(reverse('suppliers:supplier_update', kwargs={'pk': self.supplier.pk}), {
             'name': 'Updated', 'description': '',
         })
         self.assertEqual(response.status_code, 302)
@@ -56,13 +58,13 @@ class SupplierViewTest(TestCase):
 
     def test_detail_view(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/suppliers/{self.supplier.pk}/detail/')
+        response = self.client.get(reverse('suppliers:supplier_detail', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestSupplier')
 
     def test_delete_view(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/suppliers/{self.supplier.pk}/delete/')
+        response = self.client.post(reverse('suppliers:supplier_delete', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 302)
         self.supplier.refresh_from_db()
         self.assertTrue(self.supplier.is_deleted)
@@ -70,14 +72,14 @@ class SupplierViewTest(TestCase):
     def test_trash_view(self):
         self.client.force_login(self.user)
         self.supplier.delete()
-        response = self.client.get('/suppliers/trash/')
+        response = self.client.get(reverse('suppliers:supplier_trash'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'TestSupplier')
 
     def test_restore_view(self):
         self.client.force_login(self.user)
         self.supplier.delete()
-        response = self.client.post(f'/suppliers/{self.supplier.pk}/restore/')
+        response = self.client.post(reverse('suppliers:supplier_restore', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 302)
         self.supplier.refresh_from_db()
         self.assertFalse(self.supplier.is_deleted)
@@ -85,7 +87,7 @@ class SupplierViewTest(TestCase):
     def test_hard_delete_view(self):
         self.client.force_login(self.user)
         self.supplier.delete()
-        response = self.client.post(f'/suppliers/{self.supplier.pk}/hard-delete/')
+        response = self.client.post(reverse('suppliers:supplier_hard_delete', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Supplier.all_objects.filter(pk=self.supplier.pk).exists())
 
@@ -93,7 +95,7 @@ class SupplierViewTest(TestCase):
 class SupplierFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='TestSupplierForm', slug='test-supplier-form')
+        cls.tenant = TenantFactory(slug='test-supplier-form')
 
     def test_supplier_form_valid(self):
         from suppliers.forms import SupplierForm
@@ -113,7 +115,7 @@ class SupplierFormTest(TestCase):
 
     def test_supplier_form_save_integrity_error(self):
         from suppliers.forms import SupplierForm
-        tenant = Tenant.objects.create(name='T', slug='t')
+        tenant = TenantFactory(slug='t')
         form = SupplierForm(data={'name': 'S1', 'nif': '123456789'})
         self.assertTrue(form.is_valid())
         form.instance.tenant = tenant
@@ -126,7 +128,7 @@ class SupplierFormTest(TestCase):
 
     def test_supplier_delete_logs_action(self):
         from unittest.mock import patch
-        supplier = Supplier.objects.create(name='LogTest', nif='987654321', tenant=self.tenant)
+        supplier = SupplierFactory(name='LogTest', nif='987654321', tenant=self.tenant)
         with patch('suppliers.models.log_action') as mock_log:
             supplier.delete()
             mock_log.assert_called_once_with(supplier, 'DELETE')

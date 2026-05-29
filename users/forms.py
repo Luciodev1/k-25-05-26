@@ -1,6 +1,7 @@
 import os
 from django import forms
 from django.contrib.auth.models import User, Group
+from django.contrib.auth import password_validation
 from .models import Profile
 
 
@@ -78,6 +79,12 @@ class UserCreateForm(forms.ModelForm):
                     ]
         else:
             self.fields['tenant_role'].widget = forms.HiddenInput()
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if password:
+            password_validation.validate_password(password, self.instance)
+        return password
 
     def save(self, commit=True):
         user = super().save(commit=False)

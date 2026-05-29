@@ -54,9 +54,17 @@ def custom_500(request):
 
 @login_required
 def dashboard(request):
+    from django.core.cache import cache
+
+    tenant = getattr(request, 'tenant', None)
+    tenant_id = getattr(tenant, 'id', 'global')
+    cache_key = f'dashboard_{tenant_id}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return render(request, 'home.html', cached)
+
     today = timezone.now()
     first_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    tenant = getattr(request, 'tenant', None)
 
     base_product = Product.objects
     base_supplier = Supplier.objects
@@ -188,5 +196,7 @@ def dashboard(request):
         'low_stock_products': low_stock_products,
         'margin_pct': round(margin_pct, 1),
     }
+
+    cache.set(cache_key, context, 300)
 
     return render(request, 'home.html', context)

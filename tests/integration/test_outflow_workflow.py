@@ -1,38 +1,32 @@
 from decimal import Decimal
 from django.test import TestCase
-from brands.models import Brand
-from categories.models import Category
-from customers.models import Customer
 from products.models import Product
 from outflows.models import Outflow, Delivery
-from tenants.models import Tenant
+from tests.factories import TenantFactory, BrandFactory, CategoryFactory, CustomerFactory, ProductFactory, OutflowFactory, DeliveryFactory
 
 
 class OutflowWorkflowTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='OutflowTest', slug='outflow-test')
-        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
-        cls.category = Category.objects.create(name='C', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='Cliente', tenant=cls.tenant)
-        cls.product = Product.objects.create(
+        cls.tenant = TenantFactory(slug='outflow-test')
+        cls.brand = BrandFactory(name='B', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='C', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Cliente', tenant=cls.tenant)
+        cls.product = ProductFactory(
             title='Prod',
             category=cls.category,
             brand=cls.brand,
-            cost_price=Decimal('10'),
-            selling_price=Decimal('20'),
-            quantity=Decimal('50'),
             tenant=cls.tenant,
         )
 
     def test_outflow_and_delivery_soft_delete(self):
-        outflow = Outflow.objects.create(
+        outflow = OutflowFactory(
             product=self.product,
             customer=self.customer,
             quantity=Decimal('10'),
             tenant=self.tenant,
         )
-        delivery = Delivery.objects.create(
+        delivery = DeliveryFactory(
             outflow=outflow,
             quantity=Decimal('5'),
             tenant=self.tenant,

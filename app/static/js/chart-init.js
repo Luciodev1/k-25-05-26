@@ -4,9 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var labels, inflows, outflows;
     try {
-        labels = JSON.parse(canvas.dataset.labels);
-        inflows = JSON.parse(canvas.dataset.inflows);
-        outflows = JSON.parse(canvas.dataset.outflows);
+        labels = JSON.parse(document.getElementById('chart-labels').textContent);
+        inflows = JSON.parse(document.getElementById('chart-inflows').textContent);
+        outflows = JSON.parse(document.getElementById('chart-outflows').textContent);
     } catch (e) {
         return;
     }

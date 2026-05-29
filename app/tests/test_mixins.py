@@ -17,7 +17,7 @@ from app.mixins import (
     BaseDeleteView, BaseTrashListView, BaseRestoreView, BaseHardDeleteView,
 )
 from brands.models import Brand
-from tenants.models import Tenant
+from tests.factories import TenantFactory, BrandFactory
 
 
 class SoftDeleteModelTest(TestCase):
@@ -25,10 +25,10 @@ class SoftDeleteModelTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='Test', slug='test')
+        cls.tenant = TenantFactory(slug='test')
 
     def setUp(self):
-        self.brand = Brand.objects.create(name='SoftDeleteTestBrand', tenant=self.tenant)
+        self.brand = BrandFactory(name='SoftDeleteTestBrand', tenant=self.tenant)
 
     def test_soft_delete_marks_deleted(self):
         self.brand.delete()
@@ -175,7 +175,7 @@ class _BaseFormValidView:
 
 class TenantFilterMixinTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name='Test Tenant', slug='test-tenant')
+        self.tenant = TenantFactory(slug='test-tenant')
 
     def test_get_queryset_with_tenant_filters(self):
         class _ConcreteView(TenantFilterMixin, _BaseGetQuerysetView):
@@ -229,7 +229,7 @@ class _BaseGetInitialView:
 
 class TenantCreateMixinTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name='Test Tenant', slug='test-tenant')
+        self.tenant = TenantFactory(slug='test-tenant')
 
     def test_get_initial_includes_tenant(self):
         class _ConcreteView(TenantCreateMixin, _BaseGetInitialView):
@@ -282,15 +282,16 @@ class BaseDetailViewTest(TestCase):
 class BaseDeleteViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='DelTest', slug='del-test')
+        cls.tenant = TenantFactory(slug='del-test')
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.brand = Brand.objects.create(name='DeleteTestBrand', tenant=self.tenant)
+        self.brand = BrandFactory(name='DeleteTestBrand', tenant=self.tenant)
 
     def _add_middleware(self, request):
         SessionMiddleware(lambda r: None).process_request(request)
         MessageMiddleware(lambda r: None).process_request(request)
+        request.user = AnonymousUser()
 
     def test_post_deletes_and_redirects(self):
         view = BaseDeleteView()
@@ -317,9 +318,9 @@ class BaseDeleteViewTest(TestCase):
 
 class BaseTrashListViewTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name='T', slug='t')
-        self.brand = Brand.objects.create(name='Active', tenant=self.tenant)
-        self.deleted = Brand.objects.create(name='Deleted', tenant=self.tenant)
+        self.tenant = TenantFactory(slug='t')
+        self.brand = BrandFactory(name='Active', tenant=self.tenant)
+        self.deleted = BrandFactory(name='Deleted', tenant=self.tenant)
         self.deleted.delete()
 
     def test_get_queryset_returns_only_deleted(self):
@@ -332,8 +333,8 @@ class BaseTrashListViewTest(TestCase):
         self.assertNotIn(self.brand, qs)
 
     def test_get_queryset_filters_by_tenant(self):
-        tenant2 = Tenant.objects.create(name='T2', slug='t2')
-        deleted_other = Brand.objects.create(name='OtherDeleted', tenant=tenant2)
+        tenant2 = TenantFactory(slug='t2')
+        deleted_other = BrandFactory(name='OtherDeleted', tenant=tenant2)
         deleted_other.delete()
         view = BaseTrashListView()
         view.model = Brand
@@ -346,8 +347,8 @@ class BaseTrashListViewTest(TestCase):
 class BaseRestoreViewTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.tenant = Tenant.objects.create(name='T', slug='t')
-        self.brand = Brand.objects.create(name='RestoreTest', tenant=self.tenant)
+        self.tenant = TenantFactory(slug='t')
+        self.brand = BrandFactory(name='RestoreTest', tenant=self.tenant)
         self.brand.delete()
         self.view = BaseRestoreView()
         self.view.model = Brand
@@ -357,6 +358,7 @@ class BaseRestoreViewTest(TestCase):
     def _add_middleware(self, request):
         SessionMiddleware(lambda r: None).process_request(request)
         MessageMiddleware(lambda r: None).process_request(request)
+        request.user = AnonymousUser()
 
     def test_post_restores_object(self):
         request = self.factory.post('/')
@@ -368,7 +370,7 @@ class BaseRestoreViewTest(TestCase):
         self.assertFalse(self.brand.is_deleted)
 
     def test_post_wrong_tenant_shows_error(self):
-        other_tenant = Tenant.objects.create(name='Other', slug='other')
+        other_tenant = TenantFactory(slug='other')
         request = self.factory.post('/')
         request.tenant = other_tenant
         self._add_middleware(request)
@@ -381,8 +383,8 @@ class BaseRestoreViewTest(TestCase):
 class BaseHardDeleteViewTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.tenant = Tenant.objects.create(name='T', slug='t')
-        self.brand = Brand.objects.create(name='HardDeleteTest', tenant=self.tenant)
+        self.tenant = TenantFactory(slug='t')
+        self.brand = BrandFactory(name='HardDeleteTest', tenant=self.tenant)
         self.brand.delete()
         self.view = BaseHardDeleteView()
         self.view.model = Brand
@@ -404,7 +406,7 @@ class BaseHardDeleteViewTest(TestCase):
         self.assertFalse(Brand.all_objects.filter(pk=pk).exists())
 
     def test_post_wrong_tenant_does_not_delete(self):
-        other_tenant = Tenant.objects.create(name='Other', slug='other')
+        other_tenant = TenantFactory(slug='other')
         pk = self.brand.pk
         request = self.factory.post('/')
         request.tenant = other_tenant
@@ -421,8 +423,8 @@ class ExportMixinGetTest(TestCase):
         self.mixin.export_columns = [('Nome', 'name')]
         self.mixin.model = MagicMock()
         self.mixin.model._meta.verbose_name_plural = 'Items'
-        self.tenant = Tenant.objects.create(name='ExportTest', slug='export-test')
-        self.mixin.get_queryset = MagicMock(return_value=[Brand(name='X', tenant=self.tenant)])
+        self.tenant = TenantFactory(slug='export-test')
+        self.mixin.get_queryset = MagicMock(return_value=[BrandFactory(name='X', tenant=self.tenant)])
 
     def test_get_with_export_excel(self):
         request = self.factory.get('/?export=excel')

@@ -1,15 +1,10 @@
 from decimal import Decimal
 from django.test import TestCase
 from django.contrib.auth.models import User
-from brands.models import Brand
-from categories.models import Category
-from customers.models import Customer
-from suppliers.models import Supplier
 from products.models import Product
-from inflows.models import Inflow
 from outflows.models import Outflow, Delivery
-from drivers.models import Driver
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
+from tests.factories import TenantFactory, BrandFactory, CategoryFactory, CustomerFactory, SupplierFactory, DriverFactory, ProductFactory, InflowFactory, OutflowFactory, DeliveryFactory
 
 
 class FullWorkflowTest(TestCase):
@@ -17,39 +12,37 @@ class FullWorkflowTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='WorkflowTest', slug='workflow-test')
-        cls.brand = Brand.objects.create(name='TestBrand', tenant=cls.tenant)
-        cls.category = Category.objects.create(name='TestCategory', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='TestCustomer', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='TestSupplier', tenant=cls.tenant)
-        cls.driver = Driver.objects.create(
+        cls.tenant = TenantFactory(slug='workflow-test')
+        cls.brand = BrandFactory(name='TestBrand', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='TestCategory', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='TestCustomer', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='TestSupplier', tenant=cls.tenant)
+        cls.driver = DriverFactory(
             name='TestDriver', phone='+244 923 000 000',
             truck_plate='LD-01-AA-00', cistern_plate='LD-01-BB-00',
             tenant=cls.tenant,
         )
-        cls.product = Product.objects.create(
+        cls.product = ProductFactory(
             title='TestProduct', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('100'), tenant=cls.tenant,
+            tenant=cls.tenant,
         )
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
-        cls.product_zero = Product.objects.create(
+        cls.product_zero = ProductFactory(
             title='ZeroProduct', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10.00'), selling_price=Decimal('20.00'),
             quantity=Decimal('0'), tenant=cls.tenant,
         )
 
     def test_full_inventory_workflow(self):
-        inflow = Inflow.objects.create(
+        inflow = InflowFactory(
             product=self.product, supplier=self.supplier,
             quantity=Decimal('50'), price=Decimal('10.00'), tenant=self.tenant,
         )
-        outflow = Outflow.objects.create(
+        outflow = OutflowFactory(
             product=self.product, customer=self.customer,
             quantity=Decimal('10'), price=Decimal('15.00'), tenant=self.tenant,
         )
-        delivery = Delivery.objects.create(
+        delivery = DeliveryFactory(
             outflow=outflow, quantity=Decimal('10'),
             driver=self.driver, tenant=self.tenant,
         )
@@ -60,7 +53,7 @@ class FullWorkflowTest(TestCase):
     def test_full_inflow_outflow_delivery_cycle(self):
         # 1. Create inflow to increase stock
         initial_qty = self.product_zero.quantity
-        inflow = Inflow.objects.create(
+        inflow = InflowFactory(
             product=self.product_zero, supplier=self.supplier,
             quantity=Decimal('100'), price=Decimal('10.00'), tenant=self.tenant,
         )
@@ -68,7 +61,7 @@ class FullWorkflowTest(TestCase):
         self.assertEqual(self.product_zero.quantity, initial_qty + Decimal('100'))
 
         # 2. Create outflow (stock unchanged — only delivery reduces stock)
-        outflow = Outflow.objects.create(
+        outflow = OutflowFactory(
             product=self.product_zero, customer=self.customer,
             quantity=Decimal('30'), price=Decimal('20.00'), tenant=self.tenant,
         )
@@ -76,7 +69,7 @@ class FullWorkflowTest(TestCase):
         self.assertEqual(self.product_zero.quantity, Decimal('100'))
 
         # 3. Create delivery — stock decreases by final_quantity (20)
-        delivery = Delivery.objects.create(
+        delivery = DeliveryFactory(
             outflow=outflow, quantity=Decimal('20'), driver=self.driver,
             tenant=self.tenant,
         )

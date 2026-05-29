@@ -15,7 +15,7 @@ class Inflow(SoftDeleteModel):
         max_digits=20, decimal_places=4,
         validators=[MinValueValidator(0.0001)], verbose_name='Quantidade',
     )
-    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, verbose_name='Preço de Custo')
+    price = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)], verbose_name='Preço de Custo')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -28,6 +28,9 @@ class Inflow(SoftDeleteModel):
             models.Index(fields=['supplier', 'created_at']),
             models.Index(fields=['product', 'created_at']),
             models.Index(fields=['tenant', 'is_deleted']),
+            models.Index(fields=['tenant', 'created_at']),
+            models.Index(fields=['tenant', 'supplier']),
+            models.Index(fields=['tenant', 'product']),
         ]
         constraints = [
             models.CheckConstraint(

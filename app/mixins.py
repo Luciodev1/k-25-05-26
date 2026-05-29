@@ -189,11 +189,15 @@ class BaseListView(LoginRequiredMixin, PermissionRequiredMixin, HtmxMixin, Expor
 
 
 class BaseCreateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, TenantCreateMixin, CreateView):
-    pass
+    @method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 
 class BaseUpdateView(LoginRequiredMixin, PermissionRequiredMixin, SuccessMessageMixin, TenantFilterMixin, UpdateView):
-    pass
+    @method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='POST', block=True))
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
 
 class BaseDetailView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMixin, DetailView):
@@ -206,6 +210,7 @@ class BaseDeleteView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterMi
         'por outros registos.'
     )
 
+    @method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='POST', block=True))
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         try:
             self.object = self.get_object()
@@ -232,6 +237,7 @@ class BaseRestoreView(LoginRequiredMixin, PermissionRequiredMixin, TenantFilterM
     model = None
     redirect_url: str | None = None
 
+    @method_decorator(ratelimit(key='user_or_ip', rate='15/m', method='POST', block=True))
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         obj = self.model.all_objects.select_for_update().get(pk=pk)
         tenant = getattr(request, 'tenant', None)
@@ -276,7 +282,7 @@ class SoftDeleteAllManager(models.Manager):
 
 class SoftDeleteModel(models.Model):
     is_deleted = models.BooleanField(default=False, db_index=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     objects = SoftDeleteManager()
     all_objects = SoftDeleteAllManager()

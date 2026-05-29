@@ -1,45 +1,44 @@
 """Tests for account views: payments, balances, account statements."""
 from decimal import Decimal
 from django.test import TestCase
+from django.urls import reverse
 from django.contrib.auth.models import User, Permission
-from brands.models import Brand
-from categories.models import Category
 from products.models import Product
 from customers.models import Customer
 from suppliers.models import Supplier
 from outflows.models import Outflow
 from inflows.models import Inflow
 from accounts.models import CustomerAccountEntry, SupplierAccountEntry
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
+from tests.factories import TenantFactory, BrandFactory, CategoryFactory, CustomerFactory, SupplierFactory, ProductFactory, InflowFactory, OutflowFactory
 
 
 class AccountViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.tenant = Tenant.objects.create(name='AcctVT', slug='acct-vt')
+        cls.tenant = TenantFactory(slug='acct-vt')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
-        cls.brand = Brand.objects.create(name='Brand', tenant=cls.tenant)
-        cls.category = Category.objects.create(name='Cat', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='Test Customer', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='Test Supplier', tenant=cls.tenant)
-        cls.product = Product.objects.create(
+        cls.brand = BrandFactory(name='Brand', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='Cat', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Test Customer', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='Test Supplier', tenant=cls.tenant)
+        cls.product = ProductFactory(
             title='Product', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10.00'), selling_price=Decimal('15.00'),
-            quantity=Decimal('100'), tenant=cls.tenant,
+            tenant=cls.tenant,
         )
-        cls.outflow = Outflow.objects.create(
+        cls.outflow = OutflowFactory(
             product=cls.product, customer=cls.customer,
             quantity=Decimal('10'), price=Decimal('15.00'), tenant=cls.tenant,
         )
-        cls.inflow = Inflow.objects.create(
+        cls.inflow = InflowFactory(
             product=cls.product, supplier=cls.supplier,
             quantity=Decimal('20'), price=Decimal('10.00'), tenant=cls.tenant,
         )
 
     def test_customer_account_view(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/customer/{self.customer.pk}/')
+        response = self.client.get(reverse('accounts:customer_account', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Customer')
         self.assertIn('balance', response.context)
@@ -47,12 +46,12 @@ class AccountViewTest(TestCase):
     def test_customer_account_requires_permission(self):
         basic = User.objects.create_user('basic', password='pass')
         self.client.force_login(basic)
-        response = self.client.get(f'/accounts/customer/{self.customer.pk}/')
+        response = self.client.get(reverse('accounts:customer_account', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 403)
 
     def test_supplier_account_view(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/supplier/{self.supplier.pk}/')
+        response = self.client.get(reverse('accounts:supplier_account', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Supplier')
         self.assertIn('balance', response.context)
@@ -60,18 +59,18 @@ class AccountViewTest(TestCase):
     def test_supplier_account_requires_permission(self):
         basic = User.objects.create_user('basic2', password='pass')
         self.client.force_login(basic)
-        response = self.client.get(f'/accounts/supplier/{self.supplier.pk}/')
+        response = self.client.get(reverse('accounts:supplier_account', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 403)
 
     def test_customer_payment_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/customer/{self.customer.pk}/payment/')
+        response = self.client.get(reverse('accounts:customer_payment', kwargs={'pk': self.customer.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_customer_payment_view_post(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            f'/accounts/customer/{self.customer.pk}/payment/',
+            reverse('accounts:customer_payment', kwargs={'pk': self.customer.pk}),
             {
                 'customer': self.customer.pk,
                 'amount': '100.00',
@@ -87,13 +86,13 @@ class AccountViewTest(TestCase):
 
     def test_supplier_payment_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/supplier/{self.supplier.pk}/payment/')
+        response = self.client.get(reverse('accounts:supplier_payment', kwargs={'pk': self.supplier.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_supplier_payment_view_post(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            f'/accounts/supplier/{self.supplier.pk}/payment/',
+            reverse('accounts:supplier_payment', kwargs={'pk': self.supplier.pk}),
             {
                 'supplier': self.supplier.pk,
                 'amount': '200.00',
@@ -109,13 +108,13 @@ class AccountViewTest(TestCase):
 
     def test_customer_balances_view(self):
         self.client.force_login(self.user)
-        response = self.client.get('/accounts/customer-balances/')
+        response = self.client.get(reverse('accounts:customer_balances'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Customer')
 
     def test_supplier_balances_view(self):
         self.client.force_login(self.user)
-        response = self.client.get('/accounts/supplier-balances/')
+        response = self.client.get(reverse('accounts:supplier_balances'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Supplier')
 
@@ -124,16 +123,15 @@ class AccountEntryUpdateDeleteTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        cls.tenant = Tenant.objects.create(name='AcctEUDT', slug='acct-eudt')
+        cls.tenant = TenantFactory(slug='acct-eudt')
         TenantUser.objects.create(user=cls.user, tenant=cls.tenant, role='admin')
-        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
-        cls.category = Category.objects.create(name='C', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
-        cls.product = Product.objects.create(
+        cls.brand = BrandFactory(name='B', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='C', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Cust', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='Supp', tenant=cls.tenant)
+        cls.product = ProductFactory(
             title='P', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('100'), tenant=cls.tenant,
+            tenant=cls.tenant,
         )
         cls.customer_entry = CustomerAccountEntry.objects.create(
             customer=cls.customer, debit=Decimal('100'), credit=Decimal('0'),
@@ -146,14 +144,14 @@ class AccountEntryUpdateDeleteTest(TestCase):
 
     def test_customer_entry_update_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/customer-entry/{self.customer_entry.pk}/update/')
+        response = self.client.get(reverse('accounts:customer_accountentry_update', kwargs={'pk': self.customer_entry.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test debit')
 
     def test_customer_entry_update_view_post(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            f'/accounts/customer-entry/{self.customer_entry.pk}/update/',
+            reverse('accounts:customer_accountentry_update', kwargs={'pk': self.customer_entry.pk}),
             {'description': 'Updated', 'debit': '150', 'credit': '0'},
         )
         self.assertEqual(response.status_code, 302)
@@ -163,25 +161,25 @@ class AccountEntryUpdateDeleteTest(TestCase):
 
     def test_customer_entry_delete_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/customer-entry/{self.customer_entry.pk}/delete/')
+        response = self.client.get(reverse('accounts:customer_accountentry_delete', kwargs={'pk': self.customer_entry.pk}))
         self.assertEqual(response.status_code, 200)
 
     def test_customer_entry_delete_view_post(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/accounts/customer-entry/{self.customer_entry.pk}/delete/')
+        response = self.client.post(reverse('accounts:customer_accountentry_delete', kwargs={'pk': self.customer_entry.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(CustomerAccountEntry.objects.filter(pk=self.customer_entry.pk).exists())
 
     def test_supplier_entry_update_view_get(self):
         self.client.force_login(self.user)
-        response = self.client.get(f'/accounts/supplier-entry/{self.supplier_entry.pk}/update/')
+        response = self.client.get(reverse('accounts:supplier_accountentry_update', kwargs={'pk': self.supplier_entry.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test credit')
 
     def test_supplier_entry_update_view_post(self):
         self.client.force_login(self.user)
         response = self.client.post(
-            f'/accounts/supplier-entry/{self.supplier_entry.pk}/update/',
+            reverse('accounts:supplier_accountentry_update', kwargs={'pk': self.supplier_entry.pk}),
             {'description': 'Updated supp', 'debit': '0', 'credit': '250'},
         )
         self.assertEqual(response.status_code, 302)
@@ -191,7 +189,7 @@ class AccountEntryUpdateDeleteTest(TestCase):
 
     def test_supplier_entry_delete_view_post(self):
         self.client.force_login(self.user)
-        response = self.client.post(f'/accounts/supplier-entry/{self.supplier_entry.pk}/delete/')
+        response = self.client.post(reverse('accounts:supplier_accountentry_delete', kwargs={'pk': self.supplier_entry.pk}))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(SupplierAccountEntry.objects.filter(pk=self.supplier_entry.pk).exists())
 
@@ -201,15 +199,14 @@ class AccountEntryModelTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='AcctEMT', slug='acct-emt')
-        cls.brand = Brand.objects.create(name='B', tenant=cls.tenant)
-        cls.category = Category.objects.create(name='C', tenant=cls.tenant)
-        cls.customer = Customer.objects.create(name='Cust', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='Supp', tenant=cls.tenant)
-        cls.product = Product.objects.create(
+        cls.tenant = TenantFactory(slug='acct-emt')
+        cls.brand = BrandFactory(name='B', tenant=cls.tenant)
+        cls.category = CategoryFactory(name='C', tenant=cls.tenant)
+        cls.customer = CustomerFactory(name='Cust', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='Supp', tenant=cls.tenant)
+        cls.product = ProductFactory(
             title='P', category=cls.category, brand=cls.brand,
-            cost_price=Decimal('10'), selling_price=Decimal('15'),
-            quantity=Decimal('100'), tenant=cls.tenant,
+            tenant=cls.tenant,
         )
 
     def test_customer_entry_str(self):
@@ -230,9 +227,9 @@ class AccountEntryModelTest(TestCase):
 class PaymentFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='AcctPFT', slug='acct-pft')
-        cls.customer = Customer.objects.create(name='FCust', tenant=cls.tenant)
-        cls.supplier = Supplier.objects.create(name='FSupp', tenant=cls.tenant)
+        cls.tenant = TenantFactory(slug='acct-pft')
+        cls.customer = CustomerFactory(name='FCust', tenant=cls.tenant)
+        cls.supplier = SupplierFactory(name='FSupp', tenant=cls.tenant)
 
     def test_customer_payment_form_valid(self):
         from accounts.forms import CustomerPaymentForm

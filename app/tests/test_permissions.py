@@ -11,22 +11,24 @@ from app.mixins import (
     BaseListView, BaseCreateView, BaseUpdateView, BaseDetailView,
     BaseDeleteView, BaseRestoreView, BaseHardDeleteView,
 )
-from tenants.models import Tenant, TenantUser
+from tenants.models import TenantUser
 from brands.models import Brand
 from payments.models import Payment
 from products.models import Product
+from tests.factories import TenantFactory, BrandFactory
+
 
 
 class PermissionMixinBase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.tenant = Tenant.objects.create(name='PermTest', slug='perm-test')
+        cls.tenant = TenantFactory(slug='perm-test')
 
     def setUp(self):
         self.factory = RequestFactory()
         self.user = User.objects.create_user('user', 'u@t.com', 'pass')
         self.superuser = User.objects.create_superuser('admin', 'a@t.com', 'pass')
-        self.brand = Brand.objects.create(name='TestBrand', tenant=self.tenant)
+        self.brand = BrandFactory(name='TestBrand', tenant=self.tenant)
 
     def _add_middleware(self, request):
         SessionMiddleware(lambda r: None).process_request(request)

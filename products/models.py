@@ -13,8 +13,8 @@ class Product(SoftDeleteModel):
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', verbose_name='Marca')
     description = models.TextField(null=True, blank=True, verbose_name='Descrição')
     serial_number = models.CharField(max_length=200, null=True, blank=True, verbose_name='N.º de Série')
-    cost_price = models.DecimalField(max_digits=20, decimal_places=2, verbose_name='Preço de Custo')
-    selling_price = models.DecimalField(max_digits=20, decimal_places=2, verbose_name='Preço de Venda')
+    cost_price = models.DecimalField(max_digits=20, decimal_places=2, validators=[MinValueValidator(0)], verbose_name='Preço de Custo')
+    selling_price = models.DecimalField(max_digits=20, decimal_places=2, validators=[MinValueValidator(0)], verbose_name='Preço de Venda')
     quantity = models.DecimalField(
         max_digits=20, decimal_places=4, default=0,
         validators=[MinValueValidator(0)], verbose_name='Quantidade',
@@ -28,6 +28,10 @@ class Product(SoftDeleteModel):
         ordering = ['title']
         indexes = [
             models.Index(fields=['tenant', 'is_deleted']),
+            models.Index(fields=['tenant', 'created_at']),
+            models.Index(fields=['tenant', 'title']),
+            models.Index(fields=['tenant', 'category']),
+            models.Index(fields=['tenant', 'brand']),
         ]
         constraints = [
             models.CheckConstraint(
