@@ -77,15 +77,20 @@
 <div class="row g-4 mb-5">
     <!-- Chart Section -->
     <div class="col-lg-8">
-        <div class="card h-100 p-4 border-0 shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0">Análise de Movimentações</h5>
-                <select id="chart-period" name="chart-period" class="form-select form-select-sm border-0 bg-body-tertiary" style="width: auto;">
-                    <option value="6m">Últimos 6 Meses</option>
-                    <option value="1a">Último Ano</option>
-                </select>
+        <div class="card h-100 border-0 shadow-sm" style="border-radius:12px;">
+            <div class="card-body p-4 pb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0 fs-6">Análise de Movimentações</h5>
+                        <small class="text-muted">Entradas e saídas dos últimos 6 meses</small>
+                    </div>
+                    <select id="chart-period" name="chart-period" class="form-select form-select-sm border-0 bg-body-tertiary" style="width:auto;font-size:.8rem;">
+                        <option value="6m">6 Meses</option>
+                        <option value="1a">1 Ano</option>
+                    </select>
+                </div>
             </div>
-            <div style="height: 350px;">
+            <div class="px-4 pb-4" style="height:320px;">
                 {{ month_labels|json_script:"chart-labels" }}
                 {{ inflows_monthly|json_script:"chart-inflows" }}
                 {{ outflows_monthly|json_script:"chart-outflows" }}

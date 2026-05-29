@@ -48,6 +48,11 @@ def custom_404(request, exception):
     return render(request, '404.html', status=404)
 
 
+def custom_403(request, exception):
+    logger.warning("403: %s - %s", request.path, exception)
+    return render(request, '403.html', status=403)
+
+
 def custom_500(request):
     logger.error("500: %s", request.path, exc_info=True)
     return render(request, '500.html', status=500)
