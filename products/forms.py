@@ -29,11 +29,11 @@ class ProductForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        tenant = kwargs.pop('tenant', None)
+        self._tenant = kwargs.pop('tenant', None)
         super().__init__(*args, **kwargs)
-        if tenant:
-            self.fields['category'].queryset = self.fields['category'].queryset.filter(tenant=tenant)
-            self.fields['brand'].queryset = self.fields['brand'].queryset.filter(tenant=tenant)
+        if self._tenant:
+            self.fields['category'].queryset = self.fields['category'].queryset.filter(tenant=self._tenant)
+            self.fields['brand'].queryset = self.fields['brand'].queryset.filter(tenant=self._tenant)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -49,9 +49,14 @@ class ProductForm(forms.ModelForm):
             raise forms.ValidationError('A quantidade deve ser maior que zero.')
         return quantity
 
-    def save(self, commit=True):
-        from django.db import IntegrityError
-        try:
-            return super().save(commit=commit)
-        except IntegrityError:
-            raise forms.ValidationError({'serial_number': 'Já existe um produto com este número de série.'})
+    def clean_serial_number(self):
+        serial_number = self.cleaned_data.get('serial_number')
+        if not serial_number:
+            return serial_number
+        tenant_id = getattr(self._tenant, 'pk', None) or self.instance.tenant_id
+        if tenant_id and models.Product.objects.filter(
+            tenant=tenant_id,
+            serial_number=serial_number,
+        ).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Já existe um produto com este número de série.')
+        return serial_number
