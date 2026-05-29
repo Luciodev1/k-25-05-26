@@ -30,12 +30,13 @@ def _dispatch_async_if_large(queryset, request, async_task, export_format, filte
     if count <= ASYNC_EXPORT_THRESHOLD:
         return None
     tenant_id = str(getattr(request, 'tenant', None) or '')
+    task_kwargs = task_kwargs or {}
     task = async_task.delay(
         _get_user_email(request),
         tenant_id,
         filters,
         export_format,
-        **(task_kwargs or {}),
+        **task_kwargs,
     )
     return render(request, 'report_processing.html', {
         'task_id': task.id,

@@ -17,6 +17,10 @@ class Tenant(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
     
     # Tenant configuration
+    nif = models.CharField(max_length=20, blank=True, verbose_name='NIF')
+    phone = models.CharField(max_length=20, blank=True, verbose_name='Telefone')
+    email = models.EmailField(blank=True, verbose_name='Email')
+    address = models.TextField(blank=True, verbose_name='Endereço')
     currency = models.CharField(max_length=3, default='AOA')
     timezone = models.CharField(max_length=50, default='Africa/Luanda')
     language = models.CharField(max_length=5, default='pt-pt')

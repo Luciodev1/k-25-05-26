@@ -34,11 +34,15 @@ class TenantUserAddForm(forms.Form):
 class TenantCreateForm(forms.ModelForm):
     class Meta:
         model = Tenant
-        fields = ['name', 'slug', 'description', 'currency', 'timezone', 'language', 'max_users']
+        fields = ['name', 'slug', 'description', 'nif', 'phone', 'email', 'address', 'currency', 'timezone', 'language', 'max_users']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome da Empresa'}),
             'slug': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'slug-da-empresa'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição opcional'}),
+            'nif': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'NIF da empresa'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Telefone'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@empresa.co.ao'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Endereço da empresa'}),
             'currency': forms.TextInput(attrs={'class': 'form-control', 'value': 'AOA'}),
             'timezone': forms.TextInput(attrs={'class': 'form-control', 'value': 'Africa/Luanda'}),
             'language': forms.TextInput(attrs={'class': 'form-control', 'value': 'pt-pt'}),
@@ -48,6 +52,10 @@ class TenantCreateForm(forms.ModelForm):
             'name': 'Nome',
             'slug': 'Slug (URL)',
             'description': 'Descrição',
+            'nif': 'NIF',
+            'phone': 'Telefone',
+            'email': 'Email',
+            'address': 'Endereço',
             'currency': 'Moeda',
             'timezone': 'Fuso Horário',
             'language': 'Idioma',
