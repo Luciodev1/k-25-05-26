@@ -20,6 +20,7 @@ urlpatterns = [
 
     # Portal do Cliente
     path('', include('portal.urls')),
+    path('', include('portal.admin_urls')),
 
     path('', include('brands.urls')),
     path('', include('categories.urls')),

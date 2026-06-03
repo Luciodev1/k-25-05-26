@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Editar{% else %}Novo{% endif %} Acesso — SGE{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">
+    <a href="{% url 'portal_acessos:list' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+    <div>
+      <h1 class="fw-bold mb-0 fs-5">{% if object %}Editar{% else %}Novo{% endif %} Acesso ao Portal</h1>
+      <span class="text-muted small">{% if object %}{{ object.customer.name }}{% else %}Criar novo acesso para cliente{% endif %}</span>
+    </div>
+  </div>
+</div>
+<div class="sge-form-card">
+  <div class="card">
+    <div class="card-body p-4">
+      <form method="post">{% csrf_token %}{{ form.non_field_errors }}
+        <div class="mb-3">
+          <label for="{{ form.customer.id_for_label }}" class="form-label">{{ form.customer.label }}</label>
+          {{ form.customer }}
+          {% if form.customer.errors %}<div class="text-danger small mt-1">{{ form.customer.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+          {{ form.password }}
+          {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors|striptags }}</div>{% endif %}
+          <div class="form-text">{{ form.password.help_text }}</div>
+        </div>
+        <div class="mb-3 form-check">
+          {{ form.is_active }}
+          <label for="{{ form.is_active.id_for_label }}" class="form-check-label">{{ form.is_active.label }}</label>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+          <a href="{% url 'portal_acessos:list' %}" class="btn btn-light">Cancelar</a>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -99,6 +99,13 @@
                 </a>
             </li>
             {% endif %}
+            {% if perms.portal.view_customeraccess %}
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.app_name == 'portal_acessos' %}active{% endif %}" href="{% url 'portal_acessos:list' %}">
+                    <i class="bi bi-person-lock"></i> Acessos Portal
+                </a>
+            </li>
+            {% endif %}
         </ul>
         {% endif %}
 
