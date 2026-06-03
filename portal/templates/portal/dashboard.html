@@ -1,0 +1,138 @@
+{% extends 'portal/base_portal.html' %}
+{% load static %}
+{% block title %}Painel - Portal do Cliente{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Olá, {{ customer.name }}!</h4>
+        <p class="text-muted small mb-0">Bem-vindo ao seu portal. Aqui pode consultar toda a sua actividade.</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card-portal text-center">
+            <div class="icon bg-danger-subtle text-danger mx-auto"><i class="bi bi-arrow-down"></i></div>
+            <h5 class="fw-bold mb-0 text-danger">{{ total_debit|floatformat:"2g" }}</h5>
+            <small class="text-muted">Total Débito</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card-portal text-center">
+            <div class="icon bg-success-subtle text-success mx-auto"><i class="bi bi-arrow-up"></i></div>
+            <h5 class="fw-bold mb-0 text-success">{{ total_credit|floatformat:"2g" }}</h5>
+            <small class="text-muted">Total Crédito</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card-portal text-center">
+            <div class="icon bg-info-subtle text-info mx-auto"><i class="bi bi-box-seam"></i></div>
+            <h5 class="fw-bold mb-0">{{ outflows_count }}</h5>
+            <small class="text-muted">Compras Efectuadas</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card-portal text-center {% if balance < 0 %}bg-danger-subtle{% else %}bg-success-subtle{% endif %}">
+            <div class="icon {% if balance < 0 %}bg-danger text-white{% else %}bg-success text-white{% endif %} mx-auto"><i class="bi bi-wallet2"></i></div>
+            <h5 class="fw-bold mb-0 {% if balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ balance|floatformat:"2g" }}</h5>
+            <small class="text-muted">Saldo Actual</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Outflows -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-arrow-up-right-square text-primary me-2"></i>Últimas Saídas</h6>
+                <a href="{% url 'portal:account_statement' %}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_outflows %}
+                <div class="list-group list-group-flush">
+                    {% for o in recent_outflows %}
+                    <div class="list-group-item border-0 d-flex justify-content-between align-items-center py-3 px-4">
+                        <div>
+                            <div class="fw-semibold small">{{ o.product.title }}</div>
+                            <small class="text-muted">{{ o.created_at|date:"d/m/Y" }} • Qtd: {{ o.quantity|floatformat:"g" }}</small>
+                        </div>
+                        <span class="badge {% if o.status == 'delivered' %}bg-success-subtle text-success{% elif o.status == 'partial' %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %} rounded-pill">
+                            {{ o.get_status_display }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                    <span class="small">Nenhuma saída registada</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Deliveries -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-truck text-warning me-2"></i>Entregas Pendentes</h6>
+                <a href="{% url 'portal:deliveries' %}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
+            </div>
+            <div class="card-body p-0">
+                {% if pending_deliveries %}
+                <div class="list-group list-group-flush">
+                    {% for d in pending_deliveries %}
+                    <div class="list-group-item border-0 d-flex justify-content-between align-items-center py-3 px-4">
+                        <div>
+                            <div class="fw-semibold small">{{ d.outflow.product.title }}</div>
+                            <small class="text-muted">{{ d.delivery_date|date:"d/m/Y"|default:"—" }} • Motorista: {{ d.driver.name|default:"—" }}</small>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning rounded-pill">{{ d.quantity|floatformat:"g" }} uni.</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+                    <span class="small">Nenhuma entrega pendente</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-credit-card text-success me-2"></i>Últimos Pagamentos</h6>
+                <a href="{% url 'portal:payments' %}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_payments %}
+                <div class="list-group list-group-flush">
+                    {% for p in recent_payments %}
+                    <div class="list-group-item border-0 d-flex justify-content-between align-items-center py-3 px-4">
+                        <div>
+                            <div class="fw-semibold small">{{ p.get_payment_method_display }}</div>
+                            <small class="text-muted">{{ p.date|date:"d/m/Y" }}</small>
+                        </div>
+                        <span class="fw-bold text-success">{{ p.amount|floatformat:"2g" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-credit-card-2-front fs-3 d-block mb-2"></i>
+                    <span class="small">Nenhum pagamento registado</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

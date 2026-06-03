@@ -1,0 +1,81 @@
+{% extends 'portal/base_portal.html' %}
+{% block title %}Extracto de Conta - Portal do Cliente{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Extracto de Conta</h4>
+        <p class="text-muted small mb-0">{{ customer.name }} • NIF: {{ customer.nif|default:"—" }}</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center p-4">
+            <h6 class="text-muted small fw-bold text-uppercase">Total Débito</h6>
+            <h4 class="fw-bold text-danger mb-0">{{ total_debit|floatformat:"2g" }}</h4>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center p-4">
+            <h6 class="text-muted small fw-bold text-uppercase">Total Crédito</h6>
+            <h4 class="fw-bold text-success mb-0">{{ total_credit|floatformat:"2g" }}</h4>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center p-4 {% if balance < 0 %}bg-danger-subtle{% else %}bg-success-subtle{% endif %}">
+            <h6 class="small fw-bold text-uppercase">Saldo</h6>
+            <h4 class="fw-bold mb-0 {% if balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ balance|floatformat:"2g" }}</h4>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Data</th>
+                    <th>Descrição</th>
+                    <th class="text-end">Débito</th>
+                    <th class="text-end pe-4">Crédito</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td class="ps-4 small text-muted">{{ entry.date|date:"d/m/Y H:i" }}</td>
+                    <td class="small">{{ entry.description }}</td>
+                    <td class="text-end text-danger fw-bold">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+                    <td class="text-end text-success fw-bold pe-4">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                        <span>Nenhum movimento encontrado</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo;</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&rsaquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

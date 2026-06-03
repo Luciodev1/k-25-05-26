@@ -209,6 +209,32 @@ def dashboard(request):
     return render(request, 'home.html', context)
 
 
+def pwa_manifest(request):
+    tenant = getattr(request, 'tenant', None)
+    name = getattr(tenant, 'name', 'SGE') if tenant else 'SGE'
+    return JsonResponse({
+        'name': f'{name} - Portal do Cliente',
+        'short_name': 'SGE Portal',
+        'description': 'Sistema de Gestão de Stocks e Contas - Portal do Cliente',
+        'start_url': '/portal/',
+        'scope': '/',
+        'display': 'standalone',
+        'orientation': 'portrait-primary',
+        'background_color': '#0b1120',
+        'theme_color': '#059669',
+        'lang': 'pt-PT',
+        'icons': [
+            {
+                'src': f'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="%23059669"/><text x="256" y="360" font-size="300" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial">K</text></svg>',
+                'sizes': '512x512',
+                'type': 'image/svg+xml',
+                'purpose': 'any maskable',
+            },
+        ],
+        'categories': ['business', 'finance'],
+    }, content_type='application/manifest+json')
+
+
 @login_required
 def pending_deliveries_stat(request):
     tenant = getattr(request, 'tenant', None)

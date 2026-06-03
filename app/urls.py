@@ -5,12 +5,21 @@ from users.views import CustomLoginView
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import render
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', views.health_check, name='health'),
     path('', views.dashboard, name='dashboard'),
     path('pending-deliveries-stat/', views.pending_deliveries_stat, name='pending_deliveries_stat'),
+
+    # PWA
+    path('manifest.json', views.pwa_manifest, name='pwa_manifest'),
+    path('offline/', lambda request: render(request, 'offline.html'), name='offline'),
+
+    # Portal do Cliente
+    path('', include('portal.urls')),
+
     path('', include('brands.urls')),
     path('', include('categories.urls')),
     path('', include('suppliers.urls')),

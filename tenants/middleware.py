@@ -18,6 +18,7 @@ class TenantMiddleware:
                 '/selecionar/',
                 '/accounts/',
                 '/perfil/',
+                '/portal/',
                 reverse('logout'),
             )
 

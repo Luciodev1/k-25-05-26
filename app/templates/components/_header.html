@@ -17,14 +17,14 @@
         <div class="dropdown">
             <button class="btn btn-action rounded-circle position-relative" data-bs-toggle="dropdown" aria-label="Notificações">
                 <i class="bi bi-bell"></i>
-                {% if notifs.count > 0 %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">{{ notifs.count }}</span>{% endif %}
+                {% if notifs.count > 0 %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="font-size: 0.6rem;">{{ notifs.count }}</span>{% endif %}
             </button>
             <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 mt-3 animate-up overflow-hidden" style="width: 350px; max-width: 90vw; border-radius: 16px !important;">
                 <div class="p-3 bg-body-tertiary border-bottom d-flex align-items-center justify-content-between">
                     <h6 class="fw-bold mb-0 text-body">Centro de Notificacoes</h6>
                     {% if notifs.count > 0 %}<span class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">{{ notifs.count }}</span>{% endif %}
                 </div>
-                <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                <div class="list-group list-group-flush notification-list" style="max-height: 400px; overflow-y: auto;">
                     {% for n in notifs.items %}
                     <a href="{{ n.url }}" class="list-group-item list-group-item-action p-3 border-0">
                         <div class="d-flex gap-3">
@@ -36,7 +36,7 @@
                         </div>
                     </a>
                     {% empty %}
-                    <div class="text-center py-4 text-muted">
+                    <div class="text-center py-4 text-muted notification-empty">
                         <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
                         <span class="small">Sem notificacoes</span>
                     </div>

@@ -1,0 +1,68 @@
+{% extends 'portal/base_portal.html' %}
+{% block title %}Pagamentos - Portal do Cliente{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Pagamentos</h4>
+        <p class="text-muted small mb-0">Histórico de pagamentos efectuados</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Data</th>
+                    <th>Método</th>
+                    <th>Descrição</th>
+                    <th class="text-end pe-4">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td class="ps-4 small text-muted">{{ p.date|date:"d/m/Y" }}</td>
+                    <td>
+                        <span class="badge bg-light text-dark rounded-pill">
+                            {% if p.payment_method == 'CASH' %}<i class="bi bi-cash me-1"></i>{% endif %}
+                            {% if p.payment_method == 'TRANSFER' %}<i class="bi bi-bank me-1"></i>{% endif %}
+                            {% if p.payment_method == 'TPA' %}<i class="bi bi-credit-card me-1"></i>{% endif %}
+                            {% if p.payment_method == 'DEPOSIT' %}<i class="bi bi-building me-1"></i>{% endif %}
+                            {{ p.get_payment_method_display }}
+                        </span>
+                    </td>
+                    <td class="small text-muted">{{ p.description|default:"—" }}</td>
+                    <td class="text-end pe-4 fw-bold text-success">{{ p.amount|floatformat:"2g" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="bi bi-credit-card-2-front fs-3 d-block mb-2"></i>
+                        <span>Nenhum pagamento encontrado</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo;</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&rsaquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
