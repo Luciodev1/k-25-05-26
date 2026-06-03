@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from tests.factories import TenantFactory, CustomerFactory
+from tests.factories import TenantFactory, CustomerFactory, ProductFactory
 from portal.models import CustomerAccess
 from accounts.models import CustomerAccountEntry
 
@@ -202,3 +202,96 @@ class PortalPasswordChangeTest(TestCase):
         self.assertRedirects(response, reverse('portal:dashboard'))
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('NewSecret123!'))
+
+
+class PortalDataIsolationTest(TestCase):
+    """Verifica que nenhum cliente vê dados de outro cliente."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from decimal import Decimal
+        from tests.factories import (
+            TenantFactory, CustomerFactory, ProductFactory,
+            OutflowFactory, DeliveryFactory, DriverFactory, PaymentFactory,
+        )
+        from outflows.models import Outflow, Delivery
+        from payments.models import Payment
+
+        cls.tenant = TenantFactory(slug='portal-isolation')
+        cls.driver = DriverFactory(tenant=cls.tenant)
+
+        # Customer A
+        cls.customer_a = CustomerFactory(name='Cliente A', tenant=cls.tenant)
+        cls.user_a = User.objects.create_user('user_a', 'a@test.com', 'pass')
+        CustomerAccess.objects.create(user=cls.user_a, customer=cls.customer_a, is_active=True)
+
+        CustomerAccountEntry.objects.create(
+            tenant=cls.tenant, customer=cls.customer_a,
+            description='Debito A', debit=Decimal('1000'), credit=Decimal('0'),
+        )
+        CustomerAccountEntry.objects.create(
+            tenant=cls.tenant, customer=cls.customer_a,
+            description='Credito A', debit=Decimal('0'), credit=Decimal('500'),
+        )
+        prod_a = ProductFactory(tenant=cls.tenant, title='Produto A')
+        out_a = OutflowFactory(customer=cls.customer_a, tenant=cls.tenant, product=prod_a)
+        DeliveryFactory(outflow=out_a, tenant=cls.tenant, driver=cls.driver)
+        PaymentFactory(customer=cls.customer_a, tenant=cls.tenant)
+
+        # Customer B
+        cls.customer_b = CustomerFactory(name='Cliente B', tenant=cls.tenant)
+        cls.user_b = User.objects.create_user('user_b', 'b@test.com', 'pass')
+        CustomerAccess.objects.create(user=cls.user_b, customer=cls.customer_b, is_active=True)
+
+        CustomerAccountEntry.objects.create(
+            tenant=cls.tenant, customer=cls.customer_b,
+            description='Debito B', debit=Decimal('2000'), credit=Decimal('0'),
+        )
+        CustomerAccountEntry.objects.create(
+            tenant=cls.tenant, customer=cls.customer_b,
+            description='Credito B', debit=Decimal('0'), credit=Decimal('1500'),
+        )
+        prod_b = ProductFactory(tenant=cls.tenant, title='Produto B')
+        out_b = OutflowFactory(customer=cls.customer_b, tenant=cls.tenant, product=prod_b)
+        DeliveryFactory(outflow=out_b, tenant=cls.tenant, driver=cls.driver)
+        PaymentFactory(customer=cls.customer_b, tenant=cls.tenant)
+
+    def test_dashboard_shows_only_own_data(self):
+        self.client.force_login(self.user_a)
+        response = self.client.get(reverse('portal:dashboard'))
+        self.assertContains(response, 'Cliente A')
+        self.assertNotContains(response, 'Cliente B')
+
+    def test_account_statement_shows_only_own_entries(self):
+        self.client.force_login(self.user_a)
+        response = self.client.get(reverse('portal:account_statement'))
+        self.assertNotContains(response, 'Debito B')
+        self.assertNotContains(response, 'Credito B')
+        self.assertContains(response, 'Debito A')
+
+    def test_deliveries_shows_only_own_deliveries(self):
+        self.client.force_login(self.user_a)
+        response = self.client.get(reverse('portal:deliveries'))
+        self.assertContains(response, 'Produto A')
+        self.assertNotContains(response, 'Produto B')
+
+    def test_payments_shows_only_own_payments(self):
+        self.client.force_login(self.user_a)
+        response = self.client.get(reverse('portal:payments'))
+        self.assertContains(response, '100,00')
+
+    def test_profile_edit_cannot_change_other_customer(self):
+        """User A nao pode editar perfil do Customer B via URL directa."""
+        self.client.force_login(self.user_a)
+        self.client.post(reverse('portal:profile_edit'), {
+            'name': 'Hacked Name',
+        })
+        self.customer_b.refresh_from_db()
+        self.assertNotEqual(self.customer_b.name, 'Hacked Name')
+
+    def test_unauthorized_user_blocked(self):
+        """User sem CustomerAccess nao acede ao portal."""
+        other = User.objects.create_user('hacker', 'h@t.com', 'pass')
+        self.client.force_login(other)
+        response = self.client.get(reverse('portal:dashboard'))
+        self.assertEqual(response.status_code, 302)

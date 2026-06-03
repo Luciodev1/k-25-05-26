@@ -6,11 +6,11 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, UpdateView
 from django.contrib import messages
 from decimal import Decimal
 
-from .forms import CustomerLoginForm
+from .forms import CustomerLoginForm, CustomerProfileForm
 from .models import CustomerAccess
 from accounts.models import CustomerAccountEntry
 from outflows.models import Outflow, Delivery
@@ -160,4 +160,19 @@ class PortalPasswordChangeView(PortalRequiredMixin, PasswordChangeView):
 
     def form_valid(self, form):
         messages.success(self.request, 'Palavra-passe alterada com sucesso!')
+        return super().form_valid(form)
+
+
+class PortalProfileEditView(PortalRequiredMixin, UpdateView):
+    template_name = 'portal/profile_edit.html'
+    form_class = CustomerProfileForm
+
+    def get_object(self, queryset=None):
+        return self.get_customer()
+
+    def get_success_url(self):
+        return reverse('portal:profile_edit')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Perfil actualizado com sucesso!')
         return super().form_valid(form)

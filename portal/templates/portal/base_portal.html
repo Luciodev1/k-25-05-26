@@ -75,6 +75,9 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}">
                         <i class="bi bi-credit-card me-1"></i>Pagamentos
                     </a>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'portal:profile_edit' %}">
+                        <i class="bi bi-person-gear me-1"></i>Perfil
+                    </a>
                 </nav>
                 <div class="d-flex align-items-center gap-2">
                     <a href="{% url 'portal:password_change' %}" class="btn btn-sm text-white" title="Alterar Palavra-passe">
@@ -96,6 +99,7 @@
                 <a class="nav-link small {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}"><i class="bi bi-wallet2"></i></a>
                 <a class="nav-link small {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}"><i class="bi bi-truck"></i></a>
                 <a class="nav-link small {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}"><i class="bi bi-credit-card"></i></a>
+                <a class="nav-link small {% if request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'portal:profile_edit' %}"><i class="bi bi-person-gear"></i></a>
             </div>
         </div>
     </header>

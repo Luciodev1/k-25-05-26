@@ -12,4 +12,5 @@ urlpatterns = [
     path('portal/entregas/', views.PortalDeliveriesView.as_view(), name='deliveries'),
     path('portal/pagamentos/', views.PortalPaymentsView.as_view(), name='payments'),
     path('portal/mudar-password/', views.PortalPasswordChangeView.as_view(), name='password_change'),
+    path('portal/perfil/editar/', views.PortalProfileEditView.as_view(), name='profile_edit'),
 ]
