@@ -1,10 +1,7 @@
 const CACHE_NAME = 'sge-portal-v1';
 const STATIC_ASSETS = [
   '/',
-  '/static/css/style.css',
-  '/static/js/theme.js',
-  '/static/js/csrf.js',
-  '/static/js/main.js',
+  '/offline/',
 ];
 
 // Install — pre-cache static assets
@@ -27,15 +24,17 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — network-first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
+  if (request.method !== 'GET') return;
+  if (!request.url.startsWith('http')) return;
 
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
         const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         return response;
       })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/offline/')))
+      .catch(() => caches.match(request).then((cached) => cached || caches.match('/offline/')))
   );
 });

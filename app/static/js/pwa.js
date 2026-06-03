@@ -2,7 +2,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/static/js/service-worker.js', { scope: '/' })
+      .register('/service-worker.js', { scope: '/' })
       .then(() => console.log('[PWA] Service Worker registado'))
       .catch((err) => console.warn('[PWA] Falha ao registar SW:', err));
   });

@@ -209,6 +209,19 @@ def dashboard(request):
     return render(request, 'home.html', context)
 
 
+def service_worker(request):
+    from django.conf import settings
+    from pathlib import Path
+    sw_path = Path(settings.STATIC_ROOT or settings.BASE_DIR / 'app' / 'static') / 'js' / 'service-worker.js'
+    # Fallback: look in app/static if STATIC_ROOT not set (dev mode)
+    if not sw_path.exists():
+        sw_path = settings.BASE_DIR / 'app' / 'static' / 'js' / 'service-worker.js'
+    with open(sw_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    from django.http import HttpResponse
+    return HttpResponse(content, content_type='application/javascript')
+
+
 def pwa_manifest(request):
     tenant = getattr(request, 'tenant', None)
     name = getattr(tenant, 'name', 'SGE') if tenant else 'SGE'

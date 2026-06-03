@@ -15,6 +15,7 @@ urlpatterns = [
 
     # PWA
     path('manifest.json', views.pwa_manifest, name='pwa_manifest'),
+    path('service-worker.js', views.service_worker, name='service_worker'),
     path('offline/', lambda request: render(request, 'offline.html'), name='offline'),
 
     # Portal do Cliente
