@@ -1,0 +1,67 @@
+{% extends 'portal/base_portal.html' %}
+{% block title %}Histórico de Sessões - Portal do Cliente{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Histórico de Sessões</h4>
+        <p class="text-muted small mb-0">Registo de acessos à sua conta</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Data/Hora</th>
+                    <th>Ação</th>
+                    <th>Endereço IP</th>
+                    <th class="pe-4">Dispositivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="ps-4 small text-muted">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
+                    <td>
+                        <span class="badge {% if log.action == 'login' %}bg-info-subtle text-info{% elif log.action == 'logout' %}bg-secondary-subtle text-secondary{% else %}bg-warning-subtle text-warning{% endif %} rounded-pill">
+                            {% if log.action == 'login' %}<i class="bi bi-box-arrow-in-right me-1"></i>{% endif %}
+                            {% if log.action == 'logout' %}<i class="bi bi-box-arrow-right me-1"></i>{% endif %}
+                            {% if log.action == 'password_change' %}<i class="bi bi-shield-lock me-1"></i>{% endif %}
+                            {{ log.get_action_display }}
+                        </span>
+                    </td>
+                    <td class="small text-muted font-monospace">{{ log.ip_address|default:"—" }}</td>
+                    <td class="pe-4 extra-small text-muted" title="{{ log.user_agent }}">{{ log.user_agent|truncatechars:60 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
+                        <span>Nenhum registo de sessão</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo;</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&rsaquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

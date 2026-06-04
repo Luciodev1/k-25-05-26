@@ -5,3 +5,6 @@ class PortalConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'portal'
     verbose_name = 'Portal do Cliente'
+
+    def ready(self):
+        import portal.signals

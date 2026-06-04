@@ -9,7 +9,10 @@
       <span class="text-muted small">Gerir acessos dos clientes ao portal</span>
     </div>
   </div>
-  <a href="{% url 'portal_acessos:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Acesso</a>
+  <div class="d-flex gap-2">
+    <a href="{% url 'portal_acessos:session_logs' %}" class="btn btn-outline-info btn-sm"><i class="bi bi-clock-history me-1"></i> Logs de Sessão</a>
+    <a href="{% url 'portal_acessos:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Acesso</a>
+  </div>
 </div>
 
 <div class="row g-3 mb-4">
@@ -34,66 +37,111 @@
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     <form method="get" class="row g-3 mb-4">
-      <div class="col">
+      <div class="col-md-5">
         <div class="sge-search-group">
           <i class="bi bi-search"></i>
-          <input type="text" name="q" class="form-control" placeholder="Pesquisar por cliente ou utilizador…" value="{{ request.GET.q }}">
+          <input type="text" name="q" class="form-control" placeholder="Pesquisar por cliente ou utilizador…" value="{{ q }}">
         </div>
       </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select">
+          <option value="">Todos</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Activos</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivos</option>
+        </select>
+      </div>
       <div class="col-auto"><button type="submit" class="btn btn-outline-primary">Filtrar</button></div>
+      {% if q or status_filter %}<div class="col-auto"><a href="{% url 'portal_acessos:list' %}" class="btn btn-outline-secondary">Limpar</a></div>{% endif %}
     </form>
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Utilizador</th>
-            <th>Estado</th>
-            <th>Último Acesso</th>
-            <th>Criado em</th>
-            <th class="text-end pe-4">Acções</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for access in accesses %}
-          <tr>
-            <td class="fw-semibold">{{ access.customer.name }}</td>
-            <td><code>{{ access.user.username }}</code></td>
-            <td>
-              {% if access.is_active %}
-              <span class="badge bg-success-subtle text-success rounded-pill">Activo</span>
-              {% else %}
-              <span class="badge bg-danger-subtle text-danger rounded-pill">Inactivo</span>
-              {% endif %}
-            </td>
-            <td class="small text-muted">{{ access.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
-            <td class="small text-muted">{{ access.created_at|date:"d/m/Y H:i" }}</td>
-            <td class="text-end pe-4">
-              <div class="d-flex justify-content-end gap-2">
-                <a href="{% url 'portal_acessos:detail' access.pk %}" class="btn-action" title="Ver"><i class="bi bi-eye"></i></a>
-                <a href="{% url 'portal_acessos:update' access.pk %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
-                <button type="button" class="btn btn-action text-danger" title="Remover" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                  data-delete-url="{% url 'portal_acessos:delete' access.pk %}"
-                  data-delete-message="Tem certeza que deseja remover o acesso de '{{ access.customer.name }}' ({{ access.user.username }})?">
-                  <i class="bi bi-trash3"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6">
-              <div class="sge-empty">
-                <div class="sge-empty-icon"><i class="bi bi-person-lock"></i></div>
-                <div class="text-muted small">Nenhum acesso encontrado.</div>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="small text-muted" id="selected-count">0 seleccionados</span>
+        <button type="submit" name="bulk_action" value="activate" class="btn btn-sm btn-success d-none" id="bulk-activate"><i class="bi bi-check-circle me-1"></i>Activar</button>
+        <button type="submit" name="bulk_action" value="deactivate" class="btn btn-sm btn-danger d-none" id="bulk-deactivate"><i class="bi bi-x-circle me-1"></i>Desactivar</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" id="select-all" class="form-check-input"></th>
+              <th>Cliente</th>
+              <th>Utilizador</th>
+              <th>Estado</th>
+              <th>Último Acesso</th>
+              <th>Criado em</th>
+              <th class="text-end pe-4">Acções</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for access in accesses %}
+            <tr>
+              <td><input type="checkbox" name="selected_ids" value="{{ access.pk }}" class="form-check-input row-checkbox"></td>
+              <td class="fw-semibold">{{ access.customer.name }}</td>
+              <td><code>{{ access.user.username }}</code></td>
+              <td>
+                {% if access.is_active %}
+                <span class="badge bg-success-subtle text-success rounded-pill">Activo</span>
+                {% else %}
+                <span class="badge bg-danger-subtle text-danger rounded-pill">Inactivo</span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">{{ access.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
+              <td class="small text-muted">{{ access.created_at|date:"d/m/Y H:i" }}</td>
+              <td class="text-end pe-4">
+                <div class="d-flex justify-content-end gap-2">
+                  <a href="{% url 'portal_acessos:detail' access.pk %}" class="btn-action" title="Ver"><i class="bi bi-eye"></i></a>
+                  <a href="{% url 'portal_acessos:update' access.pk %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
+                  <button type="button" class="btn btn-action text-danger" title="Remover" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                    data-delete-url="{% url 'portal_acessos:delete' access.pk %}"
+                    data-delete-message="Tem certeza que deseja remover o acesso de '{{ access.customer.name }}' ({{ access.user.username }})?">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">
+                <div class="sge-empty">
+                  <div class="sge-empty-icon"><i class="bi bi-person-lock"></i></div>
+                  <div class="text-muted small">Nenhum acesso encontrado.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </form>
     {% include 'components/_pagination.html' %}
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const selectAll = document.getElementById('select-all');
+  const checkboxes = document.querySelectorAll('.row-checkbox');
+  const selectedCount = document.getElementById('selected-count');
+  const bulkActivate = document.getElementById('bulk-activate');
+  const bulkDeactivate = document.getElementById('bulk-deactivate');
+
+  function updateBulkActions() {
+    const checked = document.querySelectorAll('.row-checkbox:checked').length;
+    selectedCount.textContent = checked + ' seleccionado(s)';
+    bulkActivate.classList.toggle('d-none', checked === 0);
+    bulkDeactivate.classList.toggle('d-none', checked === 0);
+  }
+
+  selectAll.addEventListener('change', function() {
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateBulkActions();
+  });
+
+  checkboxes.forEach(cb => cb.addEventListener('change', updateBulkActions));
+});
+</script>
 {% endblock %}

@@ -1,20 +1,33 @@
+import csv
+from decimal import Decimal
+from io import BytesIO
+
+from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.db.models import Sum, F, Q
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncMonth
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import TemplateView, ListView, UpdateView
-from django.contrib import messages
-from decimal import Decimal
+from django.views.generic import TemplateView, ListView, UpdateView, DetailView
 
 from .forms import CustomerLoginForm, CustomerProfileForm
-from .models import CustomerAccess
+from .models import CustomerAccess, PortalSessionLog
 from accounts.models import CustomerAccountEntry
 from outflows.models import Outflow, Delivery
 from payments.models import Payment
+
+
+def _log_session(access, request, action):
+    PortalSessionLog.objects.create(
+        access=access,
+        ip_address=request.META.get('REMOTE_ADDR', ''),
+        user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+        action=action,
+    )
 
 
 class CustomerLoginView(LoginView):
@@ -37,6 +50,7 @@ class CustomerLoginView(LoginView):
             messages.error(self.request, 'Não tem acesso ao portal de cliente.')
             return self.form_invalid(form)
         login(self.request, user)
+        _log_session(access, self.request, 'login')
         return super().form_valid(form)
 
 
@@ -57,6 +71,11 @@ class PortalRequiredMixin(LoginRequiredMixin):
         )
         return access.customer
 
+    def get_access(self):
+        return CustomerAccess.objects.select_related('customer').get(
+            user=self.request.user, is_active=True, is_deleted=False,
+        )
+
     def get_tenant_filter(self):
         customer = self.get_customer()
         return {'tenant': customer.tenant} if customer.tenant_id else {}
@@ -69,16 +88,44 @@ class PortalDashboardView(PortalRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         customer = self.get_customer()
         tf = self.get_tenant_filter()
+        cache_key = f'portal_dash_{customer.id}'
 
         entries = CustomerAccountEntry.objects.filter(customer=customer)
         totals = entries.aggregate(
             d=Coalesce(Sum('debit'), Decimal('0')),
             c=Coalesce(Sum('credit'), Decimal('0')),
         )
+        total_d = totals['d'] or Decimal('0')
+        total_c = totals['c'] or Decimal('0')
+
+        balance_evolution = []
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT strftime('%Y-%m', date) AS month, "
+                    "COALESCE(SUM(debit), 0) AS md, COALESCE(SUM(credit), 0) AS mc "
+                    "FROM accounts_customeraccountentry "
+                    "WHERE customer_id = %s "
+                    "GROUP BY strftime('%Y-%m', date) "
+                    "ORDER BY month",
+                    [customer.pk],
+                )
+                running = Decimal('0')
+                for row in cursor.fetchall():
+                    month, md, mc = row
+                    running += Decimal(str(mc)) - Decimal(str(md))
+                    balance_evolution.append({
+                        'month': month,
+                        'balance': float(running),
+                    })
+        except Exception:
+            balance_evolution = []
+
         context['customer'] = customer
-        context['balance'] = totals['c'] - totals['d']
-        context['total_debit'] = totals['d']
-        context['total_credit'] = totals['c']
+        context['balance'] = total_c - total_d
+        context['total_debit'] = total_d
+        context['total_credit'] = total_c
         context['outflows_count'] = Outflow.objects.filter(customer=customer, **tf).count()
         context['recent_outflows'] = Outflow.objects.filter(
             customer=customer, **tf,
@@ -91,6 +138,7 @@ class PortalDashboardView(PortalRequiredMixin, TemplateView):
         ).select_related('outflow__product', 'driver').filter(
             is_confirmed=False,
         ).order_by('-delivered_at')[:5]
+        context['balance_evolution'] = balance_evolution
         return context
 
 
@@ -101,9 +149,28 @@ class PortalAccountStatementView(PortalRequiredMixin, ListView):
 
     def get_queryset(self):
         customer = self.get_customer()
-        return CustomerAccountEntry.objects.filter(
+        qs = CustomerAccountEntry.objects.filter(
             customer=customer,
-        ).select_related('outflow__product', 'payment').order_by('-date')
+        ).select_related('outflow__product', 'payment')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(description__icontains=q) |
+                Q(outflow__product__title__icontains=q) |
+                Q(outflow__id__icontains=q)
+            )
+        date_from = self.request.GET.get('date_from', '').strip()
+        date_to = self.request.GET.get('date_to', '').strip()
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+        t = self.request.GET.get('type', '').strip()
+        if t == 'debit':
+            qs = qs.filter(debit__gt=0)
+        elif t == 'credit':
+            qs = qs.filter(credit__gt=0)
+        return qs.order_by('-date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -117,6 +184,10 @@ class PortalAccountStatementView(PortalRequiredMixin, ListView):
         context['balance'] = totals['c'] - totals['d']
         context['total_debit'] = totals['d']
         context['total_credit'] = totals['c']
+        context['q'] = self.request.GET.get('q', '')
+        context['date_from'] = self.request.GET.get('date_from', '')
+        context['date_to'] = self.request.GET.get('date_to', '')
+        context['type_filter'] = self.request.GET.get('type', '')
         return context
 
 
@@ -127,13 +198,28 @@ class PortalDeliveriesView(PortalRequiredMixin, ListView):
 
     def get_queryset(self):
         customer = self.get_customer()
-        return Delivery.objects.filter(
+        qs = Delivery.objects.filter(
             outflow__customer=customer,
-        ).select_related('outflow__product', 'driver').order_by('-delivered_at')
+        ).select_related('outflow__product', 'driver')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(outflow__product__title__icontains=q) |
+                Q(driver__name__icontains=q) |
+                Q(destination__icontains=q)
+            )
+        status = self.request.GET.get('status', '').strip()
+        if status == 'confirmed':
+            qs = qs.filter(is_confirmed=True)
+        elif status == 'pending':
+            qs = qs.filter(is_confirmed=False)
+        return qs.order_by('-delivered_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['customer'] = self.get_customer()
+        context['q'] = self.request.GET.get('q', '')
+        context['status_filter'] = self.request.GET.get('status', '')
         return context
 
 
@@ -144,14 +230,88 @@ class PortalPaymentsView(PortalRequiredMixin, ListView):
 
     def get_queryset(self):
         customer = self.get_customer()
-        return Payment.objects.filter(
+        qs = Payment.objects.filter(
             customer=customer, type='RECEIPT',
-        ).order_by('-date', '-created_at')
+        )
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(description__icontains=q) |
+                Q(payment_method__icontains=q) |
+                Q(id__icontains=q)
+            )
+        method = self.request.GET.get('method', '').strip()
+        if method:
+            qs = qs.filter(payment_method=method)
+        date_from = self.request.GET.get('date_from', '').strip()
+        date_to = self.request.GET.get('date_to', '').strip()
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+        return qs.order_by('-date', '-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['customer'] = self.get_customer()
+        context['q'] = self.request.GET.get('q', '')
+        context['method_filter'] = self.request.GET.get('method', '')
+        context['date_from'] = self.request.GET.get('date_from', '')
+        context['date_to'] = self.request.GET.get('date_to', '')
         return context
+
+
+class PortalOutflowDetailView(PortalRequiredMixin, DetailView):
+    template_name = 'portal/outflow_detail.html'
+    context_object_name = 'outflow'
+
+    def get_queryset(self):
+        customer = self.get_customer()
+        return Outflow.objects.filter(
+            customer=customer,
+        ).select_related('product').prefetch_related(
+            'deliveries__driver',
+            'account_entries',
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['customer'] = self.get_customer()
+        outflow = self.object
+        context['deliveries'] = outflow.deliveries.filter(
+            is_deleted=False,
+        ).select_related('driver').order_by('-delivered_at')
+        context['progress_pct'] = (
+            float(outflow.quantity_delivered) / float(outflow.quantity) * 100
+            if outflow.quantity > 0 else 0
+        )
+        return context
+
+
+class PortalExportStatementView(PortalRequiredMixin, TemplateView):
+    def get(self, request, *args, **kwargs):
+        customer = self.get_customer()
+        fmt = request.GET.get('format', 'csv')
+        qs = CustomerAccountEntry.objects.filter(
+            customer=customer,
+        ).select_related('outflow__product', 'payment').order_by('-date')
+
+        if fmt == 'csv':
+            response = HttpResponse(content_type='text/csv; charset=utf-8')
+            response['Content-Disposition'] = f'attachment; filename="extracto_{customer.id}_{timezone.now():%Y%m%d}.csv"'
+            response.write('\ufeff')
+            writer = csv.writer(response)
+            writer.writerow(['Data', 'Descrição', 'Débito', 'Crédito'])
+            for e in qs:
+                writer.writerow([
+                    e.date.strftime('%d/%m/%Y %H:%M'),
+                    e.description,
+                    f'{e.debit:.2f}' if e.debit > 0 else '',
+                    f'{e.credit:.2f}' if e.credit > 0 else '',
+                ])
+            return response
+
+        return redirect('portal:account_statement')
 
 
 class PortalPasswordChangeView(PortalRequiredMixin, PasswordChangeView):
@@ -160,6 +320,8 @@ class PortalPasswordChangeView(PortalRequiredMixin, PasswordChangeView):
 
     def form_valid(self, form):
         messages.success(self.request, 'Palavra-passe alterada com sucesso!')
+        access = self.get_access()
+        _log_session(access, self.request, 'password_change')
         return super().form_valid(form)
 
 
@@ -176,3 +338,48 @@ class PortalProfileEditView(PortalRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, 'Perfil actualizado com sucesso!')
         return super().form_valid(form)
+
+
+class PortalPasswordResetView(PasswordResetView):
+    template_name = 'portal/password_reset.html'
+    email_template_name = 'portal/password_reset_email.html'
+    subject_template_name = 'portal/password_reset_subject.txt'
+    success_url = reverse_lazy('portal:password_reset_done')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Se o email existir, receberá instruções para redefinir a palavra-passe.')
+        return super().form_valid(form)
+
+
+class PortalPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'portal/password_reset_done.html'
+
+
+class PortalPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'portal/password_reset_confirm.html'
+    success_url = reverse_lazy('portal:password_reset_complete')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Palavra-passe redefinida com sucesso!')
+        return super().form_valid(form)
+
+
+class PortalPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'portal/password_reset_complete.html'
+
+
+class PortalSessionLogView(PortalRequiredMixin, ListView):
+    template_name = 'portal/session_log.html'
+    context_object_name = 'logs'
+    paginate_by = 20
+
+    def get_queryset(self):
+        access = self.get_access()
+        return PortalSessionLog.objects.filter(access=access).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['customer'] = self.get_customer()
+        return context
+
+
