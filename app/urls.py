@@ -6,9 +6,11 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render
+from django.views.i18n import set_language
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('favicon.ico', views.favicon, name='favicon'),
     path('health/', views.health_check, name='health'),
     path('', views.dashboard, name='dashboard'),
     path('pending-deliveries-stat/', views.pending_deliveries_stat, name='pending_deliveries_stat'),
@@ -39,6 +41,7 @@ urlpatterns = [
     path('accounts/login/', CustomLoginView.as_view(), name='login'),
     path('accounts/logout/', LogoutView.as_view(), name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('i18n/', include('django.conf.urls.i18n')),
 ]
 
 if settings.DEBUG:

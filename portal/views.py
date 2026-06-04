@@ -143,6 +143,61 @@ class PortalDashboardView(PortalRequiredMixin, TemplateView):
             is_confirmed=False,
         ).order_by('-delivered_at')[:5]
         context['balance_evolution'] = balance_evolution
+
+        # Advanced charts: top products
+        top_products = Outflow.objects.filter(
+            customer=customer, **tf,
+        ).values('product__title').annotate(
+            total_qty=Sum('quantity'),
+        ).order_by('-total_qty')[:5]
+        context['top_products'] = [
+            {'label': p['product__title'] or 'Sem nome', 'qty': float(p['total_qty'] or 0)}
+            for p in top_products
+        ]
+
+        # Monthly deliveries
+        monthly_deliveries = []
+        try:
+            from django.db import connection as conn
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT strftime('%Y-%m', delivered_at) AS month, COUNT(*) AS cnt "
+                    "FROM outflows_delivery "
+                    "JOIN outflows_outflow ON outflows_delivery.outflow_id = outflows_outflow.id "
+                    "WHERE outflows_outflow.customer_id = %s AND delivered_at IS NOT NULL "
+                    "GROUP BY strftime('%Y-%m', delivered_at) "
+                    "ORDER BY month LIMIT 12",
+                    [customer.pk],
+                )
+                for row in cursor.fetchall():
+                    monthly_deliveries.append({'month': row[0], 'count': row[1]})
+        except Exception:
+            monthly_deliveries = []
+        context['monthly_deliveries'] = monthly_deliveries
+
+        # Monthly payments
+        monthly_payments = []
+        try:
+            from django.db import connection as conn
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT strftime('%Y-%m', date) AS month, "
+                    "COALESCE(SUM(amount), 0) AS total "
+                    "FROM payments_payment "
+                    "WHERE customer_id = %s AND type = 'RECEIPT' "
+                    "GROUP BY strftime('%Y-%m', date) "
+                    "ORDER BY month LIMIT 12",
+                    [customer.pk],
+                )
+                for row in cursor.fetchall():
+                    monthly_payments.append({
+                        'month': row[0],
+                        'total': float(row[1]),
+                    })
+        except Exception:
+            monthly_payments = []
+        context['monthly_payments'] = monthly_payments
+
         return context
 
 

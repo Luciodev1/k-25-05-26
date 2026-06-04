@@ -11,6 +11,8 @@ class PortalErrorRedirectMiddleware:
         response = self.get_response(request)
 
         if response.status_code in (403, 404) and request.path.startswith('/portal/'):
+            if request.path.startswith('/portal/partilhado/'):
+                return response
             referer = request.META.get('HTTP_REFERER', '')
             if referer and '/portal/' in referer:
                 return redirect(referer)

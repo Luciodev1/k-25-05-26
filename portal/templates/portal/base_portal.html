@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="pt-pt" data-bs-theme="light">
 
@@ -11,6 +11,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="{% url 'pwa_manifest' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <link rel="alternate icon" href="{% static 'favicon.ico' %}">
 
     <title>{% block title %}Portal do Cliente - SGE{% endblock %}</title>
 
@@ -142,6 +144,17 @@
                     </a>
                 </nav>
                 <div class="d-flex align-items-center gap-2">
+                    <form action="{% url 'set_language' %}" method="post" class="d-inline" id="lang-form">
+                        {% csrf_token %}
+                        <select name="language" class="form-select form-select-sm bg-transparent text-white border-0" style="width: auto; font-size: 0.7rem; cursor: pointer;" title="Idioma">
+                            {% get_language_info_list for LANGUAGES as langs %}
+                            {% for lang in langs %}
+                            <option value="{{ lang.code }}" {% if lang.code == LANGUAGE_CODE %}selected{% endif %} class="text-dark">
+                                {{ lang.name_local|slice:":3" }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
                     <button id="bd-theme" class="btn btn-sm text-white border-0" title="Alternar tema" aria-label="Alternar tema">
                         <i id="bd-theme-icon" class="bi bi-sun-fill"></i>
                     </button>
@@ -271,7 +284,6 @@
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
 
-            // Loading state on form submits
             document.querySelectorAll('form').forEach(function (form) {
                 form.addEventListener('submit', function () {
                     var btn = this.querySelector('button[type="submit"]');
@@ -281,6 +293,13 @@
                     }
                 });
             });
+
+            var langSelect = document.querySelector('#lang-form select[name="language"]');
+            if (langSelect) {
+                langSelect.addEventListener('change', function () {
+                    this.form.submit();
+                });
+            }
         });
     </script>
     {% block extra_js %}{% endblock %}

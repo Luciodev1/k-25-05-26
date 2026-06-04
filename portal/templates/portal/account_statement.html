@@ -146,7 +146,6 @@
     </div>
 </div>
 
-{% block extra_js %}
 <script nonce="{{ csp_nonce }}">
     document.getElementById('shareModal')?.addEventListener('show.bs.modal', function () {
         var content = document.getElementById('share-modal-content');
@@ -158,5 +157,4 @@
             .catch(function() { content.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>Erro ao carregar</div>'; });
     });
 </script>
-{% endblock %}
 {% endblock %}

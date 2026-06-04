@@ -1,9 +1,12 @@
+import io
+import uuid
 from decimal import Decimal
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from tests.factories import TenantFactory, CustomerFactory, ProductFactory
-from portal.models import CustomerAccess
+from portal.models import CustomerAccess, StatementShareToken
 from accounts.models import CustomerAccountEntry
 
 
@@ -295,3 +298,150 @@ class PortalDataIsolationTest(TestCase):
         self.client.force_login(other)
         response = self.client.get(reverse('portal:dashboard'))
         self.assertEqual(response.status_code, 302)
+
+
+class PortalExportStatementPDFTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantFactory(slug='portal-pdf')
+        cls.customer = CustomerFactory(name='PDF Cliente', tenant=cls.tenant)
+        cls.user = User.objects.create_user('pdfuser', 'pdf@t.com', 'pass')
+        CustomerAccess.objects.create(user=cls.user, customer=cls.customer, is_active=True)
+        for i in range(3):
+            CustomerAccountEntry.objects.create(
+                tenant=cls.tenant, customer=cls.customer,
+                description=f'Movimento {i}', debit=Decimal('100'), credit=Decimal('0'),
+            )
+
+    def test_pdf_export_requires_login(self):
+        response = self.client.get(reverse('portal:export_statement_pdf'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_pdf_export_returns_pdf(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('portal:export_statement_pdf'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('attachment', response['Content-Disposition'])
+        self.assertIn('.pdf', response['Content-Disposition'])
+        self.assertGreater(len(response.content), 1000)
+
+
+class PortalShareStatementTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantFactory(slug='portal-share')
+        cls.customer = CustomerFactory(name='Share Cliente', tenant=cls.tenant)
+        cls.user = User.objects.create_user('shareuser', 'share@t.com', 'pass')
+        CustomerAccess.objects.create(user=cls.user, customer=cls.customer, is_active=True)
+        CustomerAccountEntry.objects.create(
+            tenant=cls.tenant, customer=cls.customer,
+            description='Teste Partilha', debit=Decimal('500'), credit=Decimal('0'),
+        )
+
+    def test_share_modal_requires_login(self):
+        response = self.client.get(reverse('portal:share_statement'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_share_modal_renders_url(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('portal:share_statement'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'share-url-input')
+        self.assertContains(response, 'Partilhar')
+
+    def test_shared_statement_public_page(self):
+        access = CustomerAccess.objects.get(user=self.user)
+        token = StatementShareToken.objects.create(
+            access=access, token=uuid.uuid4().hex[:16],
+        )
+        response = self.client.get(
+            reverse('portal:shared_statement', kwargs={'token': token.token})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Share Cliente')
+        self.assertContains(response, 'Teste Partilha')
+
+    def test_shared_statement_invalid_token(self):
+        response = self.client.get(
+            reverse('portal:shared_statement', kwargs={'token': 'invalidtoken123'})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_shared_statement_expired_token(self):
+        from django.utils import timezone
+        access = CustomerAccess.objects.get(user=self.user)
+        token = StatementShareToken.objects.create(
+            access=access, token=uuid.uuid4().hex[:16],
+        )
+        token.created_at = timezone.now() - timezone.timedelta(days=8)
+        token.save()
+        response = self.client.get(
+            reverse('portal:shared_statement', kwargs={'token': token.token})
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class PortalAdminMetricsTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantFactory(slug='portal-metrics')
+        cls.superuser = User.objects.create_superuser('admin', 'admin@t.com', 'admin')
+        cls.customer = CustomerFactory(name='Metrics Cliente', tenant=cls.tenant)
+        cls.user = User.objects.create_user('metricuser', 'met@t.com', 'pass')
+        CustomerAccess.objects.create(user=cls.user, customer=cls.customer, is_active=True)
+
+    def test_metrics_requires_permission(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('portal_acessos:metrics'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_metrics_renders_for_admin(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse('portal_acessos:metrics'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Métricas do Portal')
+        self.assertContains(response, 'Total de Acessos')
+
+    def test_metrics_shows_counts(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse('portal_acessos:metrics'))
+        self.assertContains(response, '1')  # pelo menos 1 acesso ativo
+
+
+class PortalProfilePhotoTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantFactory(slug='portal-photo')
+        cls.customer = CustomerFactory(name='Photo Cliente', tenant=cls.tenant)
+        cls.user = User.objects.create_user('photouser', 'photo@t.com', 'pass')
+        CustomerAccess.objects.create(user=cls.user, customer=cls.customer, is_active=True)
+
+    def test_profile_edit_renders_with_photo_field(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('portal:profile_edit'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Foto')
+        self.assertContains(response, 'enctype="multipart/form-data"')
+
+    def test_profile_upload_photo(self):
+        from PIL import Image
+        import io as python_io
+        self.client.force_login(self.user)
+        img_file = python_io.BytesIO()
+        Image.new('RGB', (100, 100)).save(img_file, 'JPEG')
+        img_file.seek(0)
+        upload = SimpleUploadedFile(
+            'test.jpg', img_file.read(), content_type='image/jpeg',
+        )
+        response = self.client.post(reverse('portal:profile_edit'), {
+            'name': 'Photo Cliente',
+            'phone': '',
+            'email': '',
+            'address': '',
+            'photo': upload,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.customer.refresh_from_db()
+        self.assertTrue(self.customer.photo)
+        self.assertIn('test', self.customer.photo.name)

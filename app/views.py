@@ -17,6 +17,12 @@ from accounts.models import CustomerAccountEntry, SupplierAccountEntry
 logger = logging.getLogger(__name__)
 
 
+def favicon(request):
+    from django.http import HttpResponse
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#10b981"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold" font-family="sans-serif">S</text></svg>'
+    return HttpResponse(svg, content_type='image/svg+xml')
+
+
 def health_check(request):
     from django.conf import settings
     from django.db import connection

@@ -1,0 +1,83 @@
+# English translation for SGE.
+# Copyright (C) 2026 SGE
+# This file is distributed under the same license as the SGE package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SGE 1.0\n"
+"Report-Msgid-Bugs-To: contato@k-gestao.ao\n"
+"POT-Creation-Date: 2026-06-04 16:00+0100\n"
+"PO-Revision-Date: 2026-06-04 16:00+0100\n"
+"Last-Translator: SGE Team\n"
+"Language-Team: English <en@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "SGE - Sistema de Gestão de Stocks"
+msgstr "SGE - Stock Management System"
+
+msgid "Portal do Cliente"
+msgstr "Customer Portal"
+
+msgid "Painel"
+msgstr "Dashboard"
+
+msgid "Extracto"
+msgstr "Statement"
+
+msgid "Entregas"
+msgstr "Deliveries"
+
+msgid "Pagamentos"
+msgstr "Payments"
+
+msgid "Perfil"
+msgstr "Profile"
+
+msgid "Bem-vindo ao seu portal."
+msgstr "Welcome to your portal."
+
+msgid "Saldo Actual"
+msgstr "Current Balance"
+
+msgid "Total Débito"
+msgstr "Total Debit"
+
+msgid "Total Crédito"
+msgstr "Total Credit"
+
+msgid "Nenhum movimento encontrado"
+msgstr "No entries found"
+
+msgid "Nenhuma entrega encontrada"
+msgstr "No deliveries found"
+
+msgid "Nenhum pagamento encontrado"
+msgstr "No payments found"
+
+msgid "Sessão terminada com sucesso."
+msgstr "Session ended successfully."
+
+msgid "Olá"
+msgstr "Hello"
+
+msgid "A sua palavra-passe"
+msgstr "Your password"
+
+msgid "Entrar"
+msgstr "Sign In"
+
+msgid "Esqueceu a palavra-passe?"
+msgstr "Forgot your password?"
+
+msgid "Guardar Alterações"
+msgstr "Save Changes"
+
+msgid "Voltar"
+msgstr "Go Back"
+
+msgid "Pesquisar..."
+msgstr "Search..."
