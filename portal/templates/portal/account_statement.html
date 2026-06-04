@@ -12,9 +12,15 @@
         <p class="text-muted small mb-0">{{ customer.name }} • NIF: {{ customer.nif|default:"—" }}</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="{% url 'portal:export_statement' %}?format=csv" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-download me-1"></i>CSV
+        <a href="{% url 'portal:export_statement' %}?format=csv" class="btn btn-outline-success btn-sm" data-tooltip="Descarregar extracto em CSV">
+            <i class="bi bi-filetype-csv me-1"></i>CSV
         </a>
+        <a href="{% url 'portal:export_statement_pdf' %}" class="btn btn-outline-danger btn-sm" data-tooltip="Descarregar extracto em PDF">
+            <i class="bi bi-filetype-pdf me-1"></i>PDF
+        </a>
+        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#shareModal" title="Partilhar extracto">
+            <i class="bi bi-share me-1"></i>Partilhar
+        </button>
     </div>
 </div>
 
@@ -125,4 +131,32 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div id="share-modal-content">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted small mt-2">A carregar...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce }}">
+    document.getElementById('shareModal')?.addEventListener('show.bs.modal', function () {
+        var content = document.getElementById('share-modal-content');
+        if (content.dataset.loaded) return;
+        content.dataset.loaded = 'true';
+        fetch("{% url 'portal:share_statement' %}")
+            .then(function(r) { return r.text(); })
+            .then(function(html) { content.innerHTML = html; })
+            .catch(function() { content.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>Erro ao carregar</div>'; });
+    });
+</script>
+{% endblock %}
 {% endblock %}

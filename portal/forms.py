@@ -7,18 +7,20 @@ from customers.models import Customer
 class CustomerProfileForm(forms.ModelForm):
     class Meta:
         model = Customer
-        fields = ['name', 'phone', 'email', 'address']
+        fields = ['name', 'phone', 'email', 'address', 'photo']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome completo'}),
             'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Telefone'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'seu@email.com'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Endereço', 'rows': 3}),
+            'photo': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
         labels = {
             'name': 'Nome',
             'phone': 'Telefone',
             'email': 'Email',
             'address': 'Endereço',
+            'photo': 'Foto / Logótipo',
         }
 
 

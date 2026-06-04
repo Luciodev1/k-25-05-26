@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracto Partilhado - {{ customer.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; }
+        .share-header { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 1.5rem; border-radius: 16px; margin-bottom: 1.5rem; }
+        .share-header h3 { font-weight: 700; margin: 0; }
+        .share-header small { opacity: 0.85; }
+        .share-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: white; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; border: 1px solid #e2e8f0; }
+        .share-meta div span { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; display: block; }
+        .share-meta div b { font-size: 0.95rem; }
+        .table thead th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0; background: #f8fafc; }
+        .badge-share { background: rgba(16,185,129,0.15); color: #059669; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .share-footer { text-align: center; padding: 1.5rem; color: #94a3b8; font-size: 0.75rem; border-top: 1px solid #e2e8f0; margin-top: 2rem; }
+        @media print {
+            body { background: white; padding: 0; }
+            .share-header { border-radius: 0; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width: 900px;">
+        <div class="share-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3><i class="bi bi-file-earmark-text me-2"></i>Extracto de Conta</h3>
+                <small>Documento partilhado via SGE Portal</small>
+            </div>
+            <button class="btn btn-light btn-sm no-print" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Imprimir
+            </button>
+        </div>
+
+        <div class="share-meta">
+            <div><span>Cliente</span><b>{{ customer.name }}</b></div>
+            <div><span>NIF</span><b>{{ customer.nif|default:"—" }}</b></div>
+            <div><span>Período</span><b>{% if date_from %}{{ date_from }}{% else %}Início{% endif %} — {% if date_to %}{{ date_to }}{% else %}Actual{% endif %}</b></div>
+            <div><span>Gerado em</span><b>{{ generated_at|date:"d/m/Y H:i" }}</b></div>
+        </div>
+
+        <div class="d-flex gap-3 mb-3">
+            <div class="badge-share"><i class="bi bi-arrow-down-circle me-1"></i>Débito: {{ total_debit|floatformat:"2g" }} Kz</div>
+            <div class="badge-share"><i class="bi bi-arrow-up-circle me-1"></i>Crédito: {{ total_credit|floatformat:"2g" }} Kz</div>
+            <div class="badge-share"><i class="bi bi-wallet2 me-1"></i>Saldo: {{ balance|floatformat:"2g" }} Kz</div>
+        </div>
+
+        <div class="table-responsive bg-white rounded-3 border">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr><th class="ps-4">Data</th><th>Descrição</th><th class="text-end">Débito</th><th class="text-end pe-4">Crédito</th></tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr>
+                        <td class="ps-4 small text-muted">{{ entry.date|date:"d/m/Y H:i" }}</td>
+                        <td class="small">{{ entry.description }}</td>
+                        <td class="text-end text-danger fw-bold">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+                        <td class="text-end text-success fw-bold pe-4">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum movimento encontrado</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="share-footer">
+            <i class="bi bi-shield-check me-1"></i> Documento gerado automaticamente pelo SGE — Sistema de Gestão de Stocks
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,154 @@
+{% extends 'app/base.html' %}
+{% block title %}Métricas do Portal - SGE{% endblock %}
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted"><i class="bi bi-house-door"></i></a></li>
+<li class="breadcrumb-item active" aria-current="page">Métricas do Portal</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="bi bi-bar-chart-line text-primary me-2"></i>Métricas do Portal do Cliente</h4>
+        <p class="text-muted small mb-0">Visão geral dos acessos, sessões e utilização do portal</p>
+    </div>
+    <a href="{% url 'portal_acessos:list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-people me-1"></i>Gerir Acessos
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 text-center h-100">
+            <div class="text-success fs-3 mb-2"><i class="bi bi-person-check"></i></div>
+            <h3 class="fw-bold mb-0">{{ metrics.total_accesses }}</h3>
+            <small class="text-muted">Total de Acessos</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 text-center h-100">
+            <div class="text-primary fs-3 mb-2"><i class="bi bi-toggle-on"></i></div>
+            <h3 class="fw-bold mb-0">{{ metrics.active_accesses }}</h3>
+            <small class="text-muted">Acessos Activos</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 text-center h-100">
+            <div class="text-secondary fs-3 mb-2"><i class="bi bi-toggle-off"></i></div>
+            <h3 class="fw-bold mb-0">{{ metrics.inactive_accesses }}</h3>
+            <small class="text-muted">Acessos Inactivos</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 text-center h-100">
+            <div class="text-info fs-3 mb-2"><i class="bi bi-clock-history"></i></div>
+            <h3 class="fw-bold mb-0">{{ metrics.total_sessions }}</h3>
+            <small class="text-muted">Sessões Registadas</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Actividade Recente (Sessões por Acção)</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th class="ps-4">Acção</th><th class="text-end pe-4">Total</th></tr></thead>
+                    <tbody>
+                        {% for item in metrics.sessions_by_action %}
+                        <tr>
+                            <td class="ps-4">
+                                {% if item.action == 'login' %}<i class="bi bi-box-arrow-in-right text-success me-2"></i>
+                                {% elif item.action == 'logout' %}<i class="bi bi-box-arrow-right text-warning me-2"></i>
+                                {% else %}<i class="bi bi-shield-lock text-primary me-2"></i>{% endif %}
+                                {{ item.get_action_display }}
+                            </td>
+                            <td class="text-end pe-4 fw-bold">{{ item.total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center py-4 text-muted">Nenhuma sessão registada</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Últimos Acessos</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th class="ps-4">Cliente</th><th>Último Login</th><th class="text-end pe-4">Estado</th></tr></thead>
+                    <tbody>
+                        {% for access in metrics.last_accesses %}
+                        <tr>
+                            <td class="ps-4 small">{{ access.customer.name }}</td>
+                            <td class="small text-muted">{{ access.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
+                            <td class="text-end pe-4">
+                                {% if access.is_active %}
+                                <span class="badge bg-success-subtle">Activo</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center py-4 text-muted">Nenhum acesso registado</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-activity text-primary me-2"></i>Sessões nos Últimos 30 Dias</h6>
+    </div>
+    <div class="card-body p-3">
+        {% if metrics.recent_sessions_chart %}
+        <canvas id="sessionsChart" height="80"></canvas>
+        {% else %}
+        <p class="text-muted text-center py-4 mb-0">Sem dados de sessões nos últimos 30 dias</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if metrics.recent_sessions_chart %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-Z3TnXk2qSn/qmTlY+cxFJ3HQTXFWTCvqjN+sjQ+9oHXAxqCwBDg92pEGvPP4Ckn" crossorigin="anonymous" nonce="{{ csp_nonce }}"></script>
+<script nonce="{{ csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('sessionsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ metrics.recent_sessions_chart.labels|safe }},
+                datasets: [{
+                    label: 'Sessões',
+                    data: {{ metrics.recent_sessions_chart.data|safe }},
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

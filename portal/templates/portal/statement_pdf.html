@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Extracto de Conta - {{ customer.name }}</title>
+    <style>
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #059669; padding-bottom: 10pt; margin-bottom: 15pt; }
+        .header h2 { color: #059669; margin: 0 0 4pt; font-size: 16pt; }
+        .header small { color: #666; }
+        .customer-data { background: #f9fafb; padding: 10pt; border-radius: 6pt; margin-bottom: 15pt; border: 1px solid #e2e8f0; }
+        .customer-data table { width: 100%; }
+        .customer-data td { padding: 2pt 6pt; font-size: 9pt; }
+        .customer-data td:first-child { font-weight: 700; color: #64748b; width: 100pt; }
+        .summary { display: flex; justify-content: space-between; margin-bottom: 15pt; }
+        .summary-box { flex: 1; text-align: center; padding: 8pt; border: 1px solid #e2e8f0; border-radius: 4pt; margin: 0 4pt; background: #f9fafb; }
+        .summary-box .label { font-size: 7pt; text-transform: uppercase; color: #64748b; font-weight: 700; }
+        .summary-box .value { font-size: 12pt; font-weight: 700; }
+        .value.debit { color: #dc2626; }
+        .value.credit { color: #059669; }
+        table.items { width: 100%; border-collapse: collapse; }
+        table.items th { background: #059669; color: white; padding: 6pt 8pt; font-size: 8pt; text-transform: uppercase; text-align: left; }
+        table.items td { padding: 5pt 8pt; border-bottom: 1px solid #e2e8f0; font-size: 9pt; }
+        table.items .amount { text-align: right; }
+        table.items .debit { color: #dc2626; }
+        table.items .credit { color: #059669; }
+        .footer { text-align: center; font-size: 7pt; color: #94a3b8; margin-top: 20pt; border-top: 1px solid #e2e8f0; padding-top: 8pt; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>{{ company.NAME }}</h2>
+        <small>{{ company.LOCATION }} | {{ company.EMAIL }} | {{ company.PHONE }}</small>
+    </div>
+
+    <div class="customer-data">
+        <table>
+            <tr><td>Cliente</td><td>{{ customer.name }}</td></tr>
+            <tr><td>NIF</td><td>{{ customer.nif|default:"—" }}</td></tr>
+            <tr><td>Telefone</td><td>{{ customer.phone|default:"—" }}</td></tr>
+            <tr><td>Email</td><td>{{ customer.email|default:"—" }}</td></tr>
+            <tr><td>Endereço</td><td>{{ customer.address|default:"—" }}</td></tr>
+        </table>
+    </div>
+
+    <div class="summary">
+        <div class="summary-box">
+            <div class="label">Total Débito</div>
+            <div class="value debit">{{ total_debit|floatformat:"2g" }} Kz</div>
+        </div>
+        <div class="summary-box">
+            <div class="label">Total Crédito</div>
+            <div class="value credit">{{ total_credit|floatformat:"2g" }} Kz</div>
+        </div>
+        <div class="summary-box">
+            <div class="label">Saldo</div>
+            <div class="value" style="color: {% if balance < 0 %}#dc2626{% else %}#059669{% endif %}">{{ balance|floatformat:"2g" }} Kz</div>
+        </div>
+        <div class="summary-box">
+            <div class="label">Emitido em</div>
+            <div class="value" style="font-size: 9pt;">{{ generated_at|date:"d/m/Y H:i" }}</div>
+        </div>
+    </div>
+
+    <table class="items">
+        <thead>
+            <tr><th>Data</th><th>Descrição</th><th class="amount">Débito</th><th class="amount">Crédito</th></tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td>{{ entry.date|date:"d/m/Y H:i" }}</td>
+                <td>{{ entry.description }}</td>
+                <td class="amount debit">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }} Kz{% endif %}</td>
+                <td class="amount credit">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }} Kz{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="text-align:center;padding:20pt;color:#94a3b8;">Nenhum movimento registado</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Documento gerado automaticamente pelo SGE — Sistema de Gestão de Stocks | {{ generated_at|date:"d/m/Y H:i" }}
+    </div>
+</body>
+</html>

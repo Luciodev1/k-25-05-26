@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Portal do Cliente - SGE">
-    <meta name="theme-color" content="#059669">
+    <meta name="theme-color" id="theme-color" content="#059669">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -52,7 +52,7 @@
         .portal-bottom-tabs {
             display: none;
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; border-top: 1px solid #e2e8f0;
+            background: var(--bg-card, white); border-top: 1px solid var(--border, #e2e8f0);
             z-index: 1050; padding: 0.375rem 0;
             box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
             border-radius: 16px 16px 0 0;
@@ -92,6 +92,30 @@
         }
 
         .table > thead > tr > th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; border-bottom: 2px solid var(--border); }
+
+        /* Dark mode overrides for portal */
+        [data-bs-theme="dark"] .portal-bottom-tabs { background: #1e293b; border-top-color: rgba(255,255,255,0.06); }
+        [data-bs-theme="dark"] .portal-bottom-tabs .tab-item { color: #64748b; }
+        [data-bs-theme="dark"] .portal-bottom-tabs .tab-item.active { color: #34d399; }
+        [data-bs-theme="dark"] .breadcrumb-item a { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .breadcrumb-item.active { color: #64748b; }
+
+        /* Loading button states */
+        .btn-loading { position: relative; pointer-events: none; opacity: 0.8; }
+        .btn-loading::after {
+            content: ''; position: absolute; inset: 0;
+            background: rgba(255,255,255,0.15);
+            border-radius: inherit;
+        }
+
+        /* Print-optimised extracto */
+        @media print {
+            .portal-header, .portal-bottom-tabs, .portal-footer, .breadcrumb, .btn, form, .pagination, .no-print { display: none !important; }
+            .portal-content { padding: 0 !important; min-height: auto !important; }
+            .card { border: none !important; box-shadow: none !important; background: transparent !important; }
+            .table th { background: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { font-size: 10pt; color: #000 !important; background: white !important; }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -100,27 +124,55 @@
     <header class="portal-header">
         <div class="container-fluid px-3 px-lg-5">
             <div class="d-flex align-items-center justify-content-between">
-                <a href="{% url 'portal:dashboard' %}" class="text-white text-decoration-none brand">
+                <a href="{% url 'portal:dashboard' %}" class="text-white text-decoration-none brand" title="Ir para o Painel">
                     <i class="bi bi-box-seam me-2"></i>SGE Portal
                 </a>
                 <nav class="nav d-none d-md-flex">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}" title="Painel principal">
                         <i class="bi bi-speedometer2 me-1"></i>Painel
                     </a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}" title="Extracto de conta">
                         <i class="bi bi-wallet2 me-1"></i>Extracto
                     </a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}" title="Histórico de entregas">
                         <i class="bi bi-truck me-1"></i>Entregas
                     </a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}" title="Histórico de pagamentos">
                         <i class="bi bi-credit-card me-1"></i>Pagamentos
                     </a>
                 </nav>
                 <div class="d-flex align-items-center gap-2">
+                    <button id="bd-theme" class="btn btn-sm text-white border-0" title="Alternar tema" aria-label="Alternar tema">
+                        <i id="bd-theme-icon" class="bi bi-sun-fill"></i>
+                    </button>
+                    <div class="dropdown" id="notification-bell">
+                        <button class="btn btn-sm text-white border-0 position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações" aria-label="Notificações">
+                            <i id="notification-bell-icon" class="bi bi-bell fs-5"></i>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.55rem; min-width:16px; height:16px; display:flex; align-items:center; justify-content:center;">0</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 animate-up" style="min-width: 320px; border-radius: 12px; max-height: 400px; overflow-y: auto;">
+                            <li class="px-3 py-2 fw-semibold small border-bottom d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-bell me-2 text-primary"></i>Notificações</span>
+                            </li>
+                            <li id="notification-list">
+                                <div class="text-center text-muted small py-4" id="notification-empty">
+                                    <i class="bi bi-check2-all d-block fs-4 mb-1"></i>Sem notificações
+                                </div>
+                            </li>
+                            <li class="border-top notification-clear-all d-none">
+                                <button class="dropdown-item small text-center py-2 text-muted" disabled>
+                                    <i class="bi bi-check2-all me-1"></i>Nenhuma notificação
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                     <div class="dropdown">
-                        <button class="btn btn-sm text-white border-0 p-1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ request.user.username|slice:":1"|upper }}</div>
+                        <button class="btn btn-sm text-white border-0 p-1" data-bs-toggle="dropdown" aria-expanded="false" title="Menu do utilizador">
+                            {% if request.user.customer_access.customer.photo %}
+                            <img src="{{ request.user.customer_access.customer.photo.url }}" alt="Avatar" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ request.user.customer_access.customer.name|first|upper }}</div>
+                            {% endif %}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 animate-up" style="min-width: 200px; border-radius: 12px;">
                             <li><span class="dropdown-item-text small text-muted py-1">{{ request.user.username }}</span></li>
@@ -144,7 +196,6 @@
         </div>
     </header>
 
-    <!-- Breadcrumbs -->
     {% block breadcrumbs %}
     <div class="container-fluid px-3 px-lg-5 pt-3 pb-0">
         <nav aria-label="breadcrumb">
@@ -173,7 +224,6 @@
             </div>
             {% endif %}
 
-            <!-- Skeleton loading placeholder (shown via JS, hidden by default) -->
             <div id="skeleton-loading" class="d-none">
                 <div class="row g-3 mb-4">
                     <div class="col-6 col-md-3">{% for i in "1234" %}<div class="skeleton-portal skeleton-portal-card"></div>{% endfor %}</div>
@@ -194,32 +244,43 @@
         </div>
     </footer>
 
-    <!-- Bottom Tab Bar (Mobile) -->
     <nav class="portal-bottom-tabs">
-        <a class="tab-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}">
+        <a class="tab-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}" title="Painel">
             <i class="bi bi-speedometer2"></i>Painel
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}">
+        <a class="tab-item {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}" title="Extracto">
             <i class="bi bi-wallet2"></i>Extracto
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}">
+        <a class="tab-item {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}" title="Entregas">
             <i class="bi bi-truck"></i>Entregas
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}">
+        <a class="tab-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}" title="Pagamentos">
             <i class="bi bi-credit-card"></i>Pagamentos
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'session_log' or request.resolver_match.url_name == 'password_change' %}active{% endif %}" href="{% url 'portal:profile_edit' %}">
+        <a class="tab-item {% if request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'session_log' or request.resolver_match.url_name == 'password_change' %}active{% endif %}" href="{% url 'portal:profile_edit' %}" title="Perfil">
             <i class="bi bi-person-gear"></i>Perfil
         </a>
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/pwa.js' %}"></script>
+    <script src="{% static 'js/portal-notifications.js' %}"></script>
     <script>
-        // Enable Bootstrap tooltips
         document.addEventListener('DOMContentLoaded', function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+
+            // Loading state on form submits
+            document.querySelectorAll('form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    var btn = this.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.classList.add('btn-loading');
+                        btn.disabled = true;
+                    }
+                });
+            });
         });
     </script>
     {% block extra_js %}{% endblock %}

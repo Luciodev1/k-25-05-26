@@ -11,6 +11,7 @@ class Customer(SoftDeleteModel):
     nif = models.CharField(max_length=20, blank=True, validators=[validate_angolan_nif], db_index=True, verbose_name='NIF')
     address = models.TextField(blank=True, verbose_name='Endereço')
     email = models.EmailField(blank=True, validators=[email_validator], db_index=True, verbose_name='Email')
+    photo = models.ImageField(upload_to='customers/photos/', blank=True, null=True, verbose_name='Foto/Logótipo')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

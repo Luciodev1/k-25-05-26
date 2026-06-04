@@ -49,3 +49,24 @@ class PortalSessionLog(models.Model):
 
     def __str__(self):
         return f'{self.access} - {self.action} ({self.created_at:%d/%m/%Y %H:%M})'
+
+
+class StatementShareToken(models.Model):
+    access = models.ForeignKey(
+        CustomerAccess, on_delete=models.CASCADE,
+        related_name='share_tokens',
+    )
+    token = models.CharField(max_length=32, unique=True, db_index=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Token de Partilha'
+        verbose_name_plural = 'Tokens de Partilha'
+
+    def is_expired(self):
+        expiry = self.created_at + timezone.timedelta(days=7)
+        return timezone.now() > expiry
+
+    def __str__(self):
+        return f'{self.access} - {self.token}'

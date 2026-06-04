@@ -1,0 +1,45 @@
+<div class="modal-header border-0 pb-0">
+    <h5 class="modal-title fw-bold"><i class="bi bi-share text-primary me-2"></i>Partilhar Extracto</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-4">
+    <p class="text-muted small mb-3">
+        <i class="bi bi-info-circle me-1"></i>
+        Qualquer pessoa com este link pode ver o extracto de conta. O link expira após 7 dias.
+    </p>
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" id="share-url-input" value="{{ share_url }}" readonly>
+        <button class="btn btn-success" id="copy-share-btn" onclick="copyShareUrl()">
+            <i class="bi bi-clipboard me-1"></i>Copiar
+        </button>
+    </div>
+    <div class="d-flex gap-2 justify-content-center">
+        <a href="https://wa.me/?text={{ share_url|urlencode }}" target="_blank" class="btn btn-outline-success btn-sm" title="Partilhar no WhatsApp">
+            <i class="bi bi-whatsapp me-1"></i> WhatsApp
+        </a>
+        <a href="mailto:?subject=Extracto de Conta - {{ customer.name }}&body={{ share_url|urlencode }}" class="btn btn-outline-primary btn-sm" title="Partilhar por Email">
+            <i class="bi bi-envelope me-1"></i> Email
+        </a>
+    </div>
+</div>
+<div class="modal-footer border-0 pt-0">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+</div>
+<script nonce="{{ csp_nonce }}">
+    function copyShareUrl() {
+        var input = document.getElementById('share-url-input');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).then(function() {
+            var btn = document.getElementById('copy-share-btn');
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copiado!';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-success');
+            setTimeout(function() {
+                btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copiar';
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-success');
+            }, 2000);
+        });
+    }
+</script>

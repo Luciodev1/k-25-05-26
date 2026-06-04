@@ -1,10 +1,13 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib import messages
 from django.db import models
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, View
+from django.utils import timezone
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView, View
 from portal.models import CustomerAccess, PortalSessionLog
 from portal.admin_forms import PortalAccessForm
 
@@ -146,4 +149,58 @@ class PortalSessionLogAdminView(PortalAccessRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['q'] = self.request.GET.get('q', '')
         context['action_filter'] = self.request.GET.get('action', '')
+        return context
+
+
+class PortalAdminMetricsView(PortalAccessRequiredMixin, TemplateView):
+    template_name = 'portal/admin_metrics.html'
+    permission_required = 'portal.view_customeraccess'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        now = timezone.now()
+        thirty_days_ago = now - timezone.timedelta(days=30)
+
+        total = CustomerAccess.objects.count()
+        active = CustomerAccess.objects.filter(is_active=True, is_deleted=False).count()
+
+        sessions = PortalSessionLog.objects.all()
+        total_sessions = sessions.count()
+
+        sessions_by_action = sessions.values('action').annotate(
+            total=Count('id')
+        ).order_by('action')
+
+        last_accesses = CustomerAccess.objects.filter(
+            is_deleted=False,
+        ).select_related('customer').order_by('-last_login')[:10]
+
+        recent_sessions = PortalSessionLog.objects.filter(
+            created_at__gte=thirty_days_ago,
+        ).annotate(
+            day=TruncDate('created_at'),
+        ).values('day').annotate(
+            count=Count('id'),
+        ).order_by('day')
+
+        chart_labels = []
+        chart_data = []
+        if recent_sessions:
+            for s in recent_sessions:
+                chart_labels.append(f'"{s["day"]:%d/%m}"')
+                chart_data.append(s['count'])
+
+        context['metrics'] = {
+            'total_accesses': total,
+            'active_accesses': active,
+            'inactive_accesses': total - active,
+            'total_sessions': total_sessions,
+            'sessions_by_action': sessions_by_action,
+            'last_accesses': last_accesses,
+            'recent_sessions_chart': {
+                'labels': chart_labels,
+                'data': chart_data,
+            } if chart_labels else None,
+        }
         return context

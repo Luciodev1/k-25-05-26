@@ -1,21 +1,25 @@
 import csv
+import uuid
 from decimal import Decimal
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.db.models import Sum, F, Q
-from django.db.models.functions import Coalesce, TruncMonth
-from django.http import HttpResponse
+from django.db.models.functions import Coalesce
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import TemplateView, ListView, UpdateView, DetailView
+from xhtml2pdf import pisa
 
 from .forms import CustomerLoginForm, CustomerProfileForm
-from .models import CustomerAccess, PortalSessionLog
+from .models import CustomerAccess, PortalSessionLog, StatementShareToken
 from accounts.models import CustomerAccountEntry
 from outflows.models import Outflow, Delivery
 from payments.models import Payment
@@ -312,6 +316,97 @@ class PortalExportStatementView(PortalRequiredMixin, TemplateView):
             return response
 
         return redirect('portal:account_statement')
+
+
+class PortalExportStatementPDFView(PortalRequiredMixin, TemplateView):
+    def get(self, request, *args, **kwargs):
+        customer = self.get_customer()
+        qs = CustomerAccountEntry.objects.filter(
+            customer=customer,
+        ).select_related('outflow__product', 'payment').order_by('-date')
+
+        totals = qs.aggregate(
+            d=Coalesce(Sum('debit'), Decimal('0')),
+            c=Coalesce(Sum('credit'), Decimal('0')),
+        )
+
+        html_string = render_to_string('portal/statement_pdf.html', {
+            'customer': customer,
+            'entries': qs,
+            'total_debit': totals['d'],
+            'total_credit': totals['c'],
+            'balance': totals['c'] - totals['d'],
+            'generated_at': timezone.now(),
+            'company': settings.COMPANY_INFO,
+        })
+
+        result = BytesIO()
+        pisa_status = pisa.CreatePDF(html_string, dest=result)
+        if pisa_status.err:
+            messages.error(request, 'Erro ao gerar PDF.')
+            return redirect('portal:account_statement')
+
+        result.seek(0)
+        response = HttpResponse(result, content_type='application/pdf')
+        response['Content-Disposition'] = (
+            f'attachment; filename="extracto_{customer.name}_{timezone.now():%Y%m%d}.pdf"'
+        )
+        return response
+
+
+class PortalShareStatementView(PortalRequiredMixin, TemplateView):
+    template_name = 'portal/share_modal.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        customer = self.get_customer()
+        access = self.get_access()
+        token, created = StatementShareToken.objects.get_or_create(
+            access=access,
+            defaults={'token': uuid.uuid4().hex[:16]},
+        )
+        share_url = self.request.build_absolute_uri(
+            reverse('portal:shared_statement', kwargs={'token': token.token})
+        )
+        context.update({
+            'share_url': share_url,
+            'customer': customer,
+        })
+        return context
+
+
+class PortalSharedStatementView(TemplateView):
+    template_name = 'portal/share_statement.html'
+
+    def get(self, request, *args, **kwargs):
+        token = kwargs.get('token')
+        share_token = get_object_or_404(
+            StatementShareToken.objects.select_related('access__customer'),
+            token=token, is_active=True,
+        )
+        if share_token.is_expired():
+            raise Http404('O link de partilha expirou.')
+
+        customer = share_token.access.customer
+        qs = CustomerAccountEntry.objects.filter(
+            customer=customer,
+        ).order_by('-date')
+
+        totals = qs.aggregate(
+            d=Coalesce(Sum('debit'), Decimal('0')),
+            c=Coalesce(Sum('credit'), Decimal('0')),
+        )
+
+        context = self.get_context_data(**kwargs)
+        context.update({
+            'customer': customer,
+            'entries': qs,
+            'total_debit': totals['d'],
+            'total_credit': totals['c'],
+            'balance': totals['c'] - totals['d'],
+            'generated_at': timezone.now(),
+        })
+        return self.render_to_response(context)
 
 
 class PortalPasswordChangeView(PortalRequiredMixin, PasswordChangeView):
