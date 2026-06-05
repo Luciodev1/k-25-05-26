@@ -45,17 +45,16 @@
                         </div>
                         <div>
                             <div id="pending-deliveries-stat"
+                                 class="fs-4 fw-bold text-dark"
                                  hx-get="{% url 'pending_deliveries_stat' %}"
                                  hx-trigger="load delay:10s, every 10s"
-                                 hx-swap="innerHTML">
-                                <div class="fs-4 fw-bold text-dark">{{ outflows_pending|length }}</div>
-                                <h3 class="fs-13 fw-semibold text-truncate-1-line mb-0">Entregas Pendentes</h3>
-                                <div class="pt-3">
-                                    <span class="fs-12 text-warning fw-medium"><i class="bi bi-clock-history"></i> Requer atenção</span>
-                                </div>
-                            </div>
+                                 hx-swap="innerHTML">{{ outflows_pending|length }}</div>
+                            <h3 class="fs-13 fw-semibold text-truncate-1-line mb-0">Entregas Pendentes</h3>
                         </div>
                     </div>
+                </div>
+                <div class="pt-3">
+                    <span class="fs-12 text-warning fw-medium"><i class="bi bi-clock-history"></i> Requer atenção</span>
                 </div>
             </div>
         </div>
