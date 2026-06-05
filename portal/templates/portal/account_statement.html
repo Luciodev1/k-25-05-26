@@ -11,7 +11,7 @@
         <h4 class="fw-bold mb-1">Extracto de Conta</h4>
         <p class="text-muted small mb-0">{{ customer.name }} • NIF: {{ customer.nif|default:"—" }}</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 no-print">
         <a href="{% url 'portal:export_statement' %}?format=csv" class="btn btn-outline-success btn-sm" data-tooltip="Descarregar extracto em CSV">
             <i class="bi bi-filetype-csv me-1"></i>CSV
         </a>
@@ -26,28 +26,37 @@
 
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="card stretch stretch-full text-center p-4">
-            <h6 class="text-muted small fw-bold text-uppercase">Total Débito</h6>
-            <h4 class="fw-bold text-danger mb-0" data-tooltip="Valor total em débito">{{ total_debit|floatformat:"2g" }}</h4>
+        <div class="stat-mini">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="stat-icon bg-soft-danger text-danger"><i class="bi bi-arrow-down"></i></div>
+                <small class="text-muted fs-12 fw-medium text-uppercase text-spacing-1">Total Débito</small>
+            </div>
+            <h5 class="fw-bold mb-0 text-danger" data-tooltip="Valor total em débito">{{ total_debit|floatformat:"2g" }}</h5>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card stretch stretch-full text-center p-4">
-            <h6 class="text-muted small fw-bold text-uppercase">Total Crédito</h6>
-            <h4 class="fw-bold text-success mb-0" data-tooltip="Valor total em crédito">{{ total_credit|floatformat:"2g" }}</h4>
+        <div class="stat-mini">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="stat-icon bg-soft-success text-success"><i class="bi bi-arrow-up"></i></div>
+                <small class="text-muted fs-12 fw-medium text-uppercase text-spacing-1">Total Crédito</small>
+            </div>
+            <h5 class="fw-bold mb-0 text-success" data-tooltip="Valor total em crédito">{{ total_credit|floatformat:"2g" }}</h5>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card stretch stretch-full text-center p-4 {% if balance < 0 %}bg-soft-danger{% else %}bg-soft-success{% endif %}">
-            <h6 class="small fw-bold text-uppercase">Saldo</h6>
-            <h4 class="fw-bold mb-0 {% if balance < 0 %}text-danger{% else %}text-success{% endif %}" data-tooltip="Saldo actual (créditos - débitos)">{{ balance|floatformat:"2g" }}</h4>
+        <div class="stat-mini" style="border-color: {% if balance < 0 %}rgba(239,68,68,0.3){% else %}rgba(16,185,129,0.3){% endif %};">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="stat-icon {% if balance < 0 %}bg-danger text-white{% else %}bg-success text-white{% endif %}"><i class="bi bi-wallet2"></i></div>
+                <small class="text-muted fs-12 fw-medium text-uppercase text-spacing-1">Saldo Actual</small>
+            </div>
+            <h5 class="fw-bold mb-0 {% if balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ balance|floatformat:"2g" }}</h5>
         </div>
     </div>
 </div>
 
 <!-- Search & Filter -->
-<div class="card stretch stretch-full mb-4">
-    <div class="card-body p-3">
+<div class="card stretch stretch-full mb-4 no-print">
+    <div class="card-body">
         <form method="get" class="row g-2">
             <div class="col-md-4">
                 <div class="sge-search-group">
@@ -76,7 +85,7 @@
     </div>
 </div>
 
-<div class="card stretch stretch-full overflow-hidden">
+<div class="card stretch stretch-full">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -90,23 +99,23 @@
             <tbody>
                 {% for entry in entries %}
                 <tr>
-                    <td class="ps-4 small text-muted">{{ entry.date|date:"d/m/Y H:i" }}</td>
-                    <td class="small">
+                    <td class="ps-4 fs-12 text-muted">{{ entry.date|date:"d/m/Y H:i" }}</td>
+                    <td class="fs-12">
                         {{ entry.description }}
                         {% if entry.outflow %}
-                        <a href="{% url 'portal:outflow_detail' entry.outflow.pk %}" class="text-primary text-decoration-none small ms-1" data-bs-toggle="tooltip" title="Ver detalhe da saída">
+                        <a href="{% url 'portal:outflow_detail' entry.outflow.pk %}" class="text-primary text-decoration-none ms-1" data-bs-toggle="tooltip" title="Ver detalhe da saída">
                             <i class="bi bi-box-arrow-up-right"></i>
                         </a>
                         {% endif %}
                     </td>
-                    <td class="text-end text-danger fw-bold">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}—{% endif %}</td>
-                    <td class="text-end text-success fw-bold pe-4">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+                    <td class="text-end text-danger fw-bold fs-13">{% if entry.debit > 0 %}{{ entry.debit|floatformat:"2g" }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                    <td class="text-end text-success fw-bold fs-13 pe-4">{% if entry.credit > 0 %}{{ entry.credit|floatformat:"2g" }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="4" class="text-center py-5 text-muted">
-                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                        <span>Nenhum movimento encontrado</span>
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        <span class="fs-12">Nenhum movimento encontrado</span>
                     </td>
                 </tr>
                 {% endfor %}
@@ -114,17 +123,17 @@
         </table>
     </div>
     {% if page_obj.paginator.num_pages > 1 %}
-    <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+    <div class="d-flex justify-content-center py-3">
         <nav>
-            <ul class="pagination pagination-sm mb-0">
+            <ul class="pagination pagination-common-style mb-0 d-flex align-items-center gap-1">
                 {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">&laquo;</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">&lsaquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
                 {% endif %}
                 <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
                 {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">&rsaquo;</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">&raquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
                 {% endif %}
             </ul>
         </nav>

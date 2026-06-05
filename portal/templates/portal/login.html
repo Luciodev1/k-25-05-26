@@ -44,6 +44,7 @@
             max-width: 420px;
             position: relative;
             z-index: 1;
+            animation: fadeUp 0.5s ease-out;
         }
         .logo {
             width: 60px; height: 60px; background: #10b981;
@@ -51,13 +52,15 @@
             justify-content: center; font-weight: 800; font-size: 1.8rem;
             color: white; margin: 0 auto 1rem;
             box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+            transition: transform 0.3s;
         }
+        .logo:hover { transform: scale(1.05) rotate(-3deg); }
         .login-card h2 { font-family: 'Outfit', sans-serif; font-weight: 700; }
         .form-control {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(255,255,255,0.08);
             color: white; height: 3.25rem; border-radius: 12px;
-            padding: 0 1.25rem;
+            padding: 0 1.25rem; font-size: 0.9rem;
         }
         .form-control:focus {
             border-color: #10b981;
@@ -67,11 +70,13 @@
         .form-control::placeholder { color: #64748b; }
         .btn-primary {
             background: #10b981; border: none; height: 3.25rem;
-            border-radius: 12px; font-weight: 600;
+            border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+            transition: all 0.25s;
         }
-        .btn-primary:hover { background: #059669; transform: scale(1.02); }
+        .btn-primary:hover { background: #059669; transform: scale(1.02); box-shadow: 0 4px 16px rgba(16,185,129,0.3); }
         .errorlist { list-style: none; padding: 0; margin: 0.5rem 0; }
         .errorlist li { color: #ef4444; font-size: 0.8rem; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 

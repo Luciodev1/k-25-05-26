@@ -23,7 +23,7 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td class="ps-4 small text-muted">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
+                    <td class="ps-4 fs-12 text-muted">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
                     <td>
                         <span class="badge {% if log.action == 'login' %}bg-soft-info text-info{% elif log.action == 'logout' %}bg-soft-secondary text-secondary{% else %}bg-soft-warning text-warning{% endif %} rounded-pill">
                             {% if log.action == 'login' %}<i class="bi bi-box-arrow-in-right me-1"></i>{% endif %}
@@ -32,14 +32,14 @@
                             {{ log.get_action_display }}
                         </span>
                     </td>
-                    <td class="small text-muted font-monospace">{{ log.ip_address|default:"—" }}</td>
-                    <td class="pe-4 extra-small text-muted" title="{{ log.user_agent }}">{{ log.user_agent|truncatechars:60 }}</td>
+                    <td class="fs-12 text-muted font-monospace">{{ log.ip_address|default:"—" }}</td>
+                    <td class="pe-4 fs-12 text-muted" title="{{ log.user_agent }}">{{ log.user_agent|truncatechars:60 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="4" class="text-center py-5 text-muted">
-                        <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
-                        <span>Nenhum registo de sessão</span>
+                        <i class="bi bi-clock-history fs-2 d-block mb-2"></i>
+                        <span class="fs-12">Nenhum registo de sessão</span>
                     </td>
                 </tr>
                 {% endfor %}
@@ -47,17 +47,17 @@
         </table>
     </div>
     {% if page_obj.paginator.num_pages > 1 %}
-    <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+    <div class="d-flex justify-content-center py-3">
         <nav>
-            <ul class="pagination pagination-sm mb-0">
+            <ul class="pagination pagination-common-style mb-0 d-flex align-items-center gap-1">
                 {% if page_obj.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page=1"><i class="bi bi-chevron-double-left"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
                 {% endif %}
                 <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
                 {% if page_obj.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&rsaquo;</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}"><i class="bi bi-chevron-double-right"></i></a></li>
                 {% endif %}
             </ul>
         </nav>

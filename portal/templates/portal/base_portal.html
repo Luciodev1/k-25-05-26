@@ -23,49 +23,120 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style nonce="{{ request.csp_nonce }}">
-        body { background: var(--bg-main); font-family: 'Inter', system-ui, sans-serif; }
-        .portal-header {
-            background: linear-gradient(135deg, #059669, #10b981);
-            color: white; padding: 0.75rem 0;
-            position: sticky; top: 0; z-index: 1000;
-            box-shadow: 0 2px 12px rgba(5, 150, 105, 0.3);
+        :root {
+            --portal-green: #059669;
+            --portal-green-light: #10b981;
+            --portal-green-dark: #047857;
+            --portal-glow: rgba(5, 150, 105, 0.3);
         }
-        .portal-header .brand { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15rem; }
-        .portal-header .nav-link { color: rgba(255,255,255,0.85); font-weight: 500; padding: 0.4rem 0.9rem; border-radius: 10px; transition: all 0.2s; }
+
+        body { background: var(--bg-main); font-family: 'Inter', system-ui, sans-serif; }
+
+        /* ── Header ── */
+        .portal-header {
+            background: linear-gradient(135deg, var(--portal-green), var(--portal-green-light));
+            color: white; padding: 0.65rem 0;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 16px var(--portal-glow);
+        }
+        .portal-header .brand { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
+        .portal-header .nav-link { color: rgba(255,255,255,0.85); font-weight: 500; padding: 0.4rem 0.9rem; border-radius: 10px; transition: all 0.2s; font-size: 0.82rem; }
         .portal-header .nav-link:hover, .portal-header .nav-link.active { color: white; background: rgba(255,255,255,0.15); }
+        .portal-header .nav-link i { font-size: 0.9rem; }
+
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: white; flex-shrink: 0; }
+
+        /* ── Main Layout ── */
         .portal-content { min-height: calc(100vh - 130px); padding: 1.25rem 0 5rem; }
         .portal-footer {
             background: var(--dark-sidebar); color: #94a3b8;
             padding: 0.75rem 0; text-align: center; font-size: 0.75rem;
         }
+
+        /* ── Duralux Typography Scale ── */
+        .fs-9 { font-size: 0.55rem !important; }
+        .fs-10 { font-size: 0.6rem !important; }
+        .fs-11 { font-size: 0.65rem !important; }
+        .fs-12 { font-size: 0.7rem !important; }
+        .fs-13 { font-size: 0.8rem !important; }
+        .text-spacing-1 { letter-spacing: 0.04em; }
+
+        /* ── Soft Background Variants ── */
+        .bg-soft-primary { background: rgba(5, 150, 105, 0.1) !important; }
+        .bg-soft-success { background: rgba(16, 185, 129, 0.1) !important; }
+        .bg-soft-danger { background: rgba(239, 68, 68, 0.1) !important; }
+        .bg-soft-warning { background: rgba(245, 158, 11, 0.12) !important; }
+        .bg-soft-info { background: rgba(14, 165, 233, 0.1) !important; }
+        .bg-soft-secondary { background: rgba(100, 116, 139, 0.1) !important; }
+        .bg-soft-dark { background: rgba(30, 41, 59, 0.08) !important; }
+
+        /* ── Stat / KPI Cards ── */
         .stat-card-portal {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: 20px; padding: 1.25rem; transition: all 0.25s;
         }
-        .stat-card-portal:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .stat-card-portal:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.06); transform: translateY(-3px); }
         .stat-card-portal .icon {
             width: 48px; height: 48px; border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.35rem; margin-bottom: 0.75rem;
         }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: white; }
+        .stat-card-portal h5 { font-size: 1.35rem; letter-spacing: -0.02em; }
 
-        /* Bottom Tab Bar */
+        /* Duralux-style mini stat card */
+        .stat-mini {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1rem 1.25rem;
+            transition: all 0.25s;
+        }
+        .stat-mini:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
+        .stat-mini .stat-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+
+        /* ── Cards ── */
+        .card { border-radius: 16px; overflow: hidden; }
+        .card-header { padding: 1rem 1.25rem; }
+        .card-body { padding: 1.25rem; }
+
+        /* ── Table ── */
+        .table > thead > tr > th {
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; color: #64748b;
+            border-bottom: 2px solid var(--border); padding-top: 0.9rem; padding-bottom: 0.9rem;
+        }
+        .table > tbody > tr > td { padding: 0.75rem 0.5rem; vertical-align: middle; }
+        .table > tbody > tr:hover { background: rgba(5, 150, 105, 0.03); }
+
+        /* ── Pagination ── */
+        .pagination-common-style .page-link {
+            border: none; background: transparent; color: #64748b;
+            border-radius: 10px !important; padding: 0.4rem 0.75rem;
+            font-size: 0.75rem; font-weight: 500; transition: all 0.2s;
+        }
+        .pagination-common-style .page-link:hover { background: rgba(5, 150, 105, 0.08); color: var(--portal-green); }
+        .pagination-common-style .page-item.active .page-link { background: var(--portal-green); color: white; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3); }
+
+        /* ── Bottom Tab Bar ── */
         .portal-bottom-tabs {
             display: none;
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--bg-card, white); border-top: 1px solid var(--border, #e2e8f0);
-            z-index: 1050; padding: 0.375rem 0;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+            z-index: 1050; padding: 0.3rem 0 0.15rem;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
             border-radius: 16px 16px 0 0;
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.95);
         }
         .portal-bottom-tabs .tab-item {
-            flex: 1; text-align: center; padding: 0.3rem 0;
-            color: #94a3b8; text-decoration: none; font-size: 0.6rem; font-weight: 500;
+            flex: 1; text-align: center; padding: 0.25rem 0;
+            color: #94a3b8; text-decoration: none; font-size: 0.55rem; font-weight: 500;
             transition: all 0.2s; border-radius: 8px;
         }
-        .portal-bottom-tabs .tab-item i { font-size: 1.2rem; display: block; margin-bottom: 0.1rem; }
-        .portal-bottom-tabs .tab-item.active { color: #059669; }
+        .portal-bottom-tabs .tab-item i { font-size: 1.2rem; display: block; margin-bottom: 0.05rem; }
+        .portal-bottom-tabs .tab-item.active { color: var(--portal-green); }
         .portal-bottom-tabs .tab-item:hover { background: rgba(5, 150, 105, 0.06); }
 
         @media (max-width: 768px) {
@@ -75,15 +146,51 @@
             .portal-header .brand { font-size: 1rem; }
         }
 
-        /* Skeleton */
-        .skeleton-portal { background: linear-gradient(90deg, #e2e8f0 25%, rgba(255,255,255,0.4) 50%, #e2e8f0 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.5s ease-in-out infinite; border-radius: 12px; }
+        /* ── Search input ── */
+        .sge-search-group { position: relative; }
+        .sge-search-group i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.85rem; pointer-events: none; }
+        .sge-search-group .form-control { padding-left: 34px; border-radius: 12px; }
+
+        /* ── Form Controls ── */
+        .form-control, .form-select {
+            border-radius: 12px; border-color: var(--border);
+            font-size: 0.82rem; padding: 0.5rem 0.9rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--portal-green);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+        }
+        .form-label { font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.35rem; }
+
+        /* ── Badges ── */
+        .badge { font-weight: 500; padding: 0.3em 0.7em; font-size: 0.7rem; }
+        .badge i { font-size: 0.65rem; }
+
+        /* ── Buttons ── */
+        .btn { border-radius: 12px; font-size: 0.82rem; padding: 0.45rem 1rem; font-weight: 500; transition: all 0.2s; }
+        .btn-sm { border-radius: 10px; padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+        .btn-primary { background: var(--portal-green); border-color: var(--portal-green); }
+        .btn-primary:hover { background: var(--portal-green-dark); border-color: var(--portal-green-dark); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+        .btn-outline-primary { color: var(--portal-green); border-color: var(--portal-green); }
+        .btn-outline-primary:hover { background: var(--portal-green); border-color: var(--portal-green); color: white; }
+        .btn-outline-secondary { border-color: var(--border); color: #64748b; }
+        .btn-outline-secondary:hover { background: #f1f5f9; border-color: #cbd5e1; color: #334155; }
+        .btn-success { background: var(--portal-green-light); border-color: var(--portal-green-light); }
+        .btn-success:hover { background: var(--portal-green); border-color: var(--portal-green); }
+
+        /* ── Progress ── */
+        .progress { border-radius: 99px; background: var(--border); }
+        .progress-bar { border-radius: 99px; }
+
+        /* ── Skeleton ── */
+        .skeleton-portal { background: linear-gradient(90deg, #e2e8f0 25%, rgba(255,255,255,0.5) 50%, #e2e8f0 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.5s ease-in-out infinite; border-radius: 12px; }
         @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-portal-card { height: 100px; }
         .skeleton-portal-text { height: 14px; margin-bottom: 8px; width: 70%; }
         .skeleton-portal-text.short { width: 40%; }
         .skeleton-portal-row { height: 48px; margin-bottom: 4px; }
 
-        /* Tooltip helper */
+        /* ── Tooltip ── */
         [data-tooltip] { position: relative; cursor: help; }
         [data-tooltip]:hover::after {
             content: attr(data-tooltip);
@@ -93,24 +200,37 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        .table > thead > tr > th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; border-bottom: 2px solid var(--border); }
+        /* ── Animations ── */
+        .animate-up { animation: fadeUp 0.35s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-scale { animation: scaleIn 0.25s ease-out; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        /* Dark mode overrides for portal */
-        [data-bs-theme="dark"] .portal-bottom-tabs { background: #1e293b; border-top-color: rgba(255,255,255,0.06); }
+        /* ── Modal ── */
+        .modal-content { border-radius: 16px; border: none; }
+
+        /* ── Loading button ── */
+        .btn-loading { position: relative; pointer-events: none; opacity: 0.8; }
+        .btn-loading::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.15); border-radius: inherit; }
+
+        /* ── Size utilities ── */
+        .wd-8 { width: 8px; }
+        .ht-8 { height: 8px; }
+        .ht-3 { height: 3px; }
+
+        /* ── Dark Mode ── */
+        [data-bs-theme="dark"] .portal-bottom-tabs { background: rgba(30, 41, 59, 0.95); border-top-color: rgba(255,255,255,0.06); }
         [data-bs-theme="dark"] .portal-bottom-tabs .tab-item { color: #64748b; }
         [data-bs-theme="dark"] .portal-bottom-tabs .tab-item.active { color: #34d399; }
         [data-bs-theme="dark"] .breadcrumb-item a { color: #94a3b8 !important; }
         [data-bs-theme="dark"] .breadcrumb-item.active { color: #64748b; }
+        [data-bs-theme="dark"] .table > tbody > tr:hover { background: rgba(255,255,255,0.03); }
+        [data-bs-theme="dark"] .btn-outline-secondary { border-color: #334155; color: #94a3b8; }
+        [data-bs-theme="dark"] .btn-outline-secondary:hover { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+        [data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select { background: rgba(15, 23, 42, 0.6); border-color: #334155; color: #e2e8f0; }
+        [data-bs-theme="dark"] .form-control:focus, [data-bs-theme="dark"] .form-select:focus { border-color: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15); }
 
-        /* Loading button states */
-        .btn-loading { position: relative; pointer-events: none; opacity: 0.8; }
-        .btn-loading::after {
-            content: ''; position: absolute; inset: 0;
-            background: rgba(255,255,255,0.15);
-            border-radius: inherit;
-        }
-
-        /* Print-optimised extracto */
+        /* ── Print ── */
         @media print {
             .portal-header, .portal-bottom-tabs, .portal-footer, .breadcrumb, .btn, form, .pagination, .no-print { display: none !important; }
             .portal-content { padding: 0 !important; min-height: auto !important; }
@@ -126,24 +246,24 @@
     <header class="portal-header">
         <div class="container-fluid px-3 px-lg-5">
             <div class="d-flex align-items-center justify-content-between">
-                <a href="{% url 'portal:dashboard' %}" class="text-white text-decoration-none brand" title="Ir para o Painel">
-                    <i class="bi bi-box-seam me-2"></i>SGE Portal
+                <a href="{% url 'portal:dashboard' %}" class="text-white text-decoration-none brand d-flex align-items-center gap-2" title="Ir para o Painel">
+                    <i class="bi bi-box-seam fs-5"></i>SGE Portal
                 </a>
                 <nav class="nav d-none d-md-flex">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}" title="Painel principal">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}">
                         <i class="bi bi-speedometer2 me-1"></i>Painel
                     </a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}" title="Extracto de conta">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}">
                         <i class="bi bi-wallet2 me-1"></i>Extracto
                     </a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}" title="Histórico de entregas">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}">
                         <i class="bi bi-truck me-1"></i>Entregas
                     </a>
-                    <a class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}" title="Histórico de pagamentos">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}">
                         <i class="bi bi-credit-card me-1"></i>Pagamentos
                     </a>
                 </nav>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-1 gap-sm-2">
                     <form action="{% url 'set_language' %}" method="post" class="d-inline" id="lang-form">
                         {% csrf_token %}
                         <select name="language" class="form-select form-select-sm bg-transparent text-white border-0" style="width: auto; font-size: 0.7rem; cursor: pointer;" title="Idioma">
@@ -155,11 +275,11 @@
                             {% endfor %}
                         </select>
                     </form>
-                    <button id="bd-theme" class="btn btn-sm text-white border-0" title="Alternar tema" aria-label="Alternar tema">
-                        <i id="bd-theme-icon" class="bi bi-sun-fill"></i>
+                    <button id="bd-theme" class="btn btn-sm text-white border-0 px-1" title="Alternar tema" aria-label="Alternar tema">
+                        <i id="bd-theme-icon" class="bi bi-sun-fill fs-6"></i>
                     </button>
                     <div class="dropdown" id="notification-bell">
-                        <button class="btn btn-sm text-white border-0 position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações" aria-label="Notificações">
+                        <button class="btn btn-sm text-white border-0 position-relative px-1" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações" aria-label="Notificações">
                             <i id="notification-bell-icon" class="bi bi-bell fs-5"></i>
                             <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.55rem; min-width:16px; height:16px; display:flex; align-items:center; justify-content:center;">0</span>
                         </button>
@@ -184,7 +304,7 @@
                             {% if request.user.customer_access.customer.photo %}
                             <img src="{{ request.user.customer_access.customer.photo.url }}" alt="Avatar" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
                             {% else %}
-                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ request.user.customer_access.customer.name|first|upper }}</div>
+                            <div class="user-avatar">{{ request.user.customer_access.customer.name|first|upper }}</div>
                             {% endif %}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 animate-up" style="min-width: 200px; border-radius: 12px;">
@@ -215,10 +335,10 @@
             <div class="messages-container">
                 {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-sm border-0 mb-3 animate-up" role="alert">
-                    <div class="d-flex align-items-center">
-                        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-3 fs-5"></i>{% endif %}
-                        {% if message.tags == 'error' %}<i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>{% endif %}
-                        <div>{{ message }}</div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill text-success fs-5"></i>{% endif %}
+                        {% if message.tags == 'error' %}<i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>{% endif %}
+                        <div class="small">{{ message }}</div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -228,7 +348,7 @@
 
             <div id="skeleton-loading" class="d-none">
                 <div class="row g-3 mb-4">
-                    <div class="col-6 col-md-3">{% for i in "1234" %}<div class="skeleton-portal skeleton-portal-card"></div>{% endfor %}</div>
+                    {% for i in "1234" %}<div class="col-6 col-md-3"><div class="skeleton-portal skeleton-portal-card"></div></div>{% endfor %}
                 </div>
                 <div class="skeleton-portal skeleton-portal-row mb-2"></div>
                 <div class="skeleton-portal skeleton-portal-row mb-2 w-75"></div>
@@ -242,24 +362,24 @@
 
     <footer class="portal-footer d-none d-md-block">
         <div class="container-fluid px-3 px-lg-5">
-            &copy; {% now "Y" %} SGE - Sistema de Gestão de Stocks. Todos os direitos reservados.
+            &copy; {% now "Y" %} SGE — Sistema de Gestão de Stocks
         </div>
     </footer>
 
     <nav class="portal-bottom-tabs">
-        <a class="tab-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}" title="Painel">
+        <a class="tab-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'portal:dashboard' %}">
             <i class="bi bi-speedometer2"></i>Painel
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}" title="Extracto">
+        <a class="tab-item {% if request.resolver_match.url_name == 'account_statement' %}active{% endif %}" href="{% url 'portal:account_statement' %}">
             <i class="bi bi-wallet2"></i>Extracto
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}" title="Entregas">
+        <a class="tab-item {% if request.resolver_match.url_name == 'deliveries' %}active{% endif %}" href="{% url 'portal:deliveries' %}">
             <i class="bi bi-truck"></i>Entregas
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}" title="Pagamentos">
+        <a class="tab-item {% if request.resolver_match.url_name == 'payments' %}active{% endif %}" href="{% url 'portal:payments' %}">
             <i class="bi bi-credit-card"></i>Pagamentos
         </a>
-        <a class="tab-item {% if request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'session_log' or request.resolver_match.url_name == 'password_change' %}active{% endif %}" href="{% url 'portal:profile_edit' %}" title="Perfil">
+        <a class="tab-item {% if request.resolver_match.url_name == 'profile_edit' or request.resolver_match.url_name == 'session_log' or request.resolver_match.url_name == 'password_change' %}active{% endif %}" href="{% url 'portal:profile_edit' %}">
             <i class="bi bi-person-gear"></i>Perfil
         </a>
     </nav>
@@ -268,7 +388,7 @@
     <script src="{% static 'js/theme.js' %}"></script>
     <script src="{% static 'js/pwa.js' %}"></script>
     <script src="{% static 'js/portal-notifications.js' %}"></script>
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         document.addEventListener('DOMContentLoaded', function () {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
