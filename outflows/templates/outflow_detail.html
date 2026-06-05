@@ -72,22 +72,27 @@
 <!-- Screen View -->
 <div class="no-print">
     <div class="page-header">
-      <div class="page-header-title">
+      <div class="page-header-left d-flex align-items-center">
         <a href="{% url 'outflows:outflow_list' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
-        <div><h1 class="fw-bold mb-0 fs-5">Detalhes da Saída</h1><span class="text-muted small">Informações completas do pedido</span></div>
+        <div class="page-header-title d-flex align-items-center gap-2">
+          <h5 class="fw-bold mb-0">Detalhes da Saída</h5>
+          <span class="fs-12 text-muted">Informações completas do pedido</span>
+        </div>
       </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-dark js-print-trigger"><i class="bi bi-printer me-1"></i>Imprimir Detalhes</button>
-        <a href="{% url 'outflows:outflow_update' outflow.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
-        {% if outflow.quantity_pending > 0 %}
-        <a href="{% url 'outflows:delivery_create' outflow.id %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Registar Entrega</a>
-        {% endif %}
+      <div class="page-header-right ms-auto">
+        <div class="d-flex gap-2">
+          <button class="btn btn-dark js-print-trigger"><i class="bi bi-printer me-1"></i>Imprimir Detalhes</button>
+          <a href="{% url 'outflows:outflow_update' outflow.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a>
+          {% if outflow.quantity_pending > 0 %}
+          <a href="{% url 'outflows:delivery_create' outflow.id %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Registar Entrega</a>
+          {% endif %}
+        </div>
       </div>
     </div>
 
     <div class="row g-4 mb-4">
       <div class="col-md-8">
-        <div class="card h-100"><div class="card-body p-4">
+        <div class="card stretch stretch-full h-100"><div class="card-body p-4">
           <div class="row g-4">
             <div class="col-md-6">
               <label class="sge-stat-label">Produto</label>
@@ -112,9 +117,9 @@
             <div class="col-md-3">
               <label class="sge-stat-label">Estado</label>
               <div>
-                {% if outflow.quantity_delivered == 0 %}<span class="badge bg-warning-subtle text-warning">Pendente</span>
-                {% elif outflow.quantity_delivered < outflow.quantity %}<span class="badge bg-info-subtle text-info">Parcial</span>
-                {% else %}<span class="badge bg-success-subtle text-success">Concluído</span>{% endif %}
+                {% if outflow.quantity_delivered == 0 %}<span class="badge bg-soft-warning text-warning">Pendente</span>
+                {% elif outflow.quantity_delivered < outflow.quantity %}<span class="badge bg-soft-info text-info">Parcial</span>
+                {% else %}<span class="badge bg-soft-success text-success">Concluído</span>{% endif %}
               </div>
             </div>
             <div class="col-md-6">
@@ -129,14 +134,14 @@
         </div></div>
       </div>
       <div class="col-md-4">
-        <div class="card h-100">
-          <div class="card-header bg-transparent border-bottom py-3"><h6 class="fw-bold mb-0">Notas / Observações</h6></div>
+        <div class="card stretch stretch-full h-100">
+          <div class="card-header"><h5 class="card-title">Notas / Observações</h5></div>
           <div class="card-body"><p class="text-muted small mb-0">{{ outflow.description|default:"Sem observações registadas." }}</p></div>
         </div>
       </div>
     </div>
 
-    <div class="card"><div class="card-body p-0">
+    <div class="card stretch stretch-full"><div class="card-body p-0">
       <div class="table-responsive"><table class="table table-hover align-middle mb-0">
         <thead><tr>
           <th class="ps-4">Data</th><th>Motorista / Matrículas</th><th>Qtd</th><th>Documentos</th><th>Rota</th><th class="pe-4">Anexo</th>
@@ -151,7 +156,7 @@
               <div class="fw-semibold text-accent">{{ delivery.driver.name }}</div>
               <div class="extra-small text-muted"><i class="bi bi-truck me-1"></i>{{ delivery.driver.truck_plate }} | {{ delivery.driver.cistern_plate }}</div>
             </td>
-            <td><span class="badge bg-primary-subtle text-primary">{{ delivery.quantity|floatformat:"g" }}</span></td>
+            <td><span class="badge bg-soft-primary text-primary">{{ delivery.quantity|floatformat:"g" }}</span></td>
             <td class="small">
               <div><span class="text-muted">Fat:</span> {{ delivery.invoice_number }}</div>
               <div><span class="text-muted">Guia:</span> {{ delivery.shipping_guide_number }}</div>
@@ -180,7 +185,7 @@
                 {% endif %}
               </div>
             </td>
-          </tr>{% empty %}<tr><td colspan="6"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-truck"></i></div><div class="text-muted small">Nenhuma entrega registada para esta saída.</div></div></td></tr>{% endfor %}
+          </tr>{% empty %}<tr><td colspan="6"><div class="sge-empty-state"><i class="bi bi-truck fs-1 text-muted d-block"></i><p class="fs-12 text-muted mb-0">Nenhuma entrega registada para esta saída.</p></div></td></tr>{% endfor %}
         </tbody>
       </table></div>
     </div></div>

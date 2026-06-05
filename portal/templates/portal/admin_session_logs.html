@@ -2,17 +2,18 @@
 {% block title %}Logs de Sessão — Portal — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-clock-history"></i></div>
-    <div>
-      <h1 class="fw-bold mb-0 fs-5">Logs de Sessão do Portal</h1>
-      <span class="text-muted small">Registo de acessos dos clientes ao portal</span>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Logs de Sessão do Portal</h5>
+      <span class="fs-12 text-muted">Registo de acessos dos clientes ao portal</span>
     </div>
   </div>
-  <a href="{% url 'portal_acessos:list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+  <div class="page-header-right ms-auto">
+    <a href="{% url 'portal_acessos:list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+  </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card stretch stretch-full">
   <div class="card-body">
     <form method="get" class="row g-3 mb-4">
       <div class="col-md-5">
@@ -52,7 +53,7 @@
             <td class="fw-semibold small">{{ log.access.customer.name }}</td>
             <td><code>{{ log.access.user.username }}</code></td>
             <td>
-              <span class="badge {% if log.action == 'login' %}bg-info-subtle text-info{% elif log.action == 'logout' %}bg-secondary-subtle text-secondary{% else %}bg-warning-subtle text-warning{% endif %} rounded-pill">
+              <span class="badge {% if log.action == 'login' %}bg-soft-info text-info{% elif log.action == 'logout' %}bg-soft-secondary text-secondary{% else %}bg-soft-warning text-warning{% endif %} rounded-pill">
                 {{ log.get_action_display }}
               </span>
             </td>
@@ -62,8 +63,8 @@
           {% empty %}
           <tr>
             <td colspan="6">
-              <div class="sge-empty">
-                <div class="sge-empty-icon"><i class="bi bi-clock-history"></i></div>
+              <div class="sge-empty-state">
+                <i class="bi bi-clock-history"></i>
                 <div class="text-muted small">Nenhum registo encontrado.</div>
               </div>
             </td>

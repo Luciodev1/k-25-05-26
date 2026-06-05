@@ -144,13 +144,10 @@
 
 {% block content %}
 <div class="page-header mb-4">
-  <div class="page-header-title">
-    <div class="page-header-icon" style="background:rgba(16, 185, 129, 0.1);color:var(--primary-dark);">
-      <i class="bi bi-person-badge"></i>
-    </div>
-    <div>
-      <h1 class="fw-bold mb-0 fs-5">Meu Perfil</h1>
-      <span class="text-muted small">Gerencie suas informações, permissões e atividade no sistema</span>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Meu Perfil</h5>
+      <span class="fs-12 text-muted">Gerencie suas informações, permissões e atividade no sistema</span>
     </div>
   </div>
 </div>
@@ -173,13 +170,13 @@
       <p class="text-muted small mb-3">@{{ request.user.username }}</p>
       <div class="mb-4">
         {% if request.user.is_superuser %}
-          <span class="badge cargo-badge bg-danger-subtle text-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-danger text-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ user_cargo }}</span>
         {% elif "Gerente" in user_cargo %}
-          <span class="badge cargo-badge bg-warning-subtle text-warning"><i class="bi bi-person-workspace me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-warning text-warning"><i class="bi bi-person-workspace me-1"></i> {{ user_cargo }}</span>
         {% elif "Financeiro" in user_cargo %}
-          <span class="badge cargo-badge bg-info-subtle text-info"><i class="bi bi-cash-coin me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-info text-info"><i class="bi bi-cash-coin me-1"></i> {{ user_cargo }}</span>
         {% else %}
-          <span class="badge cargo-badge bg-success-subtle text-success"><i class="bi bi-person me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-success text-success"><i class="bi bi-person me-1"></i> {{ user_cargo }}</span>
         {% endif %}
       </div>
       <div class="text-start border-top mt-3">
@@ -224,8 +221,8 @@
 
   <!-- Main Content -->
   <div class="col-lg-8 col-xl-9">
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-transparent border-bottom px-4 pt-3 pb-0">
+    <div class="card stretch stretch-full">
+      <div class="card-header">
         <ul class="nav nav-tabs border-bottom-0" id="profileTabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" type="button" role="tab">
@@ -287,10 +284,10 @@
                 {% endfor %}
               </div>
             {% else %}
-              <div class="sge-empty py-5 text-center">
-                <div class="text-muted mb-3"><i class="bi bi-shield-slash fs-1"></i></div>
+              <div class="sge-empty-state py-5">
+                <i class="bi bi-shield-slash"></i>
                 <h6 class="fw-bold text-muted">Sem Permissões Específicas</h6>
-                <p class="text-muted small">Você não possui permissões explícitas associadas ao seu perfil.</p>
+                <p class="fs-12 text-muted mb-0">Você não possui permissões explícitas associadas ao seu perfil.</p>
               </div>
             {% endif %}
           </div>
@@ -319,10 +316,10 @@
                 {% endfor %}
               </div>
             {% else %}
-              <div class="sge-empty py-5 text-center">
-                <div class="text-muted mb-3"><i class="bi bi-clock-history fs-1"></i></div>
+              <div class="sge-empty-state py-5">
+                <i class="bi bi-clock-history"></i>
                 <h6 class="fw-bold text-muted">Nenhuma Atividade</h6>
-                <p class="text-muted small">As suas ações no sistema aparecerão aqui.</p>
+                <p class="fs-12 text-muted mb-0">As suas ações no sistema aparecerão aqui.</p>
               </div>
             {% endif %}
           </div>

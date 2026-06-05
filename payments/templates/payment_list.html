@@ -2,15 +2,19 @@
 {% block title %}Pagamentos — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon" style="background:rgba(16,185,129,0.1);color:#10b981;"><i class="bi bi-cash-stack"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Pagamentos</h1><span class="text-muted small">Recebimentos e pagamentos registados</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Pagamentos</h5>
+      <span class="fs-12 text-muted">Recebimentos e pagamentos registados</span>
+    </div>
   </div>
-  {% if perms.payments.add_payment %}<a href="{% url 'payments:payment_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Pagamento</a>{% endif %}
+  <div class="page-header-right ms-auto">
+    {% if perms.payments.add_payment %}<a href="{% url 'payments:payment_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Pagamento</a>{% endif %}
+  </div>
 </div>
 
 <!-- Filtros -->
-<div class="card mb-4"><div class="card-body py-3">
+<div class="card stretch stretch-full mb-4"><div class="card-body py-3">
   <form method="get" class="row g-3 align-items-end"
         hx-get="{% url 'payments:payment_list' %}"
         hx-trigger="submit"
@@ -39,7 +43,7 @@
 </div></div>
 
 <!-- Tabela -->
-<div class="card"><div class="card-body">
+<div class="card stretch stretch-full"><div class="card-body">
   <div id="list-table-wrapper">
     {% include 'payment_list_partial.html' %}
   </div>

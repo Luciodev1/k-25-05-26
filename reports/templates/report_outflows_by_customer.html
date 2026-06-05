@@ -2,13 +2,16 @@
 {% block title %}Relatório: Saídas por Cliente — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
-    <div><h1 class="fw-bold mb-0 fs-5">Saídas por Cliente</h1><span class="text-muted small">Listagem detalhada de vendas e movimentações</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+      <h5 class="fw-bold mb-0">Saídas por Cliente</h5>
+      <span class="fs-12 text-muted">Listagem detalhada de vendas e movimentações</span>
+    </div>
   </div>
 </div>
 
-<div class="card mb-4"><div class="card-body">
+<div class="card stretch stretch-full mb-4"><div class="card-body">
   <form method="get" class="row g-3 align-items-end">
     <div class="col-md-2">
       <label class="form-label">Data Início</label>
@@ -46,7 +49,7 @@
   </form>
 </div></div>
 
-<div class="card"><div class="card-body">
+<div class="card stretch stretch-full"><div class="card-body">
   <div id="list-table-wrapper">
   <div class="table-responsive"><table class="table table-hover align-middle">
     <thead><tr>
@@ -61,11 +64,11 @@
         <td class="text-center text-success fw-bold">{{ o.quantity_delivered }}</td>
         <td class="text-center text-danger fw-bold">{{ o.quantity_pending }}</td>
         <td>
-          {% if o.status_display == 'Entregue' %}<span class="badge bg-success-subtle text-success">{{ o.status_display }}</span>
-          {% elif o.status_display == 'Parcial' %}<span class="badge bg-info-subtle text-info">{{ o.status_display }}</span>
-          {% else %}<span class="badge bg-body-secondary text-body">{{ o.status_display }}</span>{% endif %}
+          {% if o.status_display == 'Entregue' %}<span class="badge bg-soft-success text-success">{{ o.status_display }}</span>
+          {% elif o.status_display == 'Parcial' %}<span class="badge bg-soft-info text-info">{{ o.status_display }}</span>
+          {% else %}<span class="badge bg-soft-secondary text-body">{{ o.status_display }}</span>{% endif %}
         </td>
-      </tr>{% empty %}<tr><td colspan="7" class="text-center py-4 text-muted">Nenhuma saída encontrada.</td></tr>{% endfor %}
+      </tr>{% empty %}<tr><td colspan="7"><div class="sge-empty-state"><i class="bi bi-inbox"></i><p class="fs-12 text-muted mb-0">Nenhuma saída encontrada.</p></div></td></tr>{% endfor %}
     </tbody>
   </table></div>
   {% include 'components/_pagination.html' %}

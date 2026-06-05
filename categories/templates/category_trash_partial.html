@@ -1,6 +1,6 @@
 {% if categories %}
 <div class="table-responsive">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover align-middle mb-0">
         <thead>
             <tr>
                 <th>Nome</th>
@@ -42,8 +42,5 @@
 
 {% include 'components/_pagination.html' %}
 {% else %}
-<div class="text-center py-5">
-    <i class="bi bi-trash3 text-muted display-4 d-block mb-3"></i>
-    <p class="text-muted">A lixeira esta vazia.</p>
-</div>
+<div class="sge-empty-state"><i class="bi bi-bookmark"></i><p class="fs-12 text-muted mb-0">Nenhum registo removido.</p></div>
 {% endif %}

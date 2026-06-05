@@ -44,17 +44,20 @@
 
 {% block content %}
 <div class="page-header no-print">
-    <div class="page-header-title">
-        <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
-        <div><h1 class="fw-bold mb-0 fs-5">Relatório de Entregas</h1><span class="text-muted small">Gestão e acompanhamento de logística de saída</span></div>
+    <div class="page-header-left d-flex align-items-center">
+        <div class="page-header-title d-flex align-items-center gap-2">
+            <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+            <h5 class="fw-bold mb-0">Relatório de Entregas</h5>
+            <span class="fs-12 text-muted">Gestão e acompanhamento de logística de saída</span>
+        </div>
     </div>
     <div class="d-flex gap-2">
         <button class="btn btn-dark js-print-trigger"><i class="bi bi-printer"></i> Imprimir Relatório</button>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4 no-print">
-    <div class="card-body p-4">
+<div class="card stretch stretch-full mb-4 no-print">
+    <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <label class="form-label small fw-bold">Início</label>
@@ -80,7 +83,7 @@
 
 <!-- Screen View -->
 <div class="no-print">
-    <div class="card border-0 shadow-sm overflow-hidden"><div class="card-body p-4">
+    <div class="card stretch stretch-full overflow-hidden"><div class="card-body">
         <div id="list-table-wrapper">
         <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -91,7 +94,7 @@
                     <td class="ps-3 small text-muted">{{ d.delivered_at|date:"d/m/Y H:i" }}</td>
                     <td class="fw-bold text-dark">{{ d.outflow.customer.name }}</td>
                     <td class="fw-semibold text-primary">{{ d.outflow.product.title }}</td>
-                    <td class="text-center"><span class="badge bg-success-subtle text-success px-3">{{ d.quantity|floatformat:"g" }}</span></td>
+                    <td class="text-center"><span class="badge bg-soft-success text-success px-3">{{ d.quantity|floatformat:"g" }}</span></td>
                     <td class="small">{{ d.driver.name }}</td>
                 </tr>
                 {% endfor %}

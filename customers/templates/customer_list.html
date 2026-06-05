@@ -2,13 +2,17 @@
 {% block title %}Clientes — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon bg-accent-soft text-accent"><i class="bi bi-people"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Clientes</h1><span class="text-muted small">Gestão da carteira de clientes</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Clientes</h5>
+      <span class="fs-12 text-muted">Gestão da carteira de clientes</span>
+    </div>
   </div>
-  <a href="{% url 'customers:customer_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Cliente</a>
+  <div class="page-header-right ms-auto">
+    <a href="{% url 'customers:customer_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Novo Cliente</a>
+  </div>
 </div>
-<div class="card"><div class="card-body">
+<div class="card stretch stretch-full"><div class="card-body">
   <form method="get" class="row g-3 mb-4"
         hx-get="{% url 'customers:customer_list' %}"
         hx-trigger="submit"

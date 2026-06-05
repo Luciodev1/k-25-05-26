@@ -14,7 +14,7 @@
 </div>
 
 <!-- Search & Filter -->
-<div class="card border-0 shadow-sm mb-4">
+<div class="card stretch stretch-full mb-4">
     <div class="card-body p-3">
         <form method="get" class="row g-2">
             <div class="col-md-8">
@@ -38,7 +38,7 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card stretch stretch-full">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -61,11 +61,11 @@
                     <td class="small">{{ d.destination|default:"—" }}</td>
                     <td class="text-center pe-4">
                         {% if d.is_confirmed %}
-                        <span class="badge bg-success-subtle text-success rounded-pill">
+                        <span class="badge bg-soft-success text-success rounded-pill">
                             <i class="bi bi-check-circle me-1"></i>Confirmada
                         </span>
                         {% else %}
-                        <span class="badge bg-warning-subtle text-warning rounded-pill">
+                        <span class="badge bg-soft-warning text-warning rounded-pill">
                             <i class="bi bi-clock me-1"></i>Pendente
                         </span>
                         {% endif %}

@@ -2,13 +2,16 @@
 {% block title %}Auditoria — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-shield-check"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Auditoria</h1><span class="text-muted small">Registo de todas as alteracoes no sistema</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <div style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-shield-check"></i></div>
+      <h5 class="fw-bold mb-0">Auditoria</h5>
+      <span class="fs-12 text-muted">Registo de todas as alteracoes no sistema</span>
+    </div>
   </div>
 </div>
 
-<div class="card mb-4"><div class="card-body py-3">
+<div class="card stretch stretch-full mb-4"><div class="card-body py-3">
   <form method="get" class="row g-3 align-items-end">
     <div class="col-md-3">
       <label class="form-label">Acao</label>
@@ -30,7 +33,7 @@
   </form>
 </div></div>
 
-<div class="card"><div class="card-body">
+<div class="card stretch stretch-full"><div class="card-body">
   <div class="table-responsive">
     <table class="table table-hover align-middle">
       <thead><tr>

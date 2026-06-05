@@ -2,14 +2,19 @@
 {% block title %}Atividade Recente — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-activity"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Atividade Recente</h1><span class="text-muted small">Timeline de todas as acoes no sistema</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <div style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-activity"></i></div>
+      <h5 class="fw-bold mb-0">Atividade Recente</h5>
+      <span class="fs-12 text-muted">Timeline de todas as acoes no sistema</span>
+    </div>
   </div>
-  <a href="{% url 'audit:audit_list' %}" class="btn btn-outline-secondary"><i class="bi bi-shield-check me-1"></i>Ver Auditoria Completa</a>
+  <div class="page-header-right ms-auto">
+    <a href="{% url 'audit:audit_list' %}" class="btn btn-outline-secondary"><i class="bi bi-shield-check me-1"></i>Ver Auditoria Completa</a>
+  </div>
 </div>
 
-<div class="card"><div class="card-body">
+<div class="card stretch stretch-full"><div class="card-body">
   <div class="position-relative ps-4">
     <!-- Timeline line -->
     <div class="position-absolute top-0 bottom-0 start-0" style="width:2px;background:var(--bs-border-color);"></div>
@@ -43,9 +48,9 @@
       </div>
     </div>
     {% empty %}
-    <div class="text-center py-5">
+    <div class="sge-empty-state">
       <i class="bi bi-activity fs-1 text-muted d-block mb-2"></i>
-      <p class="text-muted">Nenhuma atividade registada.</p>
+      <p class="fs-12 text-muted mb-0">Nenhuma atividade registada.</p>
     </div>
     {% endfor %}
   </div>

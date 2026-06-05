@@ -2,13 +2,15 @@
 {% block title %}Novo Grupo — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon" style="background:rgba(99,102,241,0.1);color:#6366f1;"><i class="bi bi-collection"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Novo Grupo</h1><span class="text-muted small">Criar grupo de permissoes</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <a href="{% url 'users:group_list' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Novo Grupo</h5>
+      <span class="fs-12 text-muted">Criar grupo de permissoes</span>
+    </div>
   </div>
-  <a href="{% url 'users:group_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 </div>
-<div class="card"><div class="card-body">
+<div class="card stretch stretch-full"><div class="card-body">
   <form method="post">{% csrf_token %}{{ form.non_field_errors }}
     <div class="mb-3">
       <label class="form-label">Nome do Grupo</label>

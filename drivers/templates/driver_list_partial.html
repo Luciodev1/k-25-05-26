@@ -1,4 +1,4 @@
-<div id="driver-list" hx-indicator="#driver-loading" class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th scope="col">Nome</th><th scope="col">Telefone</th><th scope="col">Matrícula Camião</th><th scope="col">Matrícula Cisterna</th><th scope="col" class="text-end">Ações</th></tr></thead><tbody>
+<div id="driver-list" hx-indicator="#driver-loading" class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th scope="col">Nome</th><th scope="col">Telefone</th><th scope="col">Matrícula Camião</th><th scope="col">Matrícula Cisterna</th><th scope="col" class="text-end">Ações</th></tr></thead><tbody>
   {% for driver in drivers %}<tr>
     <td class="fw-semibold">{{ driver.name }}</td>
     <td class="small"><i class="bi bi-telephone me-1 text-muted"></i>{{ driver.phone }}</td>
@@ -8,9 +8,9 @@
       <a href="{% url 'drivers:driver_update' driver.pk %}" class="btn-action" title="Editar"><i class="bi bi-pencil"></i></a>
       <button type="button" class="btn btn-action text-danger" title="Eliminar" aria-label="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{% url 'drivers:driver_delete' driver.pk %}" data-delete-message="Tem certeza que deseja eliminar o motorista '{{ driver.name }}'?"><i class="bi bi-trash3"></i></button>
     </div></td>
-  </tr>{% empty %}<tr><td colspan="5"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-person-badge"></i></div><div class="text-muted small">Nenhum motorista encontrado.</div></div></td></tr>{% endfor %}
+  </tr>{% empty %}<tr><td colspan="5"><div class="sge-empty-state"><i class="bi bi-person-badge"></i><p class="fs-12 text-muted mb-0">Nenhum motorista encontrado.</p></div></td></tr>{% endfor %}
 </tbody></table></div>
 <div id="driver-loading" class="htmx-indicator text-center py-3">
-  <div class="spinner-border text-success" role="status"><span class="visually-hidden">A carregar...</span></div>
+  <div class="spinner-border text-primary" role="status"><span class="visually-hidden">A carregar...</span></div>
 </div>
 {% include 'components/_pagination.html' %}

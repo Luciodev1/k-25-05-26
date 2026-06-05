@@ -1,5 +1,5 @@
 <div id="brand-list" hx-indicator="#brand-loading" class="table-responsive">
-  <table class="table table-hover align-middle">
+  <table class="table table-hover align-middle mb-0">
     <thead><tr><th scope="col">Nome</th><th scope="col">Descrição</th><th scope="col" class="text-end">Ações</th></tr></thead>
     <tbody>
       {% for brand in brands %}
@@ -15,12 +15,12 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="3"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-bookmark"></i></div><div class="text-muted small">Nenhuma marca encontrada.</div></div></td></tr>
+      <tr><td colspan="3"><div class="sge-empty-state"><i class="bi bi-bookmark"></i><p class="fs-12 text-muted mb-0">Nenhuma marca encontrada.</p></div></td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 <div id="brand-loading" class="htmx-indicator text-center py-3">
-  <div class="spinner-border text-success" role="status"><span class="visually-hidden">A carregar...</span></div>
+  <div class="spinner-border text-primary" role="status"><span class="visually-hidden">A carregar...</span></div>
 </div>
 {% include 'components/_pagination.html' %}

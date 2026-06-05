@@ -1,3 +1,35 @@
+// Fullscreen toggle
+function toggleFullScreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        var el = document.documentElement;
+        if (el.requestFullscreen) {
+            el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen();
+        }
+        document.querySelector('.full-screen-switcher .maximize').style.display = 'none';
+        document.querySelector('.full-screen-switcher .minimize').style.display = 'flex';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+        document.querySelector('.full-screen-switcher .maximize').style.display = 'flex';
+        document.querySelector('.full-screen-switcher .minimize').style.display = 'none';
+    }
+}
+
+document.addEventListener('fullscreenchange', updateFullscreenIcons);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+function updateFullscreenIcons() {
+    var isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    var maxIcons = document.querySelectorAll('.full-screen-switcher .maximize');
+    var minIcons = document.querySelectorAll('.full-screen-switcher .minimize');
+    maxIcons.forEach(function(el) { el.style.display = isFull ? 'none' : 'flex'; });
+    minIcons.forEach(function(el) { el.style.display = isFull ? 'flex' : 'none'; });
+}
+
 // HTMX loading bar
 document.body.addEventListener('htmx:beforeRequest', function () {
     var bar = document.getElementById('htmx-loading-bar');
@@ -20,12 +52,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Mobile sidebar toggle
-    var sidebarToggle = document.querySelector('#sidebarToggle');
+    // Sidebar helpers
     var sidebarBackdrop = document.querySelector('#sidebarBackdrop');
+
+    function getSidebar() {
+        return document.querySelector('.nxl-navigation') || document.querySelector('.sge-sidebar');
+    }
+
+    // Mobile sidebar toggle
+    var sidebarToggle = document.querySelector('#sidebarToggle') || document.querySelector('#mobile-collapse');
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function () {
-            var sidebar = document.querySelector('.sge-sidebar');
+            var sidebar = getSidebar();
             if (sidebar) {
                 sidebar.classList.toggle('show');
                 if (sidebarBackdrop) sidebarBackdrop.classList.toggle('show');
@@ -36,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Close sidebar on backdrop click
     if (sidebarBackdrop) {
         sidebarBackdrop.addEventListener('click', function () {
-            var sidebar = document.querySelector('.sge-sidebar');
+            var sidebar = getSidebar();
             if (sidebar) sidebar.classList.remove('show');
             sidebarBackdrop.classList.remove('show');
         });
@@ -135,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!e.target.matches) return;
         var btn = e.target.closest('[data-close-sidebar]');
         if (btn) {
-            var sidebar = document.querySelector('.sge-sidebar');
+            var sidebar = getSidebar();
             if (sidebar) sidebar.classList.remove('show');
             if (sidebarBackdrop) sidebarBackdrop.classList.remove('show');
         }

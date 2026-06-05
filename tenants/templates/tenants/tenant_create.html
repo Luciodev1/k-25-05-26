@@ -4,21 +4,18 @@
 
 {% block content %}
 <div class="page-header mb-4">
-  <div class="page-header-title">
+  <div class="page-header-left d-flex align-items-center">
     <a href="{% url 'tenants:tenant_list' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
-    <div class="page-header-icon" style="background:rgba(16, 185, 129, 0.1);color:var(--primary-dark);">
-      <i class="bi bi-building-add"></i>
-    </div>
-    <div>
-      <h1 class="fw-bold mb-0 fs-5">Nova Empresa</h1>
-      <span class="text-muted small">Registar uma nova empresa no sistema</span>
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Nova Empresa</h5>
+      <span class="fs-12 text-muted">Registar uma nova empresa no sistema</span>
     </div>
   </div>
 </div>
 
 <div class="row justify-content-center">
   <div class="col-lg-8">
-    <div class="card shadow-sm border-0">
+    <div class="card stretch stretch-full">
       <div class="card-body p-4">
         <form method="post">
           {% csrf_token %}

@@ -2,9 +2,11 @@
 {% block title %}Saldos de Fornecedores — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon bg-accent-soft text-accent"><i class="bi bi-wallet"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Saldos de Fornecedores</h1><span class="text-muted small">Visão geral das dívidas e créditos</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Saldos de Fornecedores</h5>
+      <span class="fs-12 text-muted">Visão geral das dívidas e créditos</span>
+    </div>
   </div>
 </div>
 
@@ -19,15 +21,15 @@
         <td class="text-end text-muted small">{{ supplier.total_debit|floatformat:"2g" }}</td>
         <td class="text-end text-muted small">{{ supplier.total_credit|floatformat:"2g" }}</td>
         <td class="text-center">
-          {% if supplier.balance < 0 %}<span class="badge bg-danger-subtle text-danger">Dívida: {{ supplier.balance|floatformat:"2g" }}</span>
-          {% elif supplier.balance > 0 %}<span class="badge bg-success-subtle text-success">Crédito: {{ supplier.balance|floatformat:"2g" }}</span>
-          {% else %}<span class="badge bg-body-secondary text-body">Regularizado</span>{% endif %}
+          {% if supplier.balance < 0 %}<span class="badge bg-soft-danger text-danger">Dívida: {{ supplier.balance|floatformat:"2g" }}</span>
+          {% elif supplier.balance > 0 %}<span class="badge bg-soft-success text-success">Crédito: {{ supplier.balance|floatformat:"2g" }}</span>
+          {% else %}<span class="badge bg-gray-200 text-dark">Regularizado</span>{% endif %}
         </td>
         <td class="text-end"><div class="d-flex justify-content-end gap-1">
           <a href="{% url 'accounts:supplier_account' supplier.id %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-text me-1"></i>Extrato</a>
           <a href="{% url 'accounts:supplier_payment' supplier.id %}" class="btn btn-success btn-sm" title="Registar Pagamento"><i class="bi bi-plus-circle"></i></a>
         </div></td>
-      </tr>{% empty %}<tr><td colspan="5"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-truck"></i></div><div class="text-muted small">Nenhum fornecedor com movimentação encontrado.</div></div></td></tr>{% endfor %}
+      </tr>{% empty %}<tr><td colspan="5"><div class="sge-empty-state"><div class="sge-empty-state"><i class="bi bi-truck"></i></div><div class="text-muted small">Nenhum fornecedor com movimentação encontrado.</div></div></td></tr>{% endfor %}
     </tbody>
   </table></div>
 </div></div>

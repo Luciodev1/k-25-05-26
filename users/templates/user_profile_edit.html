@@ -92,14 +92,11 @@
 
 {% block content %}
 <div class="page-header mb-4">
-  <div class="page-header-title">
+  <div class="page-header-left d-flex align-items-center">
     <a href="{% url 'users:user_profile' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
-    <div class="page-header-icon" style="background:rgba(16, 185, 129, 0.1);color:var(--primary-dark);">
-      <i class="bi bi-pencil-square"></i>
-    </div>
-    <div>
-      <h1 class="fw-bold mb-0 fs-5">Editar Perfil</h1>
-      <span class="text-muted small">Atualize suas informações pessoais</span>
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Editar Perfil</h5>
+      <span class="fs-12 text-muted">Atualize suas informações pessoais</span>
     </div>
   </div>
 </div>
@@ -122,13 +119,13 @@
       <p class="text-muted small mb-3">@{{ request.user.username }}</p>
       <div class="mb-4">
         {% if request.user.is_superuser %}
-          <span class="badge cargo-badge bg-danger-subtle text-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-danger text-danger"><i class="bi bi-shield-fill-check me-1"></i> {{ user_cargo }}</span>
         {% elif "Gerente" in user_cargo %}
-          <span class="badge cargo-badge bg-warning-subtle text-warning"><i class="bi bi-person-workspace me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-warning text-warning"><i class="bi bi-person-workspace me-1"></i> {{ user_cargo }}</span>
         {% elif "Financeiro" in user_cargo %}
-          <span class="badge cargo-badge bg-info-subtle text-info"><i class="bi bi-cash-coin me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-info text-info"><i class="bi bi-cash-coin me-1"></i> {{ user_cargo }}</span>
         {% else %}
-          <span class="badge cargo-badge bg-success-subtle text-success"><i class="bi bi-person me-1"></i> {{ user_cargo }}</span>
+          <span class="badge cargo-badge bg-soft-success text-success"><i class="bi bi-person me-1"></i> {{ user_cargo }}</span>
         {% endif %}
       </div>
       <div class="text-start border-top mt-3">
@@ -156,9 +153,11 @@
       {% csrf_token %}
 
       <!-- Informações Pessoais -->
-      <div class="card shadow-sm border-0 mb-4">
+      <div class="card stretch stretch-full mb-4">
+        <div class="card-header">
+          <h5 class="card-title"><i class="bi bi-person me-2"></i> Informações Pessoais</h5>
+        </div>
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3 text-main"><i class="bi bi-person me-2"></i> Informações Pessoais</h5>
           <div class="row g-3">
             <div class="col-md-4">
               <label for="{{ user_form.first_name.id_for_label }}" class="form-label">{{ user_form.first_name.label }}</label>
@@ -180,9 +179,11 @@
       </div>
 
       <!-- Foto e Contacto -->
-      <div class="card shadow-sm border-0 mb-4">
+      <div class="card stretch stretch-full mb-4">
+        <div class="card-header">
+          <h5 class="card-title"><i class="bi bi-camera me-2"></i> Foto e Contacto</h5>
+        </div>
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3 text-main"><i class="bi bi-camera me-2"></i> Foto e Contacto</h5>
           <div class="row g-4">
             <div class="col-md-4 text-center">
               <label class="form-label d-block">{{ profile_form.avatar.label }}</label>
@@ -217,9 +218,11 @@
       </div>
 
       <!-- Preferências -->
-      <div class="card shadow-sm border-0 mb-4">
+      <div class="card stretch stretch-full mb-4">
+        <div class="card-header">
+          <h5 class="card-title"><i class="bi bi-gear me-2"></i> Preferências</h5>
+        </div>
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3 text-main"><i class="bi bi-gear me-2"></i> Preferências</h5>
           <div class="form-check form-switch">
             {{ profile_form.email_notifications }}
             <label class="form-check-label" for="{{ profile_form.email_notifications.id_for_label }}">

@@ -15,21 +15,21 @@
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="stat-card-portal text-center">
-            <div class="icon bg-danger-subtle text-danger mx-auto"><i class="bi bi-arrow-down"></i></div>
+            <div class="icon bg-soft-danger text-danger mx-auto"><i class="bi bi-arrow-down"></i></div>
             <h5 class="fw-bold mb-0 text-danger" data-tooltip="Total de débitos acumulados">{{ total_debit|floatformat:"2g" }}</h5>
             <small class="text-muted">Total Débito</small>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card-portal text-center">
-            <div class="icon bg-success-subtle text-success mx-auto"><i class="bi bi-arrow-up"></i></div>
+            <div class="icon bg-soft-success text-success mx-auto"><i class="bi bi-arrow-up"></i></div>
             <h5 class="fw-bold mb-0 text-success" data-tooltip="Total de créditos acumulados">{{ total_credit|floatformat:"2g" }}</h5>
             <small class="text-muted">Total Crédito</small>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="stat-card-portal text-center">
-            <div class="icon bg-info-subtle text-info mx-auto"><i class="bi bi-box-seam"></i></div>
+            <div class="icon bg-soft-info text-info mx-auto"><i class="bi bi-box-seam"></i></div>
             <h5 class="fw-bold mb-0" data-tooltip="Total de compras efectuadas">{{ outflows_count }}</h5>
             <small class="text-muted">Compras Efectuadas</small>
         </div>
@@ -47,7 +47,7 @@
     <!-- Balance Evolution Chart -->
     {% if balance_evolution %}
     <div class="col-12">
-        <div class="card border-0 shadow-sm">
+        <div class="card stretch stretch-full">
             <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-graph-up text-success me-2"></i>Evolução do Saldo</h6>
             </div>
@@ -60,7 +60,7 @@
 
     <!-- Recent Outflows -->
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
+        <div class="card stretch stretch-full">
             <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-arrow-up-right-square text-primary me-2"></i>Últimas Saídas</h6>
                 <a href="{% url 'portal:account_statement' %}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
@@ -74,7 +74,7 @@
                             <div class="fw-semibold small">{{ o.product.title }}</div>
                             <small class="text-muted">{{ o.created_at|date:"d/m/Y" }} • Qtd: {{ o.quantity|floatformat:"g" }}</small>
                         </div>
-                        <span class="badge {% if o.status == 'delivered' %}bg-success-subtle text-success{% elif o.status == 'partial' %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %} rounded-pill">
+                        <span class="badge {% if o.status == 'delivered' %}bg-soft-success text-success{% elif o.status == 'partial' %}bg-soft-warning text-warning{% else %}bg-soft-info text-info{% endif %} rounded-pill">
                             {{ o.get_status_display }}
                         </span>
                     </a>
@@ -92,7 +92,7 @@
 
     <!-- Pending Deliveries -->
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
+        <div class="card stretch stretch-full">
             <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-truck text-warning me-2"></i>Entregas Pendentes</h6>
                 <a href="{% url 'portal:deliveries' %}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
@@ -106,7 +106,7 @@
                             <div class="fw-semibold small">{{ d.outflow.product.title }}</div>
                             <small class="text-muted">{{ d.delivery_date|date:"d/m/Y"|default:"—" }} • Motorista: {{ d.driver.name|default:"—" }}</small>
                         </div>
-                        <span class="badge bg-warning-subtle text-warning rounded-pill">{{ d.quantity|floatformat:"g" }} uni.</span>
+                        <span class="badge bg-soft-warning text-warning rounded-pill">{{ d.quantity|floatformat:"g" }} uni.</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -122,7 +122,7 @@
 
     <!-- Recent Payments -->
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
+        <div class="card stretch stretch-full">
             <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-credit-card text-success me-2"></i>Últimos Pagamentos</h6>
                 <a href="{% url 'portal:payments' %}" class="btn btn-sm btn-outline-primary">Ver Tudo</a>
@@ -160,7 +160,7 @@
 
     {% if top_products %}
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stretch stretch-full h-100">
             <div class="card-header bg-white border-0 py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-trophy text-warning me-2"></i>Top Produtos</h6>
             </div>
@@ -173,7 +173,7 @@
 
     {% if monthly_deliveries %}
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stretch stretch-full h-100">
             <div class="card-header bg-white border-0 py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-truck text-primary me-2"></i>Entregas por Mês</h6>
             </div>
@@ -186,7 +186,7 @@
 
     {% if monthly_payments %}
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card stretch stretch-full h-100">
             <div class="card-header bg-white border-0 py-3">
                 <h6 class="fw-bold mb-0"><i class="bi bi-cash-stack text-success me-2"></i>Pagamentos por Mês</h6>
             </div>

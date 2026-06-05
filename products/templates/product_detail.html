@@ -3,21 +3,26 @@
 
 {% block content %}
 <div class="page-header">
-    <div class="page-header-title">
+    <div class="page-header-left d-flex align-items-center">
         <a href="{% url 'products:product_list' %}" class="btn-action me-1" title="Voltar"><i class="bi bi-arrow-left"></i></a>
-        <div><h1 class="fw-bold mb-0 fs-5">{{ product.title }}</h1><span class="text-muted small">Visualização detalhada do produto e níveis de stock</span></div>
+        <div class="page-header-title d-flex align-items-center gap-2">
+            <h5 class="fw-bold mb-0">{{ product.title }}</h5>
+            <span class="fs-12 text-muted">Visualização detalhada do produto e níveis de stock</span>
+        </div>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'products:product_update' product.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
-        <a href="{% url 'products:product_delete' product.id %}" class="btn btn-outline-danger" title="Eliminar"><i class="bi bi-trash3"></i></a>
+    <div class="page-header-right ms-auto">
+        <div class="d-flex gap-2">
+            <a href="{% url 'products:product_update' product.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Editar</a>
+            <a href="{% url 'products:product_delete' product.id %}" class="btn btn-outline-danger" title="Eliminar"><i class="bi bi-trash3"></i></a>
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h5 class="fw-bold mb-0">Informações Gerais</h5>
+        <div class="card stretch stretch-full">
+            <div class="card-header">
+                <h5 class="card-title">Informações Gerais</h5>
             </div>
             <div class="card-body p-4">
                 <div class="row g-4">
@@ -31,11 +36,11 @@
                     </div>
                     <div class="col-md-6">
                         <label class="nav-section-label p-0 mb-1 d-block">Categoria</label>
-                        <div><span class="badge bg-primary-subtle text-primary">{{ product.category.name }}</span></div>
+                        <div><span class="badge bg-soft-primary text-primary">{{ product.category.name }}</span></div>
                     </div>
                     <div class="col-md-6">
                         <label class="nav-section-label p-0 mb-1 d-block">Marca</label>
-                        <div><span class="badge bg-secondary-subtle text-secondary">{{ product.brand.name }}</span></div>
+                        <div><span class="badge bg-gray-200 text-dark">{{ product.brand.name }}</span></div>
                     </div>
                     <div class="col-12">
                         <label class="nav-section-label p-0 mb-1 d-block">Descrição Detalhada</label>
@@ -47,26 +52,26 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card stretch stretch-full mb-4">
             <div class="card-body p-4 text-center">
-                <div class="stat-icon bg-success-subtle text-success mx-auto mb-3">
+                <div class="stat-icon bg-soft-success text-success mx-auto mb-3">
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <h6 class="text-muted small fw-bold text-uppercase mb-1">Stock Atual</h6>
                 <h1 class="fw-bold text-dark mb-2" style="font-size: 3rem;">{{ product.quantity|floatformat:"g" }}</h1>
                 <div class="mt-2">
                     {% if product.quantity <= 5 %}
-                    <span class="badge bg-danger-subtle text-danger px-4">Stock Crítico</span>
+                    <span class="badge bg-soft-danger text-danger px-4">Stock Crítico</span>
                     {% else %}
-                    <span class="badge bg-success-subtle text-success px-4">Nível Saudável</span>
+                    <span class="badge bg-soft-success text-success px-4">Nível Saudável</span>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 pt-4 px-4">
-                <h5 class="fw-bold mb-0">Financeiro</h5>
+        <div class="card stretch stretch-full">
+            <div class="card-header">
+                <h5 class="card-title">Financeiro</h5>
             </div>
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -80,7 +85,7 @@
                 <hr class="my-4 opacity-5">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted">Margem Estimada:</span>
-                    <span class="badge bg-info-subtle text-info">Calculando...</span>
+                    <span class="badge bg-soft-info text-info">Calculando...</span>
                 </div>
             </div>
         </div>

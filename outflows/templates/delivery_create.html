@@ -5,12 +5,12 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
-        <div class="page-header"><div class="page-header-title"><a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a><div><h1 class="fw-bold mb-0 fs-5">Registar Entrega</h1><span class="text-muted small">{{ outflow.product.title }}</span></div></div></div>
+        <div class="page-header"><div class="page-header-left d-flex align-items-center"><div class="page-header-title d-flex align-items-center gap-2"><a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a><h5 class="fw-bold mb-0">Registar Entrega</h5><span class="fs-12 text-muted">{{ outflow.product.title }}</span></div></div></div>
 
         <div class="row g-4">
             <!-- Outflow Info -->
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card stretch stretch-full rounded-3 mb-4">
                     <div class="card-header bg-white border-0 py-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-info-circle me-2 text-primary"></i> Informação do Pedido</h5>
                     </div>
@@ -41,7 +41,7 @@
 
             <!-- Delivery Form -->
             <div class="col-md-8">
-                <div class="card border-0 shadow-sm rounded-3">
+                <div class="card stretch stretch-full rounded-3">
                     <div class="card-body p-4">
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}{{ form.non_field_errors }}

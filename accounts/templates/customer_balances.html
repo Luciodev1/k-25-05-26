@@ -2,9 +2,11 @@
 {% block title %}Saldos de Clientes — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <div class="page-header-icon bg-accent-soft text-accent"><i class="bi bi-wallet2"></i></div>
-    <div><h1 class="fw-bold mb-0 fs-5">Saldos de Clientes</h1><span class="text-muted small">Visão geral das contas correntes</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <h5 class="fw-bold mb-0">Saldos de Clientes</h5>
+      <span class="fs-12 text-muted">Visão geral das contas correntes</span>
+    </div>
   </div>
 </div>
 
@@ -19,15 +21,15 @@
         <td class="text-end text-muted small">{{ customer.total_debit|floatformat:"2g" }}</td>
         <td class="text-end text-muted small">{{ customer.total_credit|floatformat:"2g" }}</td>
         <td class="text-center">
-          {% if customer.balance < 0 %}<span class="badge bg-danger-subtle text-danger">Saldo Devedor: {{ customer.balance|floatformat:"2g" }}</span>
-          {% elif customer.balance > 0 %}<span class="badge bg-success-subtle text-success">Saldo do Cliente: {{ customer.balance|floatformat:"2g" }}</span>
-          {% else %}<span class="badge bg-body-secondary text-body">Regularizado</span>{% endif %}
+          {% if customer.balance < 0 %}<span class="badge bg-soft-danger text-danger">Saldo Devedor: {{ customer.balance|floatformat:"2g" }}</span>
+          {% elif customer.balance > 0 %}<span class="badge bg-soft-success text-success">Saldo do Cliente: {{ customer.balance|floatformat:"2g" }}</span>
+          {% else %}<span class="badge bg-gray-200 text-dark">Regularizado</span>{% endif %}
         </td>
         <td class="text-end"><div class="d-flex justify-content-end gap-1">
           <a href="{% url 'accounts:customer_account' customer.id %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-text me-1"></i>Extrato</a>
           <a href="{% url 'accounts:customer_payment' customer.id %}" class="btn btn-success btn-sm" title="Registar Pagamento"><i class="bi bi-plus-circle"></i></a>
         </div></td>
-      </tr>{% empty %}<tr><td colspan="5"><div class="sge-empty"><div class="sge-empty-icon"><i class="bi bi-people"></i></div><div class="text-muted small">Nenhum cliente com movimentação encontrado.</div></div></td></tr>{% endfor %}
+      </tr>{% empty %}<tr><td colspan="5"><div class="sge-empty-state"><div class="sge-empty-state"><i class="bi bi-people"></i></div><div class="text-muted small">Nenhum cliente com movimentação encontrado.</div></div></td></tr>{% endfor %}
     </tbody>
   </table></div>
 </div></div>

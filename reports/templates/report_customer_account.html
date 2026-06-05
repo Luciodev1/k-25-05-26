@@ -2,40 +2,71 @@
 {% block title %}Relatório: Extrato de Clientes — SGE{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div class="page-header-title">
-    <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
-    <div><h1 class="fw-bold mb-0 fs-5">Extrato de Clientes</h1><span class="text-muted small">Histórico consolidado de débitos e créditos</span></div>
+  <div class="page-header-left d-flex align-items-center">
+    <div class="page-header-title d-flex align-items-center gap-2">
+      <a href="{% url 'reports:report_index' %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a>
+      <h5 class="fw-bold mb-0">Extrato de Clientes</h5>
+      <span class="fs-12 text-muted">Histórico consolidado de débitos e créditos</span>
+    </div>
   </div>
+  <div class="page-header-right ms-auto"></div>
 </div>
 
 <div class="row g-3 mb-4">
   <div class="col-md-4 sge-animate-in">
-    <div class="card h-100">
+    <div class="card stretch stretch-full">
       <div class="card-body">
-        <div class="sge-stat-label">Total Débito</div>
-        <div class="sge-stat-value text-danger">{{ total_debit|floatformat:"2g" }}</div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="d-flex gap-4 align-items-center">
+            <div class="avatar-text avatar-lg bg-gray-200">
+              <i class="bi bi-arrow-down-circle fs-4"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark">{{ total_debit|floatformat:"2g" }}</div>
+              <h3 class="fs-13 fw-semibold text-truncate-1-line mb-0">Total Débito</h3>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-md-4 sge-animate-in">
-    <div class="card h-100">
+    <div class="card stretch stretch-full">
       <div class="card-body">
-        <div class="sge-stat-label">Total Crédito</div>
-        <div class="sge-stat-value text-success">{{ total_credit|floatformat:"2g" }}</div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="d-flex gap-4 align-items-center">
+            <div class="avatar-text avatar-lg bg-gray-200">
+              <i class="bi bi-arrow-up-circle fs-4"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold text-dark">{{ total_credit|floatformat:"2g" }}</div>
+              <h3 class="fs-13 fw-semibold text-truncate-1-line mb-0">Total Crédito</h3>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-md-4 sge-animate-in">
-    <div class="card h-100 border-start border-4 {% if balance < 0 %}border-danger{% else %}border-success{% endif %}">
+    <div class="card stretch stretch-full">
       <div class="card-body">
-        <div class="sge-stat-label">{% if balance < 0 %}Dívida Atual{% else %}Saldo Atual{% endif %}</div>
-        <div class="sge-stat-value {% if balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ balance|floatformat:"2g" }}</div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div class="d-flex gap-4 align-items-center">
+            <div class="avatar-text avatar-lg {% if balance < 0 %}bg-soft-danger text-danger{% else %}bg-soft-success text-success{% endif %}">
+              <i class="bi {% if balance < 0 %}bi-exclamation-circle{% else %}bi-check-circle{% endif %} fs-4"></i>
+            </div>
+            <div>
+              <div class="fs-4 fw-bold {% if balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ balance|floatformat:"2g" }}</div>
+              <h3 class="fs-13 fw-semibold text-truncate-1-line mb-0">{% if balance < 0 %}Dívida Atual{% else %}Saldo Atual{% endif %}</h3>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="card mb-4"><div class="card-body">
+<div class="card stretch stretch-full mb-4"><div class="card-body">
   <form method="get" class="row g-3 align-items-end">
     <div class="col-md-2">
       <label class="form-label">Início</label>
@@ -54,10 +85,10 @@
     </div>
     <div class="col-md-4 d-flex gap-2">
       <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-funnel me-1"></i>Filtrar</button>
-      <button type="submit" name="export" value="excel" class="btn btn-outline-success border-2 px-3" title="Exportar para Excel">
+      <button type="submit" name="export" value="excel" class="btn btn-outline-primary border-2 px-3" title="Exportar para Excel">
         <i class="bi bi-file-earmark-excel fs-5"></i>
       </button>
-      <button type="submit" name="export" value="pdf" class="btn btn-outline-danger border-2 px-3" title="Exportar para PDF">
+      <button type="submit" name="export" value="pdf" class="btn btn-outline-primary border-2 px-3" title="Exportar para PDF">
         <i class="bi bi-file-earmark-pdf fs-5"></i>
       </button>
 
@@ -66,24 +97,28 @@
   </form>
 </div></div>
 
-<div class="card"><div class="card-body">
-  <div id="list-table-wrapper">
-  <div class="table-responsive"><table class="table table-hover align-middle">
-    <thead><tr>
-      <th>Data</th><th>Cliente</th><th>Descrição</th><th class="text-end">Débito</th><th class="text-end">Crédito</th><th class="text-end">Saldo</th>
-    </tr></thead>
-    <tbody>
-      {% for e in entries %}<tr>
-        <td class="text-muted small">{{ e.date|date:"d/m/Y H:i" }}</td>
-        <td class="fw-semibold">{{ e.customer.name }}</td>
-        <td class="small">{% if e.outflow %} {{ e.outflow.product.title }} (Qtd: {{ e.outflow.quantity }}){% if e.description %} - {{ e.description }}{% endif %}{% else %}{{ e.description }}{% endif %}</td>
-        <td class="text-end text-danger fw-semibold">{% if e.debit > 0 %}{{ e.debit|floatformat:"2g" }}{% else %}—{% endif %}</td>
-        <td class="text-end text-success fw-semibold">{% if e.credit > 0 %}{{ e.credit|floatformat:"2g" }}{% else %}—{% endif %}</td>
-        <td class="text-end fw-bold {% if e.entry_balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ e.entry_balance|floatformat:"2g" }}</td>
-      </tr>{% empty %}<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum lançamento encontrado.</td></tr>{% endfor %}
-    </tbody>
-  </table></div>
-  {% include 'components/_pagination.html' %}
+<div class="card stretch stretch-full">
+  <div class="card-body custom-card-action p-0">
+    <div id="list-table-wrapper">
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+      <thead><tr>
+        <th>Data</th><th>Cliente</th><th>Descrição</th><th class="text-end">Débito</th><th class="text-end">Crédito</th><th class="text-end">Saldo</th>
+      </tr></thead>
+      <tbody>
+        {% for e in entries %}<tr>
+          <td class="text-muted small">{{ e.date|date:"d/m/Y H:i" }}</td>
+          <td class="fw-semibold">{{ e.customer.name }}</td>
+          <td class="small">{% if e.outflow %} {{ e.outflow.product.title }} (Qtd: {{ e.outflow.quantity }}){% if e.description %} - {{ e.description }}{% endif %}{% else %}{{ e.description }}{% endif %}</td>
+          <td class="text-end text-danger fw-semibold">{% if e.debit > 0 %}{{ e.debit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+          <td class="text-end text-success fw-semibold">{% if e.credit > 0 %}{{ e.credit|floatformat:"2g" }}{% else %}—{% endif %}</td>
+          <td class="text-end fw-bold {% if e.entry_balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ e.entry_balance|floatformat:"2g" }}</td>
+        </tr>{% empty %}<tr><td colspan="6" class="text-center py-4 text-muted">Nenhum lançamento encontrado.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+    </div>
   </div>
-</div></div>
+  <div class="card-footer border-top-0 pt-0">
+    {% include 'components/_pagination.html' %}
+  </div>
+</div>
 {% endblock %}

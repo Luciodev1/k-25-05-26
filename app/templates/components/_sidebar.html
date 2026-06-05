@@ -1,156 +1,164 @@
 {% load static %}
-<aside class="sge-sidebar">
-    <div class="sidebar-header">
-        <div class="logo-box">K</div>
-        <div class="sidebar-brand-text">
-            <h5 class="mb-0 fw-bold text-white">SGE</h5>
-            <small class="text-white-50">Gestão de Stocks</small>
+<nav class="nxl-navigation" id="mainSidebar">
+    <div class="navbar-wrapper">
+        <div class="m-header">
+            <a href="{% url 'dashboard' %}" class="b-brand">
+                <div class="sidebar-logo-box">K</div>
+                <div class="sidebar-brand-text">
+                    <h5 class="mb-0">SGE</h5>
+                    <small>Gestão de Stocks</small>
+                </div>
+            </a>
+            <button type="button" class="sidebar-close-btn" data-close-sidebar aria-label="Fechar menu">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
-        <button type="button" class="sidebar-close-btn d-lg-none" data-close-sidebar aria-label="Fechar menu">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <div class="navbar-content">
+            <ul class="nxl-navbar">
+                <li class="nxl-item nxl-caption"><label>Principal</label></li>
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                        <span class="nxl-micon"><i class="bi bi-speedometer2"></i></span>
+                        <span class="nxl-mtext">Painel</span>
+                    </a>
+                </li>
+
+                {% if perms.products.view_product or perms.categories.view_category or perms.brands.view_brand %}
+                <li class="nxl-item nxl-caption"><label>Inventário</label></li>
+                {% if perms.products.view_product %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'products' %}active{% endif %}" href="{% url 'products:product_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-box-seam"></i></span>
+                        <span class="nxl-mtext">Produtos</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.categories.view_category %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'categories' %}active{% endif %}" href="{% url 'categories:category_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-tags"></i></span>
+                        <span class="nxl-mtext">Categorias</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.brands.view_brand %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'brands' %}active{% endif %}" href="{% url 'brands:brand_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-bookmark-star"></i></span>
+                        <span class="nxl-mtext">Marcas</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% endif %}
+
+                {% if perms.inflows.view_inflow or perms.outflows.view_outflow or perms.drivers.view_driver %}
+                <li class="nxl-item nxl-caption"><label>Logística</label></li>
+                {% if perms.inflows.view_inflow %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'inflows' %}active{% endif %}" href="{% url 'inflows:inflow_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-arrow-down-left-square"></i></span>
+                        <span class="nxl-mtext">Entradas</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.outflows.view_outflow %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'outflows' %}active{% endif %}" href="{% url 'outflows:outflow_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-arrow-up-right-square"></i></span>
+                        <span class="nxl-mtext">Saídas</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.drivers.view_driver %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'drivers' %}active{% endif %}" href="{% url 'drivers:driver_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-truck"></i></span>
+                        <span class="nxl-mtext">Motoristas</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% endif %}
+
+                {% if perms.customers.view_customer or perms.suppliers.view_supplier or perms.payments.view_payment %}
+                <li class="nxl-item nxl-caption"><label>Financeiro</label></li>
+                {% if perms.customers.view_customer %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'customers' %}active{% endif %}" href="{% url 'customers:customer_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-people"></i></span>
+                        <span class="nxl-mtext">Clientes</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.suppliers.view_supplier %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'suppliers' %}active{% endif %}" href="{% url 'suppliers:supplier_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-buildings"></i></span>
+                        <span class="nxl-mtext">Fornecedores</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.payments.view_payment %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'payments' %}active{% endif %}" href="{% url 'payments:payment_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-credit-card"></i></span>
+                        <span class="nxl-mtext">Pagamentos</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.portal.view_customeraccess %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'portal_acessos' %}active{% endif %}" href="{% url 'portal_acessos:list' %}">
+                        <span class="nxl-micon"><i class="bi bi-person-lock"></i></span>
+                        <span class="nxl-mtext">Acessos Portal</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% endif %}
+
+                {% if perms.outflows.view_outflow or perms.inflows.view_inflow or perms.payments.view_payment or perms.accounts.view_customeraccountentry or perms.accounts.view_supplieraccountentry %}
+                <li class="nxl-item nxl-caption"><label>Relatórios</label></li>
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}" href="{% url 'reports:report_index' %}">
+                        <span class="nxl-micon"><i class="bi bi-bar-chart-line"></i></span>
+                        <span class="nxl-mtext">Centro de Relatórios</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if perms.audit.view_auditlog or perms.auth.view_user or perms.auth.view_group %}
+                <li class="nxl-item nxl-caption"><label>Sistema</label></li>
+                {% if perms.audit.view_auditlog %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.url_name == 'activity_feed' %}active{% endif %}" href="{% url 'audit:activity_feed' %}">
+                        <span class="nxl-micon"><i class="bi bi-activity"></i></span>
+                        <span class="nxl-mtext">Atividade</span>
+                    </a>
+                </li>
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.app_name == 'audit' and request.resolver_match.url_name != 'activity_feed' %}active{% endif %}" href="{% url 'audit:audit_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-shield-check"></i></span>
+                        <span class="nxl-mtext">Auditoria</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.auth.view_user %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.url_name in 'user_list user_create user_update user_delete' %}active{% endif %}" href="{% url 'users:user_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-people-fill"></i></span>
+                        <span class="nxl-mtext">Utilizadores</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if perms.auth.view_group %}
+                <li class="nxl-item">
+                    <a class="nxl-link {% if request.resolver_match.url_name in 'group_list group_create group_update group_delete' %}active{% endif %}" href="{% url 'users:group_list' %}">
+                        <span class="nxl-micon"><i class="bi bi-collection"></i></span>
+                        <span class="nxl-mtext">Grupos</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% endif %}
+            </ul>
+        </div>
     </div>
-
-    <div class="flex-grow-1 overflow-y-auto px-2">
-        <div class="nav-section-label">Principal</div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
-                    <i class="bi bi-speedometer2"></i> Painel
-                </a>
-            </li>
-        </ul>
-
-        {% if perms.products.view_product or perms.categories.view_category or perms.brands.view_brand %}
-        <div class="nav-section-label">Inventário</div>
-        <ul class="nav flex-column">
-            {% if perms.products.view_product %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'products' %}active{% endif %}" href="{% url 'products:product_list' %}">
-                    <i class="bi bi-box-seam"></i> Produtos
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.categories.view_category %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'categories' %}active{% endif %}" href="{% url 'categories:category_list' %}">
-                    <i class="bi bi-tags"></i> Categorias
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.brands.view_brand %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'brands' %}active{% endif %}" href="{% url 'brands:brand_list' %}">
-                    <i class="bi bi-bookmark-star"></i> Marcas
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-        {% endif %}
-
-        {% if perms.inflows.view_inflow or perms.outflows.view_outflow or perms.drivers.view_driver %}
-        <div class="nav-section-label">Logística</div>
-        <ul class="nav flex-column">
-            {% if perms.inflows.view_inflow %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'inflows' %}active{% endif %}" href="{% url 'inflows:inflow_list' %}">
-                    <i class="bi bi-arrow-down-left-square"></i> Entradas
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.outflows.view_outflow %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'outflows' %}active{% endif %}" href="{% url 'outflows:outflow_list' %}">
-                    <i class="bi bi-arrow-up-right-square"></i> Saídas
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.drivers.view_driver %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'drivers' %}active{% endif %}" href="{% url 'drivers:driver_list' %}">
-                    <i class="bi bi-truck"></i> Motoristas
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-        {% endif %}
-
-        {% if perms.customers.view_customer or perms.suppliers.view_supplier or perms.payments.view_payment %}
-        <div class="nav-section-label">Financeiro</div>
-        <ul class="nav flex-column">
-            {% if perms.customers.view_customer %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'customers' %}active{% endif %}" href="{% url 'customers:customer_list' %}">
-                    <i class="bi bi-people"></i> Clientes
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.suppliers.view_supplier %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'suppliers' %}active{% endif %}" href="{% url 'suppliers:supplier_list' %}">
-                    <i class="bi bi-buildings"></i> Fornecedores
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.payments.view_payment %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'payments' %}active{% endif %}" href="{% url 'payments:payment_list' %}">
-                    <i class="bi bi-credit-card"></i> Pagamentos
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.portal.view_customeraccess %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'portal_acessos' %}active{% endif %}" href="{% url 'portal_acessos:list' %}">
-                    <i class="bi bi-person-lock"></i> Acessos Portal
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-        {% endif %}
-
-        {% if perms.outflows.view_outflow or perms.inflows.view_inflow or perms.payments.view_payment or perms.accounts.view_customeraccountentry or perms.accounts.view_supplieraccountentry %}
-        <div class="nav-section-label">Relatórios</div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}" href="{% url 'reports:report_index' %}">
-                    <i class="bi bi-bar-chart-line"></i> Centro de Relatórios
-                </a>
-            </li>
-        </ul>
-        {% endif %}
-
-        {% if perms.audit.view_auditlog or perms.auth.view_user or perms.auth.view_group %}
-        <div class="nav-section-label">Sistema</div>
-        <ul class="nav flex-column mb-4">
-            {% if perms.audit.view_auditlog %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'activity_feed' %}active{% endif %}" href="{% url 'audit:activity_feed' %}">
-                    <i class="bi bi-activity"></i> Atividade
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.app_name == 'audit' and request.resolver_match.url_name != 'activity_feed' %}active{% endif %}" href="{% url 'audit:audit_list' %}">
-                    <i class="bi bi-shield-check"></i> Auditoria
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.auth.view_user %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name in 'user_list user_create user_update user_delete' %}active{% endif %}" href="{% url 'users:user_list' %}">
-                    <i class="bi bi-people-fill"></i> Utilizadores
-                </a>
-            </li>
-            {% endif %}
-            {% if perms.auth.view_group %}
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name in 'group_list group_create group_update group_delete' %}active{% endif %}" href="{% url 'users:group_list' %}">
-                    <i class="bi bi-collection"></i> Grupos
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-        {% endif %}
-    </div>
-
-</aside>
+</nav>
