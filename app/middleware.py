@@ -30,6 +30,7 @@ class ContentSecurityPolicyMiddleware:
             "default-src 'self'; "
             f"script-src 'self' 'nonce-{nonce}' {self.SCRIPT_SRC_CDN}; "
             f"style-src 'self' 'unsafe-inline' {self.STYLE_SRC_CDN}; "
+            "media-src 'self' data:; "
             "img-src 'self' data:; "
             "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
             "connect-src 'self' https://cdn.jsdelivr.net https://unpkg.com ws: wss:; "

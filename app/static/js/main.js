@@ -1,24 +1,30 @@
 // Fullscreen toggle
-function toggleFullScreen() {
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        var el = document.documentElement;
-        if (el.requestFullscreen) {
-            el.requestFullscreen();
-        } else if (el.webkitRequestFullscreen) {
-            el.webkitRequestFullscreen();
-        }
-        document.querySelector('.full-screen-switcher .maximize').style.display = 'none';
-        document.querySelector('.full-screen-switcher .minimize').style.display = 'flex';
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
-        document.querySelector('.full-screen-switcher .maximize').style.display = 'flex';
-        document.querySelector('.full-screen-switcher .minimize').style.display = 'none';
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.querySelector('.full-screen-switcher .nxl-head-link');
+    if (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                var el = document.documentElement;
+                if (el.requestFullscreen) {
+                    el.requestFullscreen();
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                }
+                document.querySelector('.full-screen-switcher .maximize').style.display = 'none';
+                document.querySelector('.full-screen-switcher .minimize').style.display = 'flex';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                document.querySelector('.full-screen-switcher .maximize').style.display = 'flex';
+                document.querySelector('.full-screen-switcher .minimize').style.display = 'none';
+            }
+        });
     }
-}
+});
 
 document.addEventListener('fullscreenchange', updateFullscreenIcons);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
