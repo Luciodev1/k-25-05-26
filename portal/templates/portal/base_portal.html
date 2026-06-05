@@ -209,17 +209,6 @@
         </div>
     </header>
 
-    {% block breadcrumbs %}
-    <div class="container-fluid px-3 px-lg-5 pt-3 pb-0">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb small mb-0">
-                <li class="breadcrumb-item"><a href="{% url 'portal:dashboard' %}" class="text-decoration-none text-muted"><i class="bi bi-house-door"></i></a></li>
-                {% block breadcrumb_items %}{% endblock %}
-            </ol>
-        </nav>
-    </div>
-    {% endblock %}
-
     <main class="portal-content">
         <div class="container-fluid px-3 px-lg-5">
             {% if messages %}

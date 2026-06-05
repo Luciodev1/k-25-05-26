@@ -143,7 +143,7 @@
                 {% endif %}
                 {% if perms.auth.view_user %}
                 <li class="nxl-item">
-                    <a class="nxl-link {% if request.resolver_match.url_name in 'user_list user_create user_update user_delete' %}active{% endif %}" href="{% url 'users:user_list' %}">
+                    <a class="nxl-link {% if request.resolver_match.url_name == 'user_list' or request.resolver_match.url_name == 'user_create' or request.resolver_match.url_name == 'user_update' or request.resolver_match.url_name == 'user_delete' %}active{% endif %}" href="{% url 'users:user_list' %}">
                         <span class="nxl-micon"><i class="bi bi-people-fill"></i></span>
                         <span class="nxl-mtext">Utilizadores</span>
                     </a>
@@ -151,7 +151,7 @@
                 {% endif %}
                 {% if perms.auth.view_group %}
                 <li class="nxl-item">
-                    <a class="nxl-link {% if request.resolver_match.url_name in 'group_list group_create group_update group_delete' %}active{% endif %}" href="{% url 'users:group_list' %}">
+                    <a class="nxl-link {% if request.resolver_match.url_name == 'group_list' or request.resolver_match.url_name == 'group_create' or request.resolver_match.url_name == 'group_update' or request.resolver_match.url_name == 'group_delete' %}active{% endif %}" href="{% url 'users:group_list' %}">
                         <span class="nxl-micon"><i class="bi bi-collection"></i></span>
                         <span class="nxl-mtext">Grupos</span>
                     </a>

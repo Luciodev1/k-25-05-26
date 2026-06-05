@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
-        <div class="page-header"><div class="page-header-left d-flex align-items-center"><div class="page-header-title d-flex align-items-center gap-2"><a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a><h5 class="fw-bold mb-0">Registar Entrega</h5><span class="fs-12 text-muted">{{ outflow.product.title }}</span></div></div></div>
+        <div class="page-header"><div class="page-header-left d-flex align-items-center"><div class="page-header-title d-flex align-items-center gap-2"><a href="{% url 'outflows:outflow_detail' outflow.id %}" class="btn-action me-1"><i class="bi bi-arrow-left"></i></a><h5 class="fw-bold mb-0"><i class="bi bi-truck me-1"></i> Registar Entrega |</h5><span class="fs-12 text-muted">{{ outflow.product.title }}</span></div></div></div>
 
         <div class="row g-4">
             <!-- Outflow Info -->

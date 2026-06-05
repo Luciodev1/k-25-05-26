@@ -187,24 +187,5 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Collapse icon toggler for filter panels
-    var filterCollapse = document.getElementById('filterCollapse');
-    if (filterCollapse) {
-        filterCollapse.addEventListener('show.bs.collapse', function () {
-            var icon = document.getElementById('filterToggleIcon');
-            if (icon) {
-                icon.classList.remove('bi-chevron-down');
-                icon.classList.add('bi-chevron-up');
-            }
-        });
-        filterCollapse.addEventListener('hide.bs.collapse', function () {
-            var icon = document.getElementById('filterToggleIcon');
-            if (icon) {
-                icon.classList.remove('bi-chevron-up');
-                icon.classList.add('bi-chevron-down');
-            }
-        });
-    }
-
 });
 
