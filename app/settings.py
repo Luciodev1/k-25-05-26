@@ -177,6 +177,7 @@ else:
 # https://docs.djangoproject.com/en/6.0/topics/cache/
 
 REDIS_URL = os.environ.get('REDIS_URL')
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
 if REDIS_URL:
     CACHES = {
         'default': {
@@ -194,6 +195,8 @@ if REDIS_URL:
             }
         }
     }
+    if REDIS_PASSWORD:
+        CACHES['default']['OPTIONS']['PASSWORD'] = REDIS_PASSWORD
 else:
     import warnings as _warnings
     _warnings.warn(

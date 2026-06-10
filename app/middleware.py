@@ -2,7 +2,7 @@ import secrets
 
 
 class ContentSecurityPolicyMiddleware:
-    """Adiciona o header Content-Security-Policy com nonce para scripts inline."""
+    """Adiciona o header Content-Security-Policy com nonce para scripts e styles inline."""
 
     SCRIPT_SRC_CDN = (
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js "
@@ -29,7 +29,8 @@ class ContentSecurityPolicyMiddleware:
         response['Content-Security-Policy'] = (
             "default-src 'self'; "
             f"script-src 'self' 'nonce-{nonce}' {self.SCRIPT_SRC_CDN}; "
-            f"style-src 'self' 'unsafe-inline' {self.STYLE_SRC_CDN}; "
+            f"style-src 'self' 'nonce-{nonce}' {self.STYLE_SRC_CDN}; "
+            "style-src-attr 'unsafe-inline'; "
             "media-src 'self' data:; "
             "img-src 'self' data:; "
             "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "

@@ -25,21 +25,35 @@ def _get_user_email(request):
     return getattr(request.user, 'email', None)
 
 
-def _dispatch_async_if_large(queryset, request, async_task, export_format, filters, task_kwargs=None):
+def _dispatch_async_if_large(queryset, request, async_task, export_format, filters, task_kwargs=None, report_type=''):
     count = queryset.count()
     if count <= ASYNC_EXPORT_THRESHOLD:
         return None
-    tenant_id = str(getattr(request, 'tenant', None) or '')
+    tenant = getattr(request, 'tenant', None)
+    from reports.models import ExportJob
+    job = ExportJob.objects.create(
+        user=request.user,
+        tenant=tenant,
+        report_type=report_type,
+        status='pending',
+        filters=filters,
+        export_format=export_format,
+    )
+    tenant_id = str(tenant or '')
     task_kwargs = task_kwargs or {}
     task = async_task.delay(
         _get_user_email(request),
         tenant_id,
         filters,
         export_format,
+        job_id=job.pk,
         **task_kwargs,
     )
+    job.task_id = task.id
+    job.save(update_fields=['task_id'])
     return render(request, 'report_processing.html', {
         'task_id': task.id,
+        'job_id': job.pk,
         'export_format': export_format.upper(),
         'record_count': count,
     })
@@ -101,7 +115,7 @@ def outflows_by_customer_report(request):
         from reports.export_tasks import async_outflows_by_customer_report
         async_response = _dispatch_async_if_large(
             queryset, request, async_outflows_by_customer_report,
-            export, filters,
+            export, filters, report_type='outflows_by_customer',
         )
         if async_response:
             return async_response
@@ -178,7 +192,7 @@ def deliveries_report(request):
         from reports.export_tasks import async_deliveries_report
         async_response = _dispatch_async_if_large(
             queryset, request, async_deliveries_report,
-            export, filters,
+            export, filters, report_type='deliveries',
         )
         if async_response:
             return async_response
@@ -252,7 +266,7 @@ def customer_account_report(request):
         from reports.export_tasks import async_customer_account_report
         async_response = _dispatch_async_if_large(
             queryset, request, async_customer_account_report,
-            export, filters,
+            export, filters, report_type='customer_account',
         )
         if async_response:
             return async_response
@@ -307,7 +321,7 @@ def supplier_account_report(request):
         from reports.export_tasks import async_supplier_account_report
         async_response = _dispatch_async_if_large(
             queryset, request, async_supplier_account_report,
-            export, filters,
+            export, filters, report_type='supplier_account',
         )
         if async_response:
             return async_response
@@ -378,15 +392,29 @@ def balances_report(request):
         count = (customer_balances.count() if section in ('all', 'customers') else 0) + \
                 (supplier_balances.count() if section in ('all', 'suppliers') else 0)
         if count > ASYNC_EXPORT_THRESHOLD:
+            tenant = getattr(request, 'tenant', None)
+            from reports.models import ExportJob
+            job = ExportJob.objects.create(
+                user=request.user,
+                tenant=tenant,
+                report_type='balances',
+                status='pending',
+                filters=filters,
+                export_format=export,
+            )
             task = async_balances_report.delay(
                 _get_user_email(request),
-                str(getattr(request, 'tenant', None) or ''),
+                str(tenant or ''),
                 filters,
                 export,
                 section,
+                job_id=job.pk,
             )
+            job.task_id = task.id
+            job.save(update_fields=['task_id'])
             return render(request, 'report_processing.html', {
                 'task_id': task.id,
+                'job_id': job.pk,
                 'export_format': export.upper(),
                 'record_count': count,
             })
@@ -517,6 +545,7 @@ def balances_report(request):
 @login_required
 def task_status(request, task_id):
     from tenants.models import TenantUser
+    from reports.models import ExportJob
     tenant = getattr(request, 'tenant', None)
     if tenant:
         if not TenantUser.objects.filter(user=request.user, tenant=tenant).exists():
@@ -525,20 +554,29 @@ def task_status(request, task_id):
             request.user.has_perm('accounts.view_customeraccountentry') or
             request.user.has_perm('accounts.view_supplieraccountentry')):
         raise PermissionDenied
+
+    job = ExportJob.objects.filter(task_id=task_id, user=request.user).first()
+
     from celery.result import AsyncResult
     from django.http import JsonResponse
     result = AsyncResult(task_id)
     ready = result.ready()
     payload = {'task_id': task_id, 'status': result.status}
     download_url = None
+
     if ready and result.result and isinstance(result.result, dict) and result.result.get('status') == 'ok':
         path = result.result.get('path', '')
         if path:
             download_url = reverse('reports:report_download', kwargs={'task_id': task_id})
             payload['result'] = result.result
             payload['download_url'] = download_url
+    elif job and job.status == 'completed' and job.file_path:
+        download_url = reverse('reports:report_download', kwargs={'task_id': task_id})
+        payload['status'] = 'SUCCESS'
+        payload['download_url'] = download_url
+
     if request.headers.get('HX-Request'):
-        if ready:
+        if ready or (job and job.status == 'completed'):
             if download_url:
                 return render(request, 'report_download_ready.html', {
                     'download_url': download_url,
@@ -560,10 +598,19 @@ def report_download(request, task_id):
     from django.http import FileResponse, Http404
     from django.core.files.storage import default_storage
     from celery.result import AsyncResult
+    from reports.models import ExportJob
+
     result = AsyncResult(task_id)
-    if not result.ready() or not result.result:
-        raise Http404('Exportação não encontrada ou ainda em processamento.')
-    path = result.result.get('path', '') if isinstance(result.result, dict) else ''
+    path = ''
+
+    if result.ready() and result.result and isinstance(result.result, dict):
+        path = result.result.get('path', '')
+
+    if not path:
+        job = ExportJob.objects.filter(task_id=task_id, user=request.user).first()
+        if job and job.status == 'completed' and job.file_path:
+            path = job.file_path
+
     if not path or not default_storage.exists(path):
         raise Http404('Ficheiro não encontrado ou expirado.')
     from pathlib import Path

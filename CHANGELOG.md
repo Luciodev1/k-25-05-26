@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0] — 2026-06-10
+
+### Segurança
+- **Redis com autenticação**: Adicionado `REDIS_PASSWORD` — Redis requer senha para conexão; healthcheck e todas as URLs atualizadas (`docker-compose.yml`, `.env.example`, `app/settings.py`)
+- **CSP sem `unsafe-inline` em style-src**: Removido `'unsafe-inline'` de `style-src`, substituído por `'nonce-{nonce}'`; `style-src-attr 'unsafe-inline'` mantido para atributos `style=` inline. Todos os 14 templates com `<style>` agora têm `nonce="{{ csp_nonce }}"`.
+
+### Novas Funcionalidades
+- **ExportJob model**: Modelo persistente para rastreamento de exportações assíncronas (`reports/models.py`). Tasks Celery agora atualizam status do ExportJob (pending → processing → completed/failed). Views usam ExportJob como fallback quando resultado do Celery expira.
+
+### Documentação
+- README.md: Instruções para gerar `REDIS_PASSWORD` com `secrets.token_urlsafe(32)`
+- `.env.example`: Nova variável `REDIS_PASSWORD` e URLs atualizadas
+
 ## [1.1.0] — 2026-05-27
 
 ### Adicionado

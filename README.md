@@ -7,14 +7,22 @@ Sistema Django para gestão de inventário, saídas, entregas, contas de cliente
 ```bash
 pip install -r requirements.txt
 cp .env.example .env
-# Definir DJANGO_SECRET_KEY em .env
+# Definir DJANGO_SECRET_KEY e REDIS_PASSWORD em .env
 python manage.py migrate
 python manage.py runserver
 ```
 
 ## Variáveis de ambiente
 
-Ver `.env.example` para `DJANGO_SECRET_KEY`, `REDIS_URL`, `SENTRY_DSN`, `CELERY_*`, `BACKUP_DIR`, `APP_VERSION`.
+Ver `.env.example` para `DJANGO_SECRET_KEY`, `REDIS_PASSWORD`, `REDIS_URL`, `SENTRY_DSN`, `CELERY_*`, `BACKUP_DIR`, `APP_VERSION`.
+
+### Gerar senha segura para Redis
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Copie o output para `REDIS_PASSWORD` no `.env`. Esta senha é usada para autenticação no Redis (cache, Celery broker, WebSockets).
 
 ## Testes
 
